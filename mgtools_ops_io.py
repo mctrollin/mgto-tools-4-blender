@@ -29,6 +29,8 @@ class MGTOOLS_OT_export_collections(Operator):
         prefix = mgtools_props_scene.p_io_export_name_prefix
         filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
         filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
+        filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
+        filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
         include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
         include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
 
@@ -54,6 +56,9 @@ class MGTOOLS_OT_export_collections(Operator):
 
             # prepare filename
             filename = collection.name[len(filter_prefix_collection):]
+            if True == filename_include_blendfilename:
+                filename = os.path.splitext(bpy.path.basename(bpy.data.filepath))[0] + "_" + filename
+            filename = filename_prefix + filename
 
             # create new exporter instance and set it up
             exporter = MGTOOLS_io_exporter(export_folder, filename)

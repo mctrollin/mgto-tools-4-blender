@@ -32,6 +32,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_folder_collections: StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export", subtype='DIR_PATH',)
     p_io_export_prefix_filter_collection: StringProperty(name='Filter: Collections', default="x_", description="Filter prefix for collections which should be exported",)
     p_io_export_prefix_filter_pivot: StringProperty(name='Filter: Pivot dummy', default="pivot_", description="Filter prefix for pivot dummies",)
+    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix', default="", description="Optional prefix",)
+    p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
 
     # animation export ---------------------
     p_io_export_folder_animations: StringProperty(name='Animations export folder', default="", description="Export folder path for animations bath export", subtype='DIR_PATH',)

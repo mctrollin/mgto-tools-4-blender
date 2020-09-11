@@ -313,6 +313,12 @@ class MGTOOLS_PT_io(Panel):
         row = box.row()
         row.label(text="Filter: Pivots")
         row.prop(mgtools_props_scene, "p_io_export_prefix_filter_pivot", text="")
+        # > export file name options
+        row = box.row()
+        row.label(text="File Prefix")
+        row.prop(mgtools_props_scene, "p_io_export_filename_prefix", text="")
+        row = box.row()
+        row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename")
         # > path options
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_folder_collections", text="")
