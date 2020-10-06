@@ -103,7 +103,7 @@ class MGTOOLS_properties_object(PropertyGroup):
     def get_world_location(self):
         # transform intrinsic- to world-space
         ao = bpy.context.view_layer.objects.active
-        return ao_pMGTOOLS_functions_helper.get_world_location(ao)
+        return MGTOOLS_functions_helper.get_world_location(ao)
 
     def set_world_location(self, value):
         # transform input world- to intrinsic-space

@@ -349,7 +349,8 @@ class MGTOOLS_functions_helper():
             target_nla_track.name = source_nla_track.name
             for source_strip in source_nla_track.strips:
                 #create strips
-                target_strip = target_nla_track.strips.new(source_strip.action.name, source_strip.frame_start, source_strip.action)
+                target_strip = target_nla_track.strips.new(source_strip.name, source_strip.frame_start, source_strip.action)
+                target_strip.name = source_strip.name # necessary as new() is not using the supplied name I guess
                 target_strip.blend_in = source_strip.blend_in
                 target_strip.blend_out = source_strip.blend_out
                 target_strip.blend_type = source_strip.blend_type
