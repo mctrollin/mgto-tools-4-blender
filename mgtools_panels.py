@@ -1,5 +1,6 @@
 import sys
 import math
+from datetime import datetime
 import bpy
 from bpy.types import Panel
 from . mgtools_functions_helper import MGTOOLS_functions_helper
@@ -413,11 +414,17 @@ class MGTOOLS_PT_about(Panel):
 
 # Layout extensions #############################################################################################
 
+weights_list_refresh_timer = datetime.now()
+weights_list_filter_flags = []
+weights_list_filter_sorting = []
+
 # vertex groups list for weights
 class MGTOOLS_UL_vgroups(bpy.types.UIList):
     # required for filtering
     VGROUP_EMPTY = 1 << 0
-  
+
+    
+
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         ob = data
         slot_vg = item
@@ -440,30 +447,43 @@ class MGTOOLS_UL_vgroups(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.label(text="", icon_value=icon)
 
-    # this is not necessary. The default filtering works and is a lot faster then the code below
+    # this is not necessary. The default filtering works and is a lot faster then the code below but does not sort and filter the way we want
     def filter_items(self, context, data, propname):
         vgroups = getattr(data, propname)
         helper_funcs = bpy.types.UI_UL_list
 
-        # Filtering ------------------------------
-        flt_flags = [self.bitflag_filter_item] * len(vgroups)
+        # reduce update rate to improve performance
+        global weights_list_refresh_timer
+        global weights_list_filter_flags
+        global weights_list_filter_sorting
 
-        # Filter by zero average weight
+        deltatime = (datetime.now() - weights_list_refresh_timer).total_seconds()
+        if 2 > deltatime:
+            return weights_list_filter_flags, weights_list_filter_sorting
+        weights_list_refresh_timer = datetime.now()
+
+        # Filtering ------------------------------
+        weights_list_filter_flags = [self.bitflag_filter_item] * len(vgroups)
+        weights_list_filter_sorting = [] * len(vgroups)
+
+        # Prepare average-weight-per-vertex-group list
         weight_averages = []
         selected_verts_indices = MGTOOLS_functions_helper.get_selected_vert_indicies(data)
         for idx, vg in enumerate(vgroups):
             weight_average = MGTOOLS_functions_helper.get_weight_average(data, idx, selected_verts_indices)
             weight_averages.append((idx, weight_average))
+            # Filter by zero average weight
             if 0 < weight_average:
-                flt_flags[idx] |= self.VGROUP_EMPTY
+                weights_list_filter_flags[idx] |= self.VGROUP_EMPTY
             else:
-                flt_flags[idx]  &= ~self.bitflag_filter_item
+                weights_list_filter_flags[idx]  &= ~self.bitflag_filter_item
 
         # Filter by name
         if self.filter_name:
-            flt_flags = helper_funcs.filter_items_by_name(self.filter_name, self.bitflag_filter_item, vgroups, "name", reverse=False)
+            weights_list_filter_flags = helper_funcs.filter_items_by_name(self.filter_name, self.bitflag_filter_item, vgroups, "name", reverse=False)
 
         # Sorting ------------------------------
-        flt_neworder = helper_funcs.sort_items_helper(weight_averages, lambda e: e[1], True)
-
-        return flt_flags, flt_neworder
+        weights_list_filter_sorting = helper_funcs.sort_items_helper(weight_averages, lambda e: e[1], True)
+        
+        return weights_list_filter_flags, weights_list_filter_sorting
+    

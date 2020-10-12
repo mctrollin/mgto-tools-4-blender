@@ -186,18 +186,28 @@ class MGTOOLS_functions_helper():
     # returns (for a given mesh and a given vertex group) a list with the weight of every vertice
     # Note: it will return a weight of 0 even if the vertex is not part of the vertex group
     @classmethod
-    def get_weights(self, mesh, vgroup):
-        weights = []
+    def get_weights_from_selection(self, mesh, vgroup, vindices):
+        weights = [0] * len(mesh.vertices)
         group_index = vgroup.index
-        # for i, v in enumerate(mesh.vertices):
-        for v in mesh.vertices:
-            weight = 0
+        for vidx in vindices:
+            v = mesh.vertices[vidx]
             for vge in v.groups:
                 if vge.group != group_index:
                     continue           
-                weight = vge.weight
+                weights[vidx] = vge.weight
                 break
-            weights.append(weight)
+        return weights
+
+    @classmethod
+    def get_weights(self, mesh, vgroup):
+        weights = [0] * len(mesh.vertices)
+        group_index = vgroup.index
+        for v in mesh.vertices:
+            for vge in v.groups:
+                if vge.group != group_index:
+                    continue           
+                weights[v.index] = vge.weight
+                break
         return weights
 
     # returns the average weight of all supplied vertices within the given vertex group
@@ -211,8 +221,8 @@ class MGTOOLS_functions_helper():
             return weight_average
 
         # get weights
-        # weights = list(range(0,1000))
-        weights = MGTOOLS_functions_helper.get_weights(meshobj.data, meshobj.vertex_groups[vgroupidx])
+        # weights = list(range(0,len(meshobj.data.vertices)))
+        weights = MGTOOLS_functions_helper.get_weights_from_selection(meshobj.data, meshobj.vertex_groups[vgroupidx], selected_vert_indices)
         
         # accumulate weights
         weight_accum = 0
