@@ -243,12 +243,50 @@ class MGTOOLS_PT_object(Panel):
 
         snap_box.operator('mgtools.object_snapshot', text="Make Range Snapshots")
 
+class MGTOOLS_PT_renaming(Panel):
+    bl_idname = "MGTOOLS_PT_renaming"
+    bl_label = "Renaming"
+    bl_category = "mgtools"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        l = self.layout
+        col = l.column()
+
+        # get scene props
+        if None == bpy.context.scene:
+            col.label(text="Scene properties not yet initialized", icon='ERROR', )
+            return
+        mgtools_props_scene = bpy.context.scene.mgtools
+
+        # rename using a mapping file
+        mapping_box = col.box()
+        mapping_box.label(text="Rename with mapping")
+
+        mapping_box.prop(mgtools_props_scene, 'p_rename_mapping_file_path')
+        mapping_box.prop(mgtools_props_scene, 'p_rename_mapping_inverse')
+
+        mapping_box.operator('mgtools.rename_bones', text="Rename Bones")
+        mapping_box.operator('mgtools.rename_vertexgroups', text="Rename Vertex Groups")
+
+        # get object props
+        # if None == bpy.context.object:
+        #     col.label(text="Object properties not yet initialized", icon='ERROR', )
+        #     return
+        # mgtools_props_obj = bpy.context.object.mgtools
+        
+
+       
+
 class MGTOOLS_PT_io(Panel):
     bl_idname = "MGTOOLS_PT_io"
     bl_label = "I/O"
     bl_category = "mgtools"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         l = self.layout

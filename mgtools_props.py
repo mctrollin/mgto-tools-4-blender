@@ -6,6 +6,12 @@ from . mgtools_functions_helper import MGTOOLS_functions_helper
 
 class MGTOOLS_properties_scene(PropertyGroup):
 
+
+    # Properties.Rename ################################################################ 
+
+    p_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
+    p_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
+
     # Properties.Rigging ################################################################ 
 
     p_rigging_bone_name_prefix: StringProperty(name='Bone name prefix', default="", description="Prefix added to all cloned bones",)

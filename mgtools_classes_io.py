@@ -68,6 +68,7 @@ class MGTOOLS_io_exporter():
         #     print(' > input_obj: ', obj.name)
 
         if 0 >= len(self.to_export_collection.all_objects):
+            print (" > Collection is empty.")
             return
 
         self.prepare_export(self.path)
@@ -144,7 +145,9 @@ class MGTOOLS_io_exporter():
             pivot_dummy_name = to_export_pivot_dummy.name[len(self.pivot_dummy_prefix):]
         print(" > pivot dummy: {} name: {}".format(input_pivot_dummy, pivot_dummy_name))
 
-       
+        if 1 > len(to_export_meshes) and 1 > len(to_export_helper) and 1 > len(to_export_armatures) and 1 > len(to_export_other):
+           print(" > nothing found to export for pivot: {}".format(input_pivot_dummy))
+           return
 
         # option: created throw-away snapshots during export
         # pivot_dummy_clone = None

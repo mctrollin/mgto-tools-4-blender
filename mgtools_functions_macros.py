@@ -5,7 +5,7 @@ from . mgtools_functions_helper import MGTOOLS_functions_helper
 class MGTOOLS_functions_macros():
 
 
-     # Object.Selection #######################################################
+    # Object.Selection #######################################################
 
     @classmethod
     def get_first_selected_mesh(self):
@@ -20,6 +20,19 @@ class MGTOOLS_functions_macros():
                 return tmpObj
             else:
                 print ("{} is {}".format(tmpObj, tmpObj.type))
+
+    @classmethod
+    def get_armature_from_first_selected_mesh(self):
+        mesh_object = self.get_first_selected_mesh()
+        if None == mesh_object:
+            return
+
+        # process modifiers
+        for mod in mesh_object.modifiers:
+            # armatures
+            if 'ARMATURE' == mod.type:
+                # auto select armatures
+                return mod.object
 
     @classmethod
     def select_only(self, refobj):
