@@ -15,9 +15,19 @@ class MGTOOLS_functions_rename():
     def rename_bones(self, armature_object, mapping_file_path, mapping_invert):
         
         if 'ARMATURE' != armature_object.type:
-                return
+            print("No armature")
+            return
         
         mapping_list = self.prepare_mapping_list(mapping_file_path)
+        if None == mapping_list: 
+            print("No mapping file")
+            return
+        if False == isinstance(mapping_list, list):
+            print("Invalid mapping file")
+            return
+        if 0 >= len(mapping_list):
+            print("No mapping entries")
+            return
 
         # loop through all bones
         for bone in armature_object.data.bones:
@@ -34,9 +44,19 @@ class MGTOOLS_functions_rename():
     def rename_vertexgroups(self, mesh_object, mapping_file_path, mapping_invert):
         
         if 'MESH' != mesh_object.type:
-                return
+            print("No mesh")
+            return
         
         mapping_list = self.prepare_mapping_list(mapping_file_path)
+        if None == mapping_list:
+            print("No mapping file")
+            return
+        if False == isinstance(mapping_list, list):
+            print("Invalid mapping file")
+            return
+        if 0 >= len(mapping_list):
+            print("No mapping entries")
+            return
 
          # loop through all vertex groups
         for vg in mesh_object.vertex_groups:
@@ -54,6 +74,9 @@ class MGTOOLS_functions_rename():
 
     @classmethod
     def get_mapped_name(self, name_input, mapping_list, mapping_invert):
+        if False == isinstance(mapping_list, list):
+            print("Invalid mapping list")
+            return
         entries_count = math.floor(len(mapping_list)*0.5)
         # if entries_count % 2 > 0:
         #     print("Mapping file entry is missing")
@@ -72,12 +95,14 @@ class MGTOOLS_functions_rename():
     @classmethod
     def prepare_mapping_list(self, mapping_file_path):
         
+        mapping_file_path_absolute = bpy.path.abspath(mapping_file_path)
+
         # checks
-        if False == os.path.exists(mapping_file_path):
+        if False == os.path.exists(mapping_file_path_absolute):
             return
 
         # read content of mapping file
-        mapping_file = open(mapping_file_path,"r") 
+        mapping_file = open(mapping_file_path_absolute,"r") 
         mapping_file_string = mapping_file.read() 
         mapping_file.close() 
 

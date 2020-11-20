@@ -208,13 +208,18 @@ class MGTOOLS_OT_weighting_flatten_weights(Operator):
 class MGTOOLS_OT_weighting_create_vertex_groups_for_selected_bones(Operator):
     bl_idname =  "mgtools.weighting_create_vertex_groups_for_selected_bones"
     bl_label = "Create vertex groups"
-    bl_description = "Create missing vertex groups for selected bones"
+    bl_description = "Create missing vertex groups on active mesh for selected pose bones. Note: make sure to use an armature modifier!"
     bl_options = {'REGISTER'} 
 
     def execute(self, context):
         # prepare vars
         obj = context.view_layer.objects.active
         selected_bones = context.selected_pose_bones # context.selected_bones
+        
+        if None == selected_bones or 0 >= len(selected_bones): 
+            print("No pose bones selected")
+            return {'CANCELLED'}
+
         bone_names = [bone.name for bone in selected_bones]
         print("obj: {}, bone_names: {}".format(obj, bone_names))
         # create vertex groups

@@ -38,6 +38,8 @@ class MGTOOLS_functions_macros():
     def select_only(self, refobj):
         if None == refobj:
             return
+        if type(refobj) != list:
+            return
 
         # clear selection
         for obj in bpy.data.objects:
@@ -97,26 +99,30 @@ class MGTOOLS_functions_macros():
         # create clones
         clones_other = []
         clones_meshes = []
-        # by doing one object after the other we have more control over the process
-        print(" > duplicating objects: {}".format(source_objects))
-        for source_object in source_objects:
+        
+        # --------------------------------------------
+
+        # set selection
+        self.select_objects(source_objects, True)
+        
+        if 0 >= len(bpy.context.selected_objects):
+            print("Problem selecting object for duplication: {}".format(source_object))
+            return
+
+        # create a copy of all selected objects and select these
+        bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
+
+        if 0 >= len(bpy.context.selected_objects):
+            print("Problem selecting clone of: {}".format(source_object))
+            return
+        
+        clones = bpy.context.selected_objects.copy()
+
+        print(" > processing duplicates: {}".format(clones))
+        for idx, clone in enumerate(clones):
             
-            # set selection
-            self.select_only(source_object)
-
-            if 0 >= len(bpy.context.selected_objects):
-                print("Problem selecting object for duplication: {}".format(source_object))
-                continue
-
-            # create a copy of the selected object(s) and select it/them
-            bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
-
-            if 0 >= len(bpy.context.selected_objects):
-                print("Problem selecting clone of: {}".format(source_object))
-                continue
-
-            # get and store clone
-            clone = bpy.context.selected_objects[0]
+            self.select_only(clone)
+            source_object = source_objects[idx]
 
             # add name prefix
             if 0 < len(prefix): 
@@ -130,6 +136,44 @@ class MGTOOLS_functions_macros():
                 clones_meshes.append(clone)
             else:
                 clones_other.append(clone)
+
+        # --------------------------------------------
+        
+        # by doing one object after the other we have more control over the process - problem: this won't retain the correct hierarchy
+        # print(" > duplicating objects: {}".format(source_objects))
+        # for source_object in source_objects:
+            
+        #     # set selection
+        #     self.select_only(source_object)
+
+        #     if 0 >= len(bpy.context.selected_objects):
+        #         print("Problem selecting object for duplication: {}".format(source_object))
+        #         continue
+
+        #     # create a copy of the selected object(s) and select it/them
+        #     bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
+
+        #     if 0 >= len(bpy.context.selected_objects):
+        #         print("Problem selecting clone of: {}".format(source_object))
+        #         continue
+
+        #     # get and store clone
+        #     clone = bpy.context.selected_objects[0]
+
+        #     # add name prefix
+        #     if 0 < len(prefix): 
+        #         clone.name = prefix + source_object.name            
+
+        #     # mesh specific processing
+        #     if 'MESH' == source_object.type:
+        #         # apply all modifiers
+        #         bpy.ops.object.convert(target='MESH')
+        #         # add to mesh list
+        #         clones_meshes.append(clone)
+        #     else:
+        #         clones_other.append(clone)
+
+        # --------------------------------------------
 
         # print (" > source_objects: {}".format(source_objects))
         # print (" > clones_other: {}".format(clones_other))
@@ -214,7 +258,7 @@ class MGTOOLS_functions_macros():
         # Reset parents -------------------------------------------
         for i, target_object in enumerate(target_objects):
             # re-parent
-            MGTOOLS_functions_helper.set_parent(obj, parents_cache[i], True)
+            MGTOOLS_functions_helper.set_parent(target_object, parents_cache[i], True)
 
         # Cleanup -------------------------------------------
         # Reset cursor

@@ -40,6 +40,14 @@ class MGTOOLS_PT_rigging(Panel):
                 box.prop(mgtools_props_scene, 'p_rigging_add_rotation_constraints_to_cloned_bones')
                 box.operator('mgtools.rigging_extract_clone_bones', text="Make Bones Snapshot")
 
+                
+        
+        box = col.box()
+        box.label(text="Retarget bone constraints")
+        box.prop(mgtools_props_scene, 'p_rigging_constraints_retarget_target_armature', text = "Target",)
+        box.operator('mgtools.rigging_constraints_retarget', text="Retarget Constraints")
+
+
 class MGTOOLS_PT_weighting(Panel):
     bl_idname = "MGTOOLS_PT_weighting"
     bl_label = "Weighting"
@@ -271,6 +279,10 @@ class MGTOOLS_PT_renaming(Panel):
         mapping_box.operator('mgtools.rename_bones', text="Rename Bones")
         mapping_box.operator('mgtools.rename_vertexgroups', text="Rename Vertex Groups")
 
+        tools_box = col.box()
+        tools_box.label(text="Tools")
+        tools_box.operator('mgtools.rename_print_bones', text="Output bone names")
+
         # get object props
         # if None == bpy.context.object:
         #     col.label(text="Object properties not yet initialized", icon='ERROR', )
@@ -311,6 +323,7 @@ class MGTOOLS_PT_io(Panel):
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy",)
         if True == mgtools_props_scene.p_io_export_include_pivot_dummy:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy_if_required",)
+        pivot_options_box.prop(mgtools_props_scene, "p_io_export_set_pivots_to_dummy",)
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_from_origin",)
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_alter_rotation",)
         if True == mgtools_props_scene.p_io_export_alter_rotation:
@@ -318,10 +331,14 @@ class MGTOOLS_PT_io(Panel):
         
         merge_options_box = col.box()
         merge_options_box.prop(mgtools_props_scene, "p_io_export_merge",)
-        if True == mgtools_props_scene.p_io_export_merge:
-            row = merge_options_box.row()
-            row.label(text="Add Prefix")
-            row.prop(mgtools_props_scene, "p_io_export_name_prefix", text="")
+        # if True == mgtools_props_scene.p_io_export_merge:
+        #     row = merge_options_box.row()
+
+        naming_options_box = col.box()
+        row = naming_options_box.row()
+        row.label(text="Add Prefix")
+        row.prop(mgtools_props_scene, "p_io_export_name_prefix", text="")
+
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
 
@@ -441,7 +458,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.4")
+        box.label(text="MGTO tools v0.5")
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2019")
 

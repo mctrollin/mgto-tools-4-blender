@@ -4,6 +4,8 @@ from mathutils import Matrix # Vector, Euler,
 
 class MGTOOLS_functions_helper():
 
+   
+
     # Selection.Mesh #######################################################
     
     @classmethod
@@ -421,3 +423,11 @@ class MGTOOLS_functions_helper():
         ao_pos_l = obj.matrix_parent_inverse @ ao_pos_i
         ao_pos_w = obj.parent.matrix_world @ ao_pos_l
         return ao_pos_w
+
+
+    # Debug.Print #######################################################
+
+    @classmethod
+    def print_collection(self, collection):
+        for c in collection:
+            print(c)

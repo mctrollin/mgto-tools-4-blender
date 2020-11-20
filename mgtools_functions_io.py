@@ -9,6 +9,10 @@ class MGTOOLS_functions_io():
         return path + '\\' + filename + '.' + extension
 
     @classmethod
+    def check_permissions(self, path):
+        return os.access(path, os.W_OK)
+
+    @classmethod
     def prepare_export(self, path):
         # prepare path
         print ("Check and prepare directory: " + path)

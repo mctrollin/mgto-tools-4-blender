@@ -4,6 +4,7 @@ import bpy
 from mathutils import Matrix # Vector, Euler, 
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . mgtools_functions_macros import MGTOOLS_functions_macros
+from . mgtools_functions_io import MGTOOLS_functions_io
 
 class MGTOOLS_io_exporter():
 
@@ -23,6 +24,7 @@ class MGTOOLS_io_exporter():
     pivot_dummy_prefix = ""
     include_pivot_dummy = True
     include_pivot_dummy_if_required = False
+    set_pivots_to_dummy = True
 
     # optional settings
     combine_meshes = False
@@ -37,6 +39,7 @@ class MGTOOLS_io_exporter():
         self.filename = filename
 
         # construct export file path
+        self.path = bpy.path.abspath(self.path)
         self.filepath = self.build_filepath(self.path, self.filename)
 
 
@@ -44,7 +47,7 @@ class MGTOOLS_io_exporter():
         print("Export (selection) to: " + self.filepath)
 
         if 0 >= len(self.to_export_selection):
-            print (" > No export objects defined.")
+            print(" > No export objects defined.")
             return
 
         # print selection content
@@ -52,6 +55,11 @@ class MGTOOLS_io_exporter():
         #     print(' > input_obj: ', obj.name)
 
         self.prepare_export(self.path)
+
+        if False == MGTOOLS_functions_io.check_permissions(self.filepath):
+            print(" > Permission denied.")
+            return
+
         self.export_now(self.to_export_selection)
 
         print(" > Export (selection) finished for " + self.filepath)
@@ -60,7 +68,7 @@ class MGTOOLS_io_exporter():
         print("Export (collection) to: " + self.filepath)
 
         if None == self.to_export_collection:
-            print (" > No export collection defined.")
+            print(" > No export collection defined.")
             return
 
         # print collection content
@@ -68,10 +76,15 @@ class MGTOOLS_io_exporter():
         #     print(' > input_obj: ', obj.name)
 
         if 0 >= len(self.to_export_collection.all_objects):
-            print (" > Collection is empty.")
+            print(" > Collection is empty.")
             return
 
         self.prepare_export(self.path)
+
+        if False == MGTOOLS_functions_io.check_permissions(self.filepath):
+            print(" > Permission denied.")
+            return
+
         self.export_now(self.to_export_collection.all_objects)
 
         print(" > Export (collection) finished for " + self.filepath)
@@ -182,7 +195,7 @@ class MGTOOLS_io_exporter():
                 MGTOOLS_functions_helper.transfere_modifier_armature(input_meshes, to_export_meshes)
 
             # adopt pivot from pivot-dummy
-            if None != to_export_pivot_dummy:
+            if True == self.set_pivots_to_dummy and None != to_export_pivot_dummy:
                 print(" > set pivot")
                 MGTOOLS_functions_macros.set_pivot(to_export_meshes, to_export_pivot_dummy.location, to_export_pivot_dummy.rotation_euler, True)
 
@@ -331,6 +344,10 @@ class MGTOOLS_io_exporter():
         self.prepare_export(self, path)
         filepath = self.build_filepath(self, path, filename)
         
+        if False == MGTOOLS_functions_io.check_permissions(filepath):
+            print (" > Permission denied.")
+            return
+
         # cache frame range
         cached_frame_start = bpy.context.scene.frame_start
         cached_frame_end = bpy.context.scene.frame_end

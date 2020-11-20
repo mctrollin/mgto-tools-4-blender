@@ -33,6 +33,7 @@ class MGTOOLS_OT_export_collections(Operator):
         filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
         include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
         include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
+        set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
 
         # loop through all collections
         for collection in bpy.data.collections:
@@ -74,6 +75,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.pivot_dummy_prefix = filter_prefix_pivot
             exporter.include_pivot_dummy = include_pivot_dummy
             exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
+            exporter.set_pivots_to_dummy = set_pivots_to_dummy
 
             # start the export
             exporter.try_export_collection()

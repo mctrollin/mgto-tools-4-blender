@@ -4,7 +4,7 @@ from bpy.types import Operator
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . mgtools_functions_macros import MGTOOLS_functions_macros
 
-# create new armature using selected bones as reference and respecting the original hierarchy
+# Create new armature using selected bones as reference and respecting the original hierarchy
 class MGTOOLS_OT_extract_clone_bones(Operator):
     bl_idname = "mgtools.rigging_extract_clone_bones"
     bl_label = ""
@@ -76,7 +76,6 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
 
 
         return{'FINISHED'}
-
 
     def clone_ebone(self, target_armature, source_armature, source_ebone_name, use_constraints, root_ebone_name, new_bones_prefix):
 
@@ -158,7 +157,6 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
             bconstr.target = source_armature
             bconstr.subtarget = source_ebone_name
 
-
     def clone_ebone_basics(self, target_armature_data, source_ebone):
         ebone = target_armature_data.edit_bones.new(source_ebone.name)
         ebone.head = source_ebone.head
@@ -181,6 +179,48 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
                 return p
         return None
 
+# Change target armature of all bone constraints
+class MGTOOLS_OT_retarget_constraints(Operator):
+    bl_idname = "mgtools.rigging_constraints_retarget"
+    bl_label = ""
+    bl_description = ""
 
+    def execute(self, context):
+
+        # get sources ---------------------------
+        if 0 >= len(bpy.context.selected_objects):
+            print ("Nothing selected")
+            return {'CANCELLED'}
+
+        # get source armature
+        source_armature = MGTOOLS_functions_macros.get_first_selected_armature()
+
+        if None == source_armature:
+            print ("Can't find source armature")
+            return {'CANCELLED'}
+
+        # get source bone names (as the references will change if we use the clone method)
+        # source_ebones = [eb.name for eb in context.selected_bones]
+
+        # if 0 >= len(source_ebones):
+        #     print ("No source bones selected")
+        #     return {'CANCELLED'}
+
+        # read properties
+        mgtools_props_scene = bpy.context.scene.mgtools
+        retarget_target_armature = mgtools_props_scene.p_rigging_constraints_retarget_target_armature
+
+        if None == retarget_target_armature:
+            print ("Target armature must be set.")
+            return {'CANCELLED'}
+
+        # loop through pose bones
+        for pbone in source_armature.pose.bones:
+            for bconstrain in pbone.constraints:
+                bconstrain.target = retarget_target_armature
+
+        return{'FINISHED'}
+
+        
 
 

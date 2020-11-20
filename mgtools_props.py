@@ -12,11 +12,14 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
     p_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
 
+
     # Properties.Rigging ################################################################ 
 
     p_rigging_bone_name_prefix: StringProperty(name='Bone name prefix', default="", description="Prefix added to all cloned bones",)
     p_rigging_add_root_bone: BoolProperty(name="Add root bone", default=False, description="Add root bone (0,0,0) and link bones without parent to it",)
     p_rigging_add_rotation_constraints_to_cloned_bones: BoolProperty(name="Add rotation constraints", default=False, description="Add to each bone a rotation constraint referencing the corresponding source bone",)
+
+    p_rigging_constraints_retarget_target_armature: PointerProperty(name="Target", type=bpy.types.Object, description="New constraints target armature. ",)
 
 
     # Properties.Animation ################################################################ 
@@ -81,6 +84,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
         )
     p_io_export_include_pivot_dummy: BoolProperty(name="Include pivot dummy", default=True, description="Don't export the pivot dummy",)
     p_io_export_include_pivot_dummy_if_required: BoolProperty(name="Include pivot dummy if required", default=True, description="Don't export the pivot dummy if it's not necessary because we only export one single object",)
+    p_io_export_set_pivots_to_dummy: BoolProperty(name="Set pivots to dummy", default=True, description="Will set all pivots to the pivot dummy transforms",)
     p_io_export_from_origin: BoolProperty(name="Move to origin", default=True, description="Export object from world origin",)
     p_io_export_alter_rotation: BoolProperty(name="Alter rotation", default=False, description="Change the rotation before exporting (and revert it afterwards)",)
     p_io_export_rotation: FloatVectorProperty(name="Export rotation", default=(0.0, 0.0, 0.0), description="Export object rotation",)
