@@ -17,8 +17,8 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
 
         # ---------------------------------------------
         # TEST: rotation
-        rot_degree = (90, 0, 0)
-        bpy.context.view_layer.objects.active.rotation_euler = tuple(radians(a) for a in rot_degree)
+        # rot_degree = (90, 0, 0)
+        # bpy.context.view_layer.objects.active.rotation_euler = tuple(radians(a) for a in rot_degree)
 
         # ---------------------------------------------
         # TEST: list creation
@@ -97,6 +97,10 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
         # bm.free()
 
 
+        # ---------------------------------------------
+        # TEST: copy to new collection
+        # MGTOOLS_functions_macros.duplicate_to_collection(bpy.context.selected_objects, False)
+        MGTOOLS_functions_macros.make_collection_instance_real(bpy.context.view_layer.objects.active)
 
         # ---------------------------------------------
         return{'FINISHED'}

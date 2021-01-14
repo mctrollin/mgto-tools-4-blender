@@ -32,7 +32,7 @@ class MGTOOLS_io_exporter():
     alter_pivot_rotation = False
     pivot_rotation = (0,0,0)
     prefix = "to_export__"
-
+    posfix = ""
 
     def __init__(self, path, filename):
         self.path = path
@@ -102,6 +102,7 @@ class MGTOOLS_io_exporter():
         
         print ("Export now: {}".format(input_objects))
 
+        # flags ----------------------------------
         # tmp: decide if we should create throw-away only-for-export clones or not
         # create_clones = False
         # if True == self.combine_meshes:
@@ -113,12 +114,28 @@ class MGTOOLS_io_exporter():
             print(" > error: No objects defined for export")
             return
 
-
         # prepare ----------------------------------
+        # create a temporary collection for exporting purposes
+        tmp_export_collection = None
+        if True == create_clones:
+            # create temporary collection
+            tmp_export_collection = MGTOOLS_functions_macros.duplicate_to_collection(input_objects, False)
+
+            # make any containted collection instance real
+            collection_objects = []
+            for obj in tmp_export_collection.all_objects:
+                collection_objects.append(obj)
+            for obj in collection_objects:
+                MGTOOLS_functions_macros.make_collection_instance_real(obj)
+            
+            # override to-process list with the new clones
+            input_objects = tmp_export_collection.all_objects
+
         # filter objects into separate lists and try to find pivot dummy
         input_meshes = []
         input_helper = []
         input_armatures = []
+        input_collectioninstances = []
         input_other = []
         input_pivot_dummy = None
         for obj in input_objects:
@@ -132,9 +149,11 @@ class MGTOOLS_io_exporter():
             elif 'EMPTY' == obj.type:
                 if 0 < len(self.pivot_dummy_prefix) and True == obj.name.startswith(self.pivot_dummy_prefix):
                     input_pivot_dummy = obj
+                elif None != obj.instance_collection:
+                    input_collectioninstances.append(obj)
                 else:
                     input_helper.append(obj)
-            # everythin else
+            # everything else
             else:
                 input_other.append(obj)
 
@@ -180,7 +199,7 @@ class MGTOOLS_io_exporter():
         
             # create a throw-away snapshot of the object(s) we want to export
             print (" > creating to-export snapshots from {}".format(input_meshes))
-            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes, self.combine_meshes, self.prefix, False, None)
+            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes, self.combine_meshes, self.prefix, self.posfix, False, None)
             to_export_meshes = input_meshes_clones
             print (" > snapshots created: {}".format(to_export_meshes))
 
@@ -337,6 +356,12 @@ class MGTOOLS_io_exporter():
         if None != input_meshes_clones:
             for clone in input_meshes_clones:
                 bpy.data.objects.remove(clone)
+
+        if None != tmp_export_collection:
+            for clone in tmp_export_collection.objects:
+                bpy.data.objects.remove(clone)
+            bpy.data.collections.remove(tmp_export_collection)
+
 
     @classmethod
     def quick_export_anim(self, path, filename, frame_start, frame_end):

@@ -336,8 +336,9 @@ class MGTOOLS_PT_io(Panel):
 
         naming_options_box = col.box()
         row = naming_options_box.row()
-        row.label(text="Add Prefix")
+        row.label(text="Pre / Posfix")
         row.prop(mgtools_props_scene, "p_io_export_name_prefix", text="")
+        row.prop(mgtools_props_scene, "p_io_export_name_posfix", text="")
 
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
@@ -458,9 +459,9 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.5")
+        box.label(text="MGTO tools v0.6.0") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
-        box.label(text="(C) 2019")
+        box.label(text="(C) 2021")
 
         python_version_info = sys.version_info
         box = l.column()

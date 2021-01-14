@@ -26,7 +26,8 @@ class MGTOOLS_OT_export_collections(Operator):
         axis_forward = mgtools_props_scene.p_io_export_axis_forward
         axis_up = mgtools_props_scene.p_io_export_axis_up
         use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
-        prefix = mgtools_props_scene.p_io_export_name_prefix
+        export_name_prefix = mgtools_props_scene.p_io_export_name_prefix
+        export_name_posfix = mgtools_props_scene.p_io_export_name_posfix
         filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
         filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
         filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
@@ -71,7 +72,8 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.pivot_rotation = pivot_rotation
             exporter.combine_meshes = combine_meshes
             exporter.to_export_collection = collection
-            exporter.prefix = prefix
+            exporter.prefix = export_name_prefix
+            exporter.posfix = export_name_posfix
             exporter.pivot_dummy_prefix = filter_prefix_pivot
             exporter.include_pivot_dummy = include_pivot_dummy
             exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required

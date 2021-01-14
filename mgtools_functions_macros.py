@@ -1,5 +1,6 @@
 import bpy
 from mathutils import Vector, Euler, Matrix
+import uuid
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 
 class MGTOOLS_functions_macros():
@@ -38,7 +39,8 @@ class MGTOOLS_functions_macros():
     def select_only(self, refobj):
         if None == refobj:
             return
-        if type(refobj) != list:
+        if type(refobj) == list:
+            print("Warning: input should be one object but its:{}".format(len(refobj)))
             return
 
         # clear selection
@@ -69,13 +71,101 @@ class MGTOOLS_functions_macros():
             bpy.context.view_layer.objects.active = ref_objects[0]
 
 
-     # Object.Misc #######################################################
+    # Object.Misc #######################################################
+
+    # Duplicate selected objects and move them into a newly created collection
+    @classmethod
+    def duplicate_to_collection(self, source_objects, select_clones):
+        
+        # cache current selection
+        cached_selection = bpy.context.selected_objects
+        cached_active = bpy.context.view_layer.objects.active
+
+        # set selection
+        self.select_objects(source_objects, True)
+        
+        if 0 >= len(bpy.context.selected_objects):
+            print("Problem selecting object for duplication: {}".format(source_object))
+            return
+
+        # --------------------------------------------
+
+        # create a copy of all selected objects and select them
+        bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
+
+        # create a temporary collection for exporting purposes
+        tmp_export_collection = bpy.data.collections.new("TmpExport_" + str(uuid.uuid4().hex))
+        bpy.context.scene.collection.children.link(tmp_export_collection)
+
+        # move duplicates to new collection
+        for obj in bpy.context.selected_objects:
+            for col in obj.users_collection: # unlink from existing collection(s)
+                col.objects.unlink(obj)
+            tmp_export_collection.objects.link(obj) # link to our new collection
+
+        # --------------------------------------------
+
+        # option: revert selection or not
+        # print(" > set selection")
+        if False == select_clones:
+            self.select_objects(cached_selection, False)
+            bpy.context.view_layer.objects.active = cached_active
+        else:
+            self.select_objects(clones_meshes, True)
+
+        return tmp_export_collection
+
+    # De-instanciate a collection instance and remove the parent null objects
+    @classmethod
+    def make_collection_instance_real(self, collection_instance):
+
+        if None == collection_instance.instance_collection:
+            return
+
+        # cache current selection
+        cached_selection = bpy.context.selected_objects
+        cached_active = bpy.context.view_layer.objects.active
+
+        # --------------------------------------------
+
+        # set selection
+        MGTOOLS_functions_macros.select_only(collection_instance)
+
+        # keep parent and hierarchy, we only want to get rid of the instance-state for now
+        bpy.ops.object.duplicates_make_real(
+            use_base_parent=True, use_hierarchy=True)
+
+        # remove all childs from the instance root dummy
+        for child in collection_instance.children:
+            MGTOOLS_functions_helper.set_parent(child, collection_instance.parent, True) # child.parent = collection_instance.parent
+
+        # modify cached selection
+        if collection_instance in cached_selection:
+            cached_selection.remove(collection_instance)
+        if collection_instance is cached_active:
+            cached_active = None
+
+        # remove the root dummy
+        bpy.data.objects.remove(collection_instance)
+        # bpy.ops.object.delete({"selected_objects": [collection_instance]})
+
+        # --------------------------------------------
+
+        # option: revert selection or not
+        # print(" > set selection")
+        # if False == select_clones:
+        self.select_objects(cached_selection, False)
+        bpy.context.view_layer.objects.active = cached_active
+        # else:
+        #     self.select_objects(clones_meshes, True)
+
+        return
 
 
     # Object.Manipulation #######################################################
 
     @classmethod
-    def make_snapshot_from(self, source_objects_raw, merge, prefix, select_clones, type_filter):
+    def make_snapshot_from(self, source_objects_raw, merge, prefix, posfix, select_clones, type_filter):
         if None == source_objects_raw or 0 >= len(source_objects_raw):
             return
 
@@ -124,9 +214,14 @@ class MGTOOLS_functions_macros():
             self.select_only(clone)
             source_object = source_objects[idx]
 
-            # add name prefix
+            # add name pre- and posfix
+            clone.name = source_object.name
+
             if 0 < len(prefix): 
-                clone.name = prefix + source_object.name            
+                clone.name = prefix + clone.name
+
+            if 0 < len(posfix):
+                clone.name = clone.name + posfix
 
             # mesh specific processing
             if 'MESH' == source_object.type:
@@ -208,6 +303,10 @@ class MGTOOLS_functions_macros():
 
     @classmethod
     def set_pivot(self, target_objects, new_loc, new_rot_euler, apply_scale):
+        # checks
+        if None == target_objects or 0 >= len(target_objects):
+            return
+        
         # Prepare -------------------------------------------
         # de-link values so we don't alter the original ones
         new_loc = new_loc.copy()

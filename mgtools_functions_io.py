@@ -10,6 +10,8 @@ class MGTOOLS_functions_io():
 
     @classmethod
     def check_permissions(self, path):
+        if not os.path.exists(path):
+            return True
         return os.access(path, os.W_OK)
 
     @classmethod

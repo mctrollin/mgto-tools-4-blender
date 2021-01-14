@@ -91,6 +91,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_use_mesh_modifiers: BoolProperty(name="Use mesh modifiers", default=True, description="Apply mesh modifiers during export (non-destructive)",)
     p_io_export_merge: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together",)
     p_io_export_name_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all exported meshes",)
+    p_io_export_name_posfix: StringProperty(name='Object name posfix', default="", description="Posfix added to all exported meshes",)
 
 
     # Register ################################################################ 
