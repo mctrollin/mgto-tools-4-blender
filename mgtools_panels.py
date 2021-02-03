@@ -317,6 +317,11 @@ class MGTOOLS_PT_io(Panel):
         row.prop(mgtools_props_scene, "p_io_export_axis_forward", text="",)
         row.label(text="Up")
         row.prop(mgtools_props_scene, "p_io_export_axis_up", text="")
+        row = main_options_box.row()
+        row.label(text="Bone Primary Axis")
+        row.prop(mgtools_props_scene, "p_io_export_primary_bone_axis", text="",)
+        row.label(text="Bone Secondary Axis")
+        row.prop(mgtools_props_scene, "p_io_export_secondary_bone_axis", text="")
         main_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
         
         pivot_options_box = col.box()

@@ -36,6 +36,18 @@ class MGTOOLS_functions_helper():
         else:
             child.parent = new_parent
 
+    @classmethod
+    def set_parent_recursive(self, object, new_parent, keep_transforms):
+        for child in object.children:
+            self.deparent_recursive(child, new_parent)
+        set_parent(object, new_parent, keep_transforms)
+
+    @classmethod
+    def remove_recursive(self, object):
+        for child in object.children:
+            self.remove_recursive(child)
+        bpy.data.objects.remove(object)
+
 
     # Modifier #######################################################
 

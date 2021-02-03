@@ -82,6 +82,32 @@ class MGTOOLS_properties_scene(PropertyGroup):
         default='Y',
         description="Up axis definition when exporting",
         )
+    p_io_export_primary_bone_axis: EnumProperty(
+        name="Primary bone axis",
+        items=(
+            ('X', "X", ""),
+            ('-X', "-X", ""),
+            ('Y', "Y", ""),
+            ('-Y', "-Y", ""),
+            ('Z', "Z", ""),
+            ('-Z', "-Z", ""),
+            ),
+        default='Y',
+        description="Primary bone axis definition when exporting",
+        )
+    p_io_export_secondary_bone_axis: EnumProperty(
+        name="Secondary bone axis",
+        items=(
+            ('X', "X", ""),
+            ('-X', "-X", ""),
+            ('Y', "Y", ""),
+            ('-Y', "-Y", ""),
+            ('Z', "Z", ""),
+            ('-Z', "-Z", ""),
+            ),
+        default='X',
+        description="Secondary bone axis definition when exporting",
+        )
     p_io_export_include_pivot_dummy: BoolProperty(name="Include pivot dummy", default=True, description="Don't export the pivot dummy",)
     p_io_export_include_pivot_dummy_if_required: BoolProperty(name="Include pivot dummy if required", default=True, description="Don't export the pivot dummy if it's not necessary because we only export one single object",)
     p_io_export_set_pivots_to_dummy: BoolProperty(name="Set pivots to dummy", default=True, description="Will set all pivots to the pivot dummy transforms",)

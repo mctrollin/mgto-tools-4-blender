@@ -53,6 +53,12 @@ class MGTOOLS_functions_macros():
 
     @classmethod
     def select_objects(self, ref_objects, set_active):
+
+        try:
+            len(ref_objects)
+        except TypeError:
+            ref_objects = [ref_objects]
+
         if None == ref_objects or 0 >= len(ref_objects):
             return
 
@@ -135,6 +141,10 @@ class MGTOOLS_functions_macros():
         bpy.ops.object.duplicates_make_real(
             use_base_parent=True, use_hierarchy=True)
 
+        # get children
+        childs = []
+        childs.extend(collection_instance.children)
+
         # remove all childs from the instance root dummy
         for child in collection_instance.children:
             MGTOOLS_functions_helper.set_parent(child, collection_instance.parent, True) # child.parent = collection_instance.parent
@@ -159,7 +169,7 @@ class MGTOOLS_functions_macros():
         # else:
         #     self.select_objects(clones_meshes, True)
 
-        return
+        return childs
 
 
     # Object.Manipulation #######################################################

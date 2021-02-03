@@ -25,6 +25,8 @@ class MGTOOLS_OT_export_collections(Operator):
         combine_meshes = mgtools_props_scene.p_io_export_merge
         axis_forward = mgtools_props_scene.p_io_export_axis_forward
         axis_up = mgtools_props_scene.p_io_export_axis_up
+        primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
+        secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
         use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
         export_name_prefix = mgtools_props_scene.p_io_export_name_prefix
         export_name_posfix = mgtools_props_scene.p_io_export_name_posfix
@@ -66,6 +68,8 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter = MGTOOLS_io_exporter(export_folder, filename)
             exporter.axis_forward = axis_forward
             exporter.axis_up = axis_up
+            exporter.primary_bone_axis = primary_bone_axis
+            exporter.secondary_bone_axis = secondary_bone_axis
             exporter.use_mesh_modifiers = use_mesh_modifiers
             exporter.export_from_origin = export_from_origin
             exporter.alter_pivot_rotation = alter_rotation

@@ -15,6 +15,8 @@ class MGTOOLS_io_exporter():
     axis_forward = '-Z'
     axis_up = 'Y'
     use_mesh_modifiers = True
+    primary_bone_axis = 'Y'
+    secondary_bone_axis = 'X'
 
     # selection based options
     to_export_selection = []
@@ -98,8 +100,13 @@ class MGTOOLS_io_exporter():
         if not os.path.exists(path):
             os.mkdir(path)
 
-    def export_now(self, input_objects):
+    def export_now(self, input_objects_raw):
         
+        # copy incoming data into temporary var
+        values = input_objects_raw.values()
+        input_objects = []
+        input_objects.extend(values)
+
         print ("Export now: {}".format(input_objects))
 
         # flags ----------------------------------
@@ -108,6 +115,8 @@ class MGTOOLS_io_exporter():
         # if True == self.combine_meshes:
         #     create_clones = True
         create_clones = True
+        # create a temporary collection and copy all input objects there
+        create_temp_collection = False
 
         # checks ----------------------------------
         if None == input_objects:
@@ -118,18 +127,38 @@ class MGTOOLS_io_exporter():
         # create a temporary collection for exporting purposes
         tmp_export_collection = None
         if True == create_clones:
-            # create temporary collection
-            tmp_export_collection = MGTOOLS_functions_macros.duplicate_to_collection(input_objects, False)
-
-            # make any containted collection instance real
-            collection_objects = []
-            for obj in tmp_export_collection.all_objects:
-                collection_objects.append(obj)
-            for obj in collection_objects:
-                MGTOOLS_functions_macros.make_collection_instance_real(obj)
-            
-            # override to-process list with the new clones
-            input_objects = tmp_export_collection.all_objects
+            if True == create_temp_collection:
+                # create temporary collection (problem with unique names if we don't want ".001" etc. added to our exported objects)
+                tmp_export_collection = MGTOOLS_functions_macros.duplicate_to_collection(input_objects, False)
+                # make any containted collection instance real
+                collection_objects = []
+                for obj in tmp_export_collection.all_objects:
+                    collection_objects.append(obj)
+                for obj in collection_objects:
+                    MGTOOLS_functions_macros.make_collection_instance_real(obj)
+                # override to-process list with the new clones
+                input_objects = tmp_export_collection.all_objects
+            else:
+                ## make collection instances real
+                # collect collection instances
+                input_collection_instances = []
+                for obj in input_objects:
+                    if None != obj.instance_collection:
+                        input_collection_instances.append(obj)
+                # create clones
+                input_collection_instances_clones = []
+                for ic in input_collection_instances:
+                    MGTOOLS_functions_macros.select_objects(ic, True)
+                    bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
+                    if 0 < len(bpy.context.selected_objects):
+                        ic_clone = bpy.context.selected_objects[0]
+                        input_collection_instances_clones.append(ic_clone)
+                # make clones real
+                to_remove_stuff = []
+                for icc in input_collection_instances_clones:
+                    to_remove_stuff.extend(MGTOOLS_functions_macros.make_collection_instance_real(icc))
+                # add to to-process list
+                input_objects.extend(to_remove_stuff)
 
         # filter objects into separate lists and try to find pivot dummy
         input_meshes = []
@@ -291,6 +320,8 @@ class MGTOOLS_io_exporter():
             embed_textures=False, 
             # rig 
             add_leaf_bones=False,
+            primary_bone_axis=self.primary_bone_axis,
+            secondary_bone_axis=self.secondary_bone_axis,
             use_armature_deform_only=False,
             armature_nodetype='NULL', # 'ROOT' gives good results if only exporting an armature
             # anim 
@@ -362,6 +393,10 @@ class MGTOOLS_io_exporter():
                 bpy.data.objects.remove(clone)
             bpy.data.collections.remove(tmp_export_collection)
 
+        if None != to_remove_stuff:
+            for clone in to_remove_stuff:
+                MGTOOLS_functions_helper.remove_recursive(clone) #bpy.data.objects.remove(clone)
+
 
     @classmethod
     def quick_export_anim(self, path, filename, frame_start, frame_end):
@@ -404,6 +439,8 @@ class MGTOOLS_io_exporter():
             embed_textures=False, 
             # rig 
             add_leaf_bones=False,
+            primary_bone_axis=self.primary_bone_axis,
+            secondary_bone_axis=self.secondary_bone_axis,
             use_armature_deform_only=False,
             armature_nodetype='NULL', # 'ROOT' gives good results if only exporting an armature
             # anim 
