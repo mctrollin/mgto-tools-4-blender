@@ -225,13 +225,15 @@ class MGTOOLS_functions_macros():
             source_object = source_objects[idx]
 
             # add name pre- and posfix
-            clone.name = source_object.name
+            new_name = source_object.name
 
             if 0 < len(prefix): 
-                clone.name = prefix + clone.name
+                new_name = prefix + new_name
 
             if 0 < len(posfix):
-                clone.name = clone.name + posfix
+                new_name = new_name + posfix
+
+            clone.name = new_name
 
             # mesh specific processing
             if 'MESH' == source_object.type:
