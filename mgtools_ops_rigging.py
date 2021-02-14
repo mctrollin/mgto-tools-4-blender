@@ -53,8 +53,12 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
 
         # read properties
         mgtools_props_scene = bpy.context.scene.mgtools
-        use_constraints = mgtools_props_scene.p_rigging_add_rotation_constraints_to_cloned_bones
         new_bones_prefix = mgtools_props_scene.p_rigging_bone_name_prefix
+        use_constraints = {
+            "location" : mgtools_props_scene.p_rigging_add_location_constraints_to_cloned_bones,
+            "rotation" : mgtools_props_scene.p_rigging_add_rotation_constraints_to_cloned_bones,
+            "scale" : mgtools_props_scene.p_rigging_add_scale_constraints_to_cloned_bones
+        }
 
         # create root bones ---------------------------
         root_ebone_name = None
@@ -152,8 +156,19 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
 
 
         # copy info from source bone to target bone ----------------------------
-        if True == use_constraints:
+        # location
+        if True == use_constraints["location"]:
+            bconstr = target_pbone.constraints.new('COPY_LOCATION')
+            bconstr.target = source_armature
+            bconstr.subtarget = source_ebone_name
+        # rotation
+        if True == use_constraints["rotation"]:
             bconstr = target_pbone.constraints.new('COPY_ROTATION')
+            bconstr.target = source_armature
+            bconstr.subtarget = source_ebone_name
+        # scale
+        if True == use_constraints["scale"]:
+            bconstr = target_pbone.constraints.new('COPY_SCALE')
             bconstr.target = source_armature
             bconstr.subtarget = source_ebone_name
 

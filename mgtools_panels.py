@@ -37,7 +37,9 @@ class MGTOOLS_PT_rigging(Panel):
                 row.label(text="Bones prefix")
                 row.prop(mgtools_props_scene, 'p_rigging_bone_name_prefix', text="")
                 box.prop(mgtools_props_scene, 'p_rigging_add_root_bone')
+                box.prop(mgtools_props_scene, 'p_rigging_add_location_constraints_to_cloned_bones')
                 box.prop(mgtools_props_scene, 'p_rigging_add_rotation_constraints_to_cloned_bones')
+                box.prop(mgtools_props_scene, 'p_rigging_add_scale_constraints_to_cloned_bones')
                 box.operator('mgtools.rigging_extract_clone_bones', text="Make Bones Snapshot")
 
                 
@@ -464,7 +466,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.1") # check also version in __init__
+        box.label(text="MGTO tools v0.6.2") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2021")
 

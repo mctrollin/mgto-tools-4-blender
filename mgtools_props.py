@@ -17,7 +17,10 @@ class MGTOOLS_properties_scene(PropertyGroup):
 
     p_rigging_bone_name_prefix: StringProperty(name='Bone name prefix', default="", description="Prefix added to all cloned bones",)
     p_rigging_add_root_bone: BoolProperty(name="Add root bone", default=False, description="Add root bone (0,0,0) and link bones without parent to it",)
+    p_rigging_add_location_constraints_to_cloned_bones: BoolProperty(name="Add location constraints", default=False, description="Add to each bone a location constraint referencing the corresponding source bone",)
     p_rigging_add_rotation_constraints_to_cloned_bones: BoolProperty(name="Add rotation constraints", default=False, description="Add to each bone a rotation constraint referencing the corresponding source bone",)
+    p_rigging_add_scale_constraints_to_cloned_bones: BoolProperty(name="Add scale constraints", default=False, description="Add to each bone a scale constraint referencing the corresponding source bone",)
+
 
     p_rigging_constraints_retarget_target_armature: PointerProperty(name="Target", type=bpy.types.Object, description="New constraints target armature. ",)
 
