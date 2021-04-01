@@ -37,6 +37,8 @@ class MGTOOLS_OT_export_collections(Operator):
         include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
         include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
         set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
+        animation_export_strips = mgtools_props_scene.p_io_export_animation_strips
+        animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
 
         # loop through all collections
         for collection in bpy.data.collections:
@@ -82,6 +84,9 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.include_pivot_dummy = include_pivot_dummy
             exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
             exporter.set_pivots_to_dummy = set_pivots_to_dummy
+            exporter.animation_export_strips = animation_export_strips
+            exporter.animation_use_relative_frameranges = animation_use_relative_frameranges
+
 
             # start the export
             exporter.try_export_collection()
@@ -132,13 +137,15 @@ class MGTOOLS_OT_export_animations(Operator):
         # read properties
         mgtools_props_scene = bpy.context.scene.mgtools
 
-        export_folder = mgtools_props_scene.p_io_export_folder_animations
-        actions_source_override = mgtools_props_scene.p_io_export_actions_reference_override
-        use_relative_frameranges = mgtools_props_scene.p_io_export_use_relative_frameranges
+        export_folder = mgtools_props_scene.p_io_export_animation_folder
+        actions_source_override = mgtools_props_scene.p_io_export_animation_actions_reference_override
+        use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
         file_prefix = mgtools_props_scene.p_io_export_animation_file_prefix
 
-        # choose objects to export
+        # choose object to export (make sure there is one selected)
         # objects = bpy.context.selected_objects
+        if None == bpy.context.view_layer.objects.active:
+            return{'CANCELLED'}
 
         # get object which holds animation strips information 
         # Note: (here we are only interested on the frame ranges, not the actual animation data)
@@ -171,6 +178,7 @@ class MGTOOLS_OT_export_animations(Operator):
             print ("  - {} / {}, frame_abs:({} - {}), frame_rel:({} - {})".format(strip.name, strip.action.name, strip.frame_start, strip.frame_end, frame_start, frame_end))
             
             filename = file_prefix + strip.action.name
+            export_folder = bpy.path.abspath(export_folder)
             MGTOOLS_io_exporter.quick_export_anim(export_folder, filename, frame_start, frame_end)
 
         # revert active action
@@ -251,6 +259,6 @@ class MGTOOLS_OT_open_animations_export_folder(Operator):
 
     def execute(self, context):
         mgtools_props_scene = bpy.context.scene.mgtools
-        path = mgtools_props_scene.p_io_export_folder_animations
+        path = mgtools_props_scene.p_io_export_animation_folder
         subprocess.Popen('explorer {path}'.format(path = path))
         return {'FINISHED'}

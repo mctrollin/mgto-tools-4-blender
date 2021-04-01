@@ -28,6 +28,10 @@ class MGTOOLS_io_exporter():
     include_pivot_dummy_if_required = False
     set_pivots_to_dummy = True
 
+    # animation settings
+    animation_export_strips = False
+    animation_use_relative_frameranges = False
+
     # optional settings
     combine_meshes = False
     export_from_origin = False
@@ -37,11 +41,10 @@ class MGTOOLS_io_exporter():
     posfix = ""
 
     def __init__(self, path, filename):
-        self.path = path
-        self.filename = filename
 
         # construct export file path
-        self.path = bpy.path.abspath(self.path)
+        self.path = bpy.path.abspath(path)
+        self.filename = filename
         self.filepath = self.build_filepath(self.path, self.filename)
 
 
@@ -99,6 +102,91 @@ class MGTOOLS_io_exporter():
         print ("Check and prepare directory: " + path)
         if not os.path.exists(path):
             os.mkdir(path)
+
+    def call_fbx_export_now(self):
+        
+        # logging
+        # for clone in to_export_clones:
+        #     print("  > to_export_clone: {}".format(clone.name))
+        print(" > export FBX:  filepath={}, axis_forward={}, axis_up={}, use_mesh_modifiers={},".format(
+            self.filepath, self.axis_forward, self.axis_up, self.use_mesh_modifiers))
+
+        # debug exit ----
+        # return
+        # ----------
+
+        bpy.ops.export_scene.fbx(
+            # os
+            filepath=self.filepath,
+            check_existing=False,
+            # object
+            axis_forward=self.axis_forward,
+            axis_up=self.axis_up,
+            use_selection=True,
+            global_scale=1.0,
+            apply_unit_scale=True,
+            apply_scale_options='FBX_SCALE_ALL',
+            bake_space_transform=False,
+            object_types={'ARMATURE', 'EMPTY', 'MESH'},
+            # mesh
+            use_mesh_modifiers=self.use_mesh_modifiers,
+            # material
+            embed_textures=False,
+            # rig
+            add_leaf_bones=False,
+            primary_bone_axis=self.primary_bone_axis,
+            secondary_bone_axis=self.secondary_bone_axis,
+            use_armature_deform_only=False,
+            armature_nodetype='NULL',  # 'ROOT' gives good results if only exporting an armature
+            # anim
+            bake_anim=True,
+            # Key All Bones, Force exporting at least one key of animation for all bones (needed with some target applications, like UE4)
+            bake_anim_use_all_bones=True,
+            bake_anim_use_nla_strips=False,
+            bake_anim_use_all_actions=False,
+            bake_anim_force_startend_keying=True,
+            bake_anim_step=1.0,
+            bake_anim_simplify_factor=1.0,
+        )
+
+        ###### defaults: #########
+        # filepath="",
+        # check_existing=True,
+        # filter_glob="*.fbx",
+        # ui_tab='MAIN',
+        # use_selection=False,
+        # use_active_collection=False,
+        # global_scale=1.0,
+        # apply_unit_scale=True,
+        # apply_scale_options='FBX_SCALE_NONE',
+        # bake_space_transform=False,
+        # object_types={'ARMATURE', 'CAMERA', 'EMPTY', 'LIGHT', 'MESH', 'OTHER'},
+        # use_mesh_modifiers=True,
+        # use_mesh_modifiers_render=True,
+        # mesh_smooth_type='OFF',
+        # use_mesh_edges=False,
+        # use_tspace=False,
+        # use_custom_props=False,
+        # add_leaf_bones=True,
+        # primary_bone_axis='Y',
+        # secondary_bone_axis='X',
+        # use_armature_deform_only=False,
+        # armature_nodetype='NULL',
+        # bake_anim=True,
+        # bake_anim_use_all_bones=True,
+        # bake_anim_use_nla_strips=True,
+        # bake_anim_use_all_actions=True,
+        # bake_anim_force_startend_keying=True,
+        # bake_anim_step=1.0,
+        # bake_anim_simplify_factor=1.0,
+        # path_mode='AUTO',
+        # embed_textures=False,
+        # batch_mode='OFF',
+        # use_batch_own_dir=True,
+        # use_metadata=True,
+        # axis_forward='-Z',
+        # axis_up='Y'
+        ########################
 
     def export_now(self, input_objects_raw):
         
@@ -213,7 +301,7 @@ class MGTOOLS_io_exporter():
         # option: created throw-away snapshots during export
         # pivot_dummy_clone = None
         input_meshes_clones = None
-        if True == create_clones:
+        if 0 < len(input_meshes) and True == create_clones:
             # create input_pivot_dummy throw-away snapshot
             # if None != input_pivot_dummy:
             #     pivot_dummy_clone = bpy.data.objects.new(self.prefix + input_pivot_dummy.name, None)
@@ -231,6 +319,7 @@ class MGTOOLS_io_exporter():
             input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes, self.combine_meshes, self.prefix, self.posfix, False, None)
             to_export_meshes = input_meshes_clones
             print (" > snapshots created: {}".format(to_export_meshes))
+            
 
             # do a view_layer refresh after creating clones
             bpy.context.view_layer.update()
@@ -291,85 +380,64 @@ class MGTOOLS_io_exporter():
                 to_export_list.append(to_export_pivot_dummy)
         MGTOOLS_functions_macros.select_objects(to_export_list, True)
 
-        # logging
-        # for clone in to_export_clones:
-        #     print("  > to_export_clone: {}".format(clone.name))
-        print(" > export FBX:  filepath={}, axis_forward={}, axis_up={}, use_mesh_modifiers={},".format(
-            self.filepath, self.axis_forward, self.axis_up, self.use_mesh_modifiers))
 
-        # debug exit ----
-        # return
-        # ----------
+        # animations
+        # if requested check if there are animations, set the frame ranges and export every one
 
-        bpy.ops.export_scene.fbx(
-            # os
-            filepath=self.filepath,
-            check_existing=False,
-            # object
-            axis_forward=self.axis_forward,
-            axis_up=self.axis_up,
-            use_selection=True, 
-            global_scale=1.0, 
-            apply_unit_scale=True, 
-            apply_scale_options='FBX_SCALE_ALL', 
-            bake_space_transform=False, 
-            object_types={'ARMATURE', 'EMPTY', 'MESH'}, 
-            # mesh
-            use_mesh_modifiers=self.use_mesh_modifiers,
-            # material
-            embed_textures=False, 
-            # rig 
-            add_leaf_bones=False,
-            primary_bone_axis=self.primary_bone_axis,
-            secondary_bone_axis=self.secondary_bone_axis,
-            use_armature_deform_only=False,
-            armature_nodetype='NULL', # 'ROOT' gives good results if only exporting an armature
-            # anim 
-            bake_anim=True,
-            )
+        # get object which holds animation strips information
+        # Note: (here we are only interested on the frame ranges, not the actual animation data)
+        strips_source = to_export_armatures[0] if 0 < len(to_export_armatures) else None # for now we use the first armature
+        # if None != actions_source_override: # TODO: if this is somehow necessary the property needs to be added (or moved from the obsolete animation batch export)
+        #     strips_source = actions_source_override
 
-        ###### defaults: #########
-        # filepath="", 
-        # check_existing=True, 
-        # filter_glob="*.fbx", 
-        # ui_tab='MAIN', 
-        # use_selection=False, 
-        # use_active_collection=False, 
-        # global_scale=1.0, 
-        # apply_unit_scale=True, 
-        # apply_scale_options='FBX_SCALE_NONE', 
-        # bake_space_transform=False, 
-        # object_types={'ARMATURE', 'CAMERA', 'EMPTY', 'LIGHT', 'MESH', 'OTHER'}, 
-        # use_mesh_modifiers=True, 
-        # use_mesh_modifiers_render=True, 
-        # mesh_smooth_type='OFF', 
-        # use_mesh_edges=False, 
-        # use_tspace=False, 
-        # use_custom_props=False, 
-        # add_leaf_bones=True, 
-        # primary_bone_axis='Y', 
-        # secondary_bone_axis='X', 
-        # use_armature_deform_only=False, 
-        # armature_nodetype='NULL', 
-        # bake_anim=True, 
-        # bake_anim_use_all_bones=True, 
-        # bake_anim_use_nla_strips=True, 
-        # bake_anim_use_all_actions=True, 
-        # bake_anim_force_startend_keying=True, 
-        # bake_anim_step=1.0, 
-        # bake_anim_simplify_factor=1.0, 
-        # path_mode='AUTO', 
-        # embed_textures=False, 
-        # batch_mode='OFF', 
-        # use_batch_own_dir=True, 
-        # use_metadata=True, 
-        # axis_forward='-Z', 
-        # axis_up='Y'
-        ########################
+        # cache active action
+        active_action_cached = strips_source.animation_data.action if None != strips_source else None
+
+        # cache frame range
+        cached_frame_start = bpy.context.scene.frame_start
+        cached_frame_end = bpy.context.scene.frame_end
+
+        strips = MGTOOLS_functions_helper.get_all_animstrips(strips_source)
+        if True == self.animation_export_strips and 0 < len(strips):
+            for strip in strips:
+
+                frame_start = strip.frame_start
+                frame_end = strip.frame_end
+
+                # relative animation range export 
+                if True == self.animation_use_relative_frameranges:
+                    # set active action of 'strips_source' to strip's action
+                    strips_source.animation_data.action = strip.action
+                    # modify start and end frame
+                    frame_start = strips_source.animation_data.action.frame_range[0]
+                    frame_end = strips_source.animation_data.action.frame_range[1]
+
+                # set scene frame range
+                bpy.context.scene.frame_start = frame_start
+                bpy.context.scene.frame_end = frame_end
+
+                print(" > anim export: {} / {}, frame_abs:({} - {}), frame_rel:({} - {})".format(
+                    strip.name, strip.action.name, strip.frame_start, strip.frame_end, frame_start, frame_end))
+
+                # update filename
+                self.filepath = self.build_filepath(
+                    self.path,  self.filename + strip.action.name)
+
+                self.call_fbx_export_now()
+        else:
+            self.call_fbx_export_now()
 
 
 
         # cleanup ------------------------------------
+
+        # revert active action
+        if None != strips_source:
+            strips_source.animation_data.action = active_action_cached
+
+        # revert scene frame range
+        bpy.context.scene.frame_start = cached_frame_start
+        bpy.context.scene.frame_end = cached_frame_end
 
         # revert pivot transforms
         if None != to_export_pivot_dummy:
@@ -395,17 +463,16 @@ class MGTOOLS_io_exporter():
 
         if None != to_remove_stuff:
             for clone in to_remove_stuff:
-                MGTOOLS_functions_helper.remove_recursive(clone) #bpy.data.objects.remove(clone)
-
+                MGTOOLS_functions_helper.remove_recursive(clone)  # bpy.data.objects.remove(clone)
 
     @classmethod
     def quick_export_anim(self, path, filename, frame_start, frame_end):
 
         self.prepare_export(self, path)
         filepath = self.build_filepath(self, path, filename)
-        
+
         if False == MGTOOLS_functions_io.check_permissions(filepath):
-            print (" > Permission denied.")
+            print(" > Permission denied.")
             return
 
         # cache frame range
@@ -419,7 +486,7 @@ class MGTOOLS_io_exporter():
         # export
         print(" > export FBX:  filepath={}, axis_forward={}, axis_up={}, use_mesh_modifiers={},".format(
             filepath, self.axis_forward, self.axis_up, self.use_mesh_modifiers))
-        
+
         bpy.ops.export_scene.fbx(
             # os
             filepath=filepath,
@@ -427,32 +494,32 @@ class MGTOOLS_io_exporter():
             # object
             axis_forward=self.axis_forward,
             axis_up=self.axis_up,
-            use_selection=True, 
-            global_scale=1.0, 
-            apply_unit_scale=True, 
-            apply_scale_options='FBX_SCALE_ALL', 
-            bake_space_transform=False, 
-            object_types={'ARMATURE', 'EMPTY', 'MESH'}, 
+            use_selection=True,
+            global_scale=1.0,
+            apply_unit_scale=True,
+            apply_scale_options='FBX_SCALE_ALL',
+            bake_space_transform=False,
+            object_types={'ARMATURE', 'EMPTY', 'MESH'},
             # mesh
             use_mesh_modifiers=self.use_mesh_modifiers,
             # material
-            embed_textures=False, 
-            # rig 
+            embed_textures=False,
+            # rig
             add_leaf_bones=False,
             primary_bone_axis=self.primary_bone_axis,
             secondary_bone_axis=self.secondary_bone_axis,
             use_armature_deform_only=False,
-            armature_nodetype='NULL', # 'ROOT' gives good results if only exporting an armature
-            # anim 
+            armature_nodetype='NULL',  # 'ROOT' gives good results if only exporting an armature
+            # anim
             bake_anim=True,
-            bake_anim_use_all_bones=True, 
-            bake_anim_use_nla_strips=False, 
-            bake_anim_use_all_actions=False, 
-            bake_anim_force_startend_keying=True, 
-            bake_anim_step=1.0, 
-            bake_anim_simplify_factor=1.0, 
-            )
+            bake_anim_use_all_bones=True,
+            bake_anim_use_nla_strips=False,
+            bake_anim_use_all_actions=False,
+            bake_anim_force_startend_keying=True,
+            bake_anim_step=1.0,
+            bake_anim_simplify_factor=1.0,
+        )
 
-        # revert scene frame range 
+        # revert scene frame range
         bpy.context.scene.frame_start = cached_frame_start
         bpy.context.scene.frame_end = cached_frame_end

@@ -350,7 +350,11 @@ class MGTOOLS_PT_io(Panel):
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
 
-      
+        animation_options_box = col.box()
+        animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_strips",)
+        if True == mgtools_props_scene.p_io_export_animation_strips:
+            animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
+
 
         # selection export -------------------------------------------
         # > path options
@@ -396,13 +400,13 @@ class MGTOOLS_PT_io(Panel):
         # label
         box.label(text="Animations batch export")
         # > settings
-        box.prop(mgtools_props_scene, "p_io_export_actions_reference_override",)
-        box.prop(mgtools_props_scene, "p_io_export_use_relative_frameranges",)
+        box.prop(mgtools_props_scene, "p_io_export_animation_actions_reference_override",)
+        box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
         row = box.row()
         row.label(text="Prefix")
         row.prop(mgtools_props_scene, "p_io_export_animation_file_prefix", text="")
         row = box.row()
-        row.prop(mgtools_props_scene, "p_io_export_folder_animations", text="")
+        row.prop(mgtools_props_scene, "p_io_export_animation_folder", text="")
         row.operator("mgtools.io_open_collections_export_folder", text="", icon='VIEWZOOM')
         # > export
         box.operator('mgtools.io_export_animations', text="Export Animations")
@@ -466,7 +470,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.2") # check also version in __init__
+        box.label(text="MGTO tools v0.6.3") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2021")
 

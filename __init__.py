@@ -16,7 +16,7 @@ bl_info = {
     "author" : "rollin",
     "description" : "Various tools and macros for modelling, skinning, rigging, animation and export",
     "blender" : (2, 80, 0),
-    "version" : (0, 6, 2), # check also version in 'About' panel
+    "version" : (0, 6, 3), # check also version in 'About' panel
     "location" : "View3D Panel",
     "warning" : "Might be unstable",
     "category" : "Generic"
