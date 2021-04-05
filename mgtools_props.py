@@ -44,7 +44,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_folder_collections: StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export", subtype='DIR_PATH',)
     p_io_export_prefix_filter_collection: StringProperty(name='Filter: Collections', default="x_", description="Filter prefix for collections which should be exported",)
     p_io_export_prefix_filter_pivot: StringProperty(name='Filter: Pivot dummy', default="pivot_", description="Filter prefix for pivot dummies",)
-    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix', default="", description="Optional prefix",)
+    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix (static)', default="", description="Optional prefix for static meshes",)
+    p_io_export_filename_prefix_skeletal: StringProperty(name='Filename: Prefix (skeletal)', default="", description="Optional prefix for skeletal meshes",)
     p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
 
     # animation export ---------------------
@@ -120,9 +121,10 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_rotation: FloatVectorProperty(name="Export rotation", default=(0.0, 0.0, 0.0), description="Export object rotation",)
     p_io_export_use_mesh_modifiers: BoolProperty(name="Use mesh modifiers", default=True, description="Apply mesh modifiers during export (non-destructive)",)
     p_io_export_merge: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together",)
-    p_io_export_name_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all exported meshes",)
-    p_io_export_name_posfix: StringProperty(name='Object name posfix', default="", description="Posfix added to all exported meshes",)
+    p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all exported meshes",)
+    p_io_export_objectname_posfix: StringProperty(name='Object name posfix', default="", description="Posfix added to all exported meshes",)
 
+    
 
     # Register ################################################################ 
 

@@ -28,11 +28,12 @@ class MGTOOLS_OT_export_collections(Operator):
         primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
         secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
         use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
-        export_name_prefix = mgtools_props_scene.p_io_export_name_prefix
-        export_name_posfix = mgtools_props_scene.p_io_export_name_posfix
+        export_objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix        
+        export_objectname_posfix = mgtools_props_scene.p_io_export_objectname_posfix
         filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
         filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
         filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
+        filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
         filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
         include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
         include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
@@ -64,10 +65,12 @@ class MGTOOLS_OT_export_collections(Operator):
             filename = collection.name[len(filter_prefix_collection):]
             if True == filename_include_blendfilename:
                 filename = os.path.splitext(bpy.path.basename(bpy.data.filepath))[0] + "_" + filename
-            filename = filename_prefix + filename
+            # filename = filename_prefix + filename # this is now done by the exporter class itself
 
             # create new exporter instance and set it up
             exporter = MGTOOLS_io_exporter(export_folder, filename)
+            exporter.filename_prefix_static = filename_prefix
+            exporter.filename_prefix_skeletal = filename_prefix_skeletal
             exporter.axis_forward = axis_forward
             exporter.axis_up = axis_up
             exporter.primary_bone_axis = primary_bone_axis
@@ -78,8 +81,8 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.pivot_rotation = pivot_rotation
             exporter.combine_meshes = combine_meshes
             exporter.to_export_collection = collection
-            exporter.prefix = export_name_prefix
-            exporter.posfix = export_name_posfix
+            exporter.objectname_prefix = export_objectname_prefix
+            exporter.objectname_posfix = export_objectname_posfix
             exporter.pivot_dummy_prefix = filter_prefix_pivot
             exporter.include_pivot_dummy = include_pivot_dummy
             exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required

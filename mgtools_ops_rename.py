@@ -75,3 +75,21 @@ class MGTOOLS_OT_rename_print_bones(Operator):
             print(out_string)
        
         return{'FINISHED'}
+
+class MGTOOLS_OT_rename_mesh_from_object(Operator):
+    bl_idname = "mgtools.rename_mesh_from_object"
+    bl_label = "Set Mesh name from Object name"
+    bl_description = "For all selected Mesh Objects will copies the name of the mesh object to the mesh data object so both have the same name."
+
+    def execute(self, context):
+        print ("MGTOOLS_OT_rename_print_bones")
+
+        target_objects = bpy.context.selected_objects.copy()
+       
+        if None != target_objects:
+            out_string = ""
+            for target_object in target_objects:
+                if 'MESH' == target_object.type:
+                    target_object.data.name = target_object.name
+       
+        return{'FINISHED'}

@@ -11,6 +11,8 @@ class MGTOOLS_io_exporter():
     # mandatory settings
     path = ""
     filename = ""
+    filename_prefix_static = ""
+    filename_prefix_skeletal = ""
     filepath = ""
     axis_forward = '-Z'
     axis_up = 'Y'
@@ -37,8 +39,8 @@ class MGTOOLS_io_exporter():
     export_from_origin = False
     alter_pivot_rotation = False
     pivot_rotation = (0,0,0)
-    prefix = "to_export__"
-    posfix = ""
+    objectname_prefix = "to_export__"
+    objectname_posfix = ""
 
     def __init__(self, path, filename):
 
@@ -316,7 +318,7 @@ class MGTOOLS_io_exporter():
         
             # create a throw-away snapshot of the object(s) we want to export
             print (" > creating to-export snapshots from {}".format(input_meshes))
-            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes, self.combine_meshes, self.prefix, self.posfix, False, None)
+            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes, self.combine_meshes, self.objectname_prefix, self.objectname_posfix, False, None)
             to_export_meshes = input_meshes_clones
             print (" > snapshots created: {}".format(to_export_meshes))
             
@@ -380,6 +382,9 @@ class MGTOOLS_io_exporter():
                 to_export_list.append(to_export_pivot_dummy)
         MGTOOLS_functions_macros.select_objects(to_export_list, True)
 
+        # update filepath
+        used_filename_prefix = self.filename_prefix_static if 0 >= len(to_export_armatures) else self.filename_prefix_skeletal 
+        self.filepath = self.build_filepath(self.path, used_filename_prefix + self.filename)
 
         # animations
         # if requested check if there are animations, set the frame ranges and export every one
@@ -419,9 +424,8 @@ class MGTOOLS_io_exporter():
                 print(" > anim export: {} / {}, frame_abs:({} - {}), frame_rel:({} - {})".format(
                     strip.name, strip.action.name, strip.frame_start, strip.frame_end, frame_start, frame_end))
 
-                # update filename
-                self.filepath = self.build_filepath(
-                    self.path,  self.filename + strip.action.name)
+                # update filename for animation export
+                self.filepath = self.build_filepath(self.path, self.filename + strip.action.name)
 
                 self.call_fbx_export_now()
         else:
