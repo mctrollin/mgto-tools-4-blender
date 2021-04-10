@@ -13,6 +13,7 @@ class MGTOOLS_io_exporter():
     filename = ""
     filename_prefix_static = ""
     filename_prefix_skeletal = ""
+    filename_prefix_animation = ""
     filepath = ""
     axis_forward = '-Z'
     axis_up = 'Y'
@@ -386,24 +387,24 @@ class MGTOOLS_io_exporter():
         used_filename_prefix = self.filename_prefix_static if 0 >= len(to_export_armatures) else self.filename_prefix_skeletal 
         self.filepath = self.build_filepath(self.path, used_filename_prefix + self.filename)
 
-        # animations
-        # if requested check if there are animations, set the frame ranges and export every one
+        animation_strips_source = None
 
-        # get object which holds animation strips information
-        # Note: (here we are only interested on the frame ranges, not the actual animation data)
-        strips_source = to_export_armatures[0] if 0 < len(to_export_armatures) else None # for now we use the first armature
-        # if None != actions_source_override: # TODO: if this is somehow necessary the property needs to be added (or moved from the obsolete animation batch export)
-        #     strips_source = actions_source_override
-
-        # cache active action
-        active_action_cached = strips_source.animation_data.action if None != strips_source else None
-
-        # cache frame range
+         # cache frame range
         cached_frame_start = bpy.context.scene.frame_start
         cached_frame_end = bpy.context.scene.frame_end
 
-        strips = MGTOOLS_functions_helper.get_all_animstrips(strips_source)
-        if True == self.animation_export_strips and 0 < len(strips):
+        if 'STRIPS' == self.animation_export_mode:
+            # get object which holds animation strips information
+            # Note: (here we are only interested on the frame ranges, not the actual animation data)
+            animation_strips_source = to_export_armatures[0] if 0 < len(to_export_armatures) else None # for now we use the first armature
+            # if None != actions_source_override: # TODO: if this is somehow necessary the property needs to be added (or moved from the obsolete animation batch export)
+            #     animation_strips_source = actions_source_override
+
+            # cache active action
+            active_action_cached = animation_strips_source.animation_data.action if None != animation_strips_source else None
+
+            strips = MGTOOLS_functions_helper.get_all_animstrips(animation_strips_source)
+        
             for strip in strips:
 
                 frame_start = strip.frame_start
@@ -411,11 +412,11 @@ class MGTOOLS_io_exporter():
 
                 # relative animation range export 
                 if True == self.animation_use_relative_frameranges:
-                    # set active action of 'strips_source' to strip's action
-                    strips_source.animation_data.action = strip.action
+                    # set active action of 'animation_strips_source' to strip's action
+                    animation_strips_source.animation_data.action = strip.action
                     # modify start and end frame
-                    frame_start = strips_source.animation_data.action.frame_range[0]
-                    frame_end = strips_source.animation_data.action.frame_range[1]
+                    frame_start = animation_strips_source.animation_data.action.frame_range[0]
+                    frame_end = animation_strips_source.animation_data.action.frame_range[1]
 
                 # set scene frame range
                 bpy.context.scene.frame_start = frame_start
@@ -425,19 +426,66 @@ class MGTOOLS_io_exporter():
                     strip.name, strip.action.name, strip.frame_start, strip.frame_end, frame_start, frame_end))
 
                 # update filename for animation export
-                self.filepath = self.build_filepath(self.path, self.filename + strip.action.name)
+                self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + strip.action.name)
 
                 self.call_fbx_export_now()
+
+        elif 'MARKERS' == self.animation_export_mode:
+            
+            marker_idx = -1
+            animation_name = ''
+            
+            timeline_markers_sorted = bpy.context.scene.timeline_markers.values()
+            timeline_markers_sorted.sort(key=lambda x: x.frame, reverse=False)
+
+            for marker in timeline_markers_sorted:
+                marker_idx += 1
+
+                # start marker of an animation
+                is_start = 0 < len(self.animation_marker_start) and 0 <= marker.name.find(self.animation_marker_start)
+                # end marker of an animation
+                is_end = 0 < len(self.animation_marker_end) and 0 <= marker.name.find(self.animation_marker_end)
+                # very last marker in the scene
+                is_last = len(timeline_markers_sorted) - 1 == marker_idx
+
+                print(" > marker {}: {}, is_start:{}, is_end:{}, is_last:{}, current anim:{}".format(marker_idx, marker.name, is_start, is_end, is_last, animation_name))
+
+                # found start-marker
+                if True == is_start:
+                    # set scene frame start
+                    bpy.context.scene.frame_start = marker.frame
+
+                    animation_name = marker.name.replace(self.animation_marker_start, '')
+
+                # found end-marker (terminator) or if last marker
+                elif True == is_end:
+                    # set scene frame end
+                    bpy.context.scene.frame_end = marker.frame
+                
+                if True == is_last:
+                    # set scene frame end
+                    bpy.context.scene.frame_end = cached_frame_end if cached_frame_end > bpy.context.scene.frame_start else marker.frame
+
+                if True == is_end or True == is_last and 0 < len(animation_name):
+                    print(" > export now {}".format(animation_name))
+
+                    # update filename for animation export
+                    self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + animation_name)
+
+                    self.call_fbx_export_now()
+
+                    # important: reset name
+                    animation_name = ''
+
         else:
             self.call_fbx_export_now()
-
 
 
         # cleanup ------------------------------------
 
         # revert active action
-        if None != strips_source:
-            strips_source.animation_data.action = active_action_cached
+        if None != animation_strips_source:
+            animation_strips_source.animation_data.action = active_action_cached
 
         # revert scene frame range
         bpy.context.scene.frame_start = cached_frame_start

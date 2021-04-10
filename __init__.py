@@ -13,10 +13,10 @@
 
 bl_info = {
     "name" : "mgto_tools_blender",
-    "author" : "rollin",
+    "author" : "Till 'rollin' Maginot",
     "description" : "Various tools and macros for modelling, skinning, rigging, animation and export",
     "blender" : (2, 80, 0),
-    "version" : (0, 6, 3), # check also version in 'About' panel
+    "version" : (0, 6, 4), # check also version in 'About' panel
     "location" : "View3D Panel",
     "warning" : "Might be unstable",
     "category" : "Generic"

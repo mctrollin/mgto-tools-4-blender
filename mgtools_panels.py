@@ -325,9 +325,10 @@ class MGTOOLS_PT_io(Panel):
         row.prop(mgtools_props_scene, "p_io_export_primary_bone_axis", text="",)
         row.label(text="Bone Secondary Axis")
         row.prop(mgtools_props_scene, "p_io_export_secondary_bone_axis", text="")
-        main_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
+        
         
         pivot_options_box = col.box()
+        pivot_options_box.label(text="Pivot")
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy",)
         if True == mgtools_props_scene.p_io_export_include_pivot_dummy:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy_if_required",)
@@ -336,38 +337,42 @@ class MGTOOLS_PT_io(Panel):
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_alter_rotation",)
         if True == mgtools_props_scene.p_io_export_alter_rotation:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_rotation",)
-        
-        merge_options_box = col.box()
-        merge_options_box.prop(mgtools_props_scene, "p_io_export_merge",)
-        # if True == mgtools_props_scene.p_io_export_merge:
-        #     row = merge_options_box.row()
 
-        naming_options_box = col.box()
-        row = naming_options_box.row()
-        row.label(text="Pre / Posfix")
-        row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="")
-        row.prop(mgtools_props_scene, "p_io_export_objectname_posfix", text="")
+        mesh_options_box = col.box()
+        mesh_options_box.label(text="Mesh")
+        mesh_options_box.prop(mgtools_props_scene, "p_io_export_merge",)
+        mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
+        row = mesh_options_box.row()
+        row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
+        row.prop(mgtools_props_scene, "p_io_export_objectname_posfix", text="Pos")
 
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
 
+        # animation options -------------------------------------------
         animation_options_box = col.box()
-        animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_strips",)
-        if True == mgtools_props_scene.p_io_export_animation_strips:
+        animation_options_box.label(text="Animation")
+        animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_mode", text="Mode")
+        if 'STRIPS' == mgtools_props_scene.p_io_export_animation_mode:
             animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
+        if 'MARKERS' == mgtools_props_scene.p_io_export_animation_mode:
+            animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_marker_start", text="Start")
+            animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_marker_end", text="End")
 
-
-        # selection export -------------------------------------------
-        # > path options
+        # filename options -------------------------------------------
         box = col.box()
-        # label
-        box.label(text="Selection export")
-        # > path options
+        box.label(text="File name")
         row = box.row()
-        row.prop(mgtools_props_scene, "p_io_export_filepath", text="")
-        row.operator("mgtools.io_open_selection_export_folder", text="", icon='VIEWZOOM')
-        # > export
-        box.operator('mgtools.io_export_selection', text="Export Selection")
+        row.label(text="Prefix Static")
+        row.prop(mgtools_props_scene, "p_io_export_filename_prefix", text="")
+        row = box.row()
+        row.label(text="Prefix Skeletal")
+        row.prop(mgtools_props_scene, "p_io_export_filename_prefix_skeletal", text="")
+        row = box.row()
+        row.label(text="Prefix Animation")
+        row.prop(mgtools_props_scene, "p_io_export_filename_prefix_animation", text="")
+        row = box.row()
+        row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename")
 
 
         # collection (batch-) export -------------------------------------------
@@ -382,15 +387,7 @@ class MGTOOLS_PT_io(Panel):
         row = box.row()
         row.label(text="Filter: Pivots")
         row.prop(mgtools_props_scene, "p_io_export_prefix_filter_pivot", text="")
-        # > export file name options
-        row = box.row()
-        row.label(text="File Prefix")
-        row.prop(mgtools_props_scene, "p_io_export_filename_prefix", text="")
-        row = box.row()
-        row.label(text="File Prefix Skeletal")
-        row.prop(mgtools_props_scene, "p_io_export_filename_prefix_skeletal", text="")
-        row = box.row()
-        row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename")
+       
         # > path options
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_folder_collections", text="")
@@ -398,22 +395,33 @@ class MGTOOLS_PT_io(Panel):
         # > export
         box.operator('mgtools.io_export_collections', text="Export Collections")
 
-
-        # animations (batch-) export -------------------------------------------
+        # selection export -------------------------------------------
+        # > path options
         box = col.box()
         # label
-        box.label(text="Animations batch export")
-        # > settings
-        box.prop(mgtools_props_scene, "p_io_export_animation_actions_reference_override",)
-        box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
+        box.label(text="Selection export")
+        # > path options
         row = box.row()
-        row.label(text="Prefix")
-        row.prop(mgtools_props_scene, "p_io_export_animation_file_prefix", text="")
-        row = box.row()
-        row.prop(mgtools_props_scene, "p_io_export_animation_folder", text="")
-        row.operator("mgtools.io_open_collections_export_folder", text="", icon='VIEWZOOM')
+        row.prop(mgtools_props_scene, "p_io_export_filepath", text="")
+        row.operator("mgtools.io_open_selection_export_folder", text="", icon='VIEWZOOM')
         # > export
-        box.operator('mgtools.io_export_animations', text="Export Animations")
+        box.operator('mgtools.io_export_selection', text="Export Selection")
+
+        # animations (batch-) export -------------------------------------------
+        # box = col.box()
+        # # label
+        # box.label(text="Animations batch export")
+        # # > settings
+        # box.prop(mgtools_props_scene, "p_io_export_animation_actions_reference_override",)
+        # box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
+        # row = box.row()
+        # row.label(text="Prefix")
+        # row.prop(mgtools_props_scene, "p_io_export_animation_file_prefix", text="")
+        # row = box.row()
+        # row.prop(mgtools_props_scene, "p_io_export_animation_folder", text="")
+        # row.operator("mgtools.io_open_collections_export_folder", text="", icon='VIEWZOOM')
+        # # > export
+        # box.operator('mgtools.io_export_animations', text="Export Animations")
 
 
         # hitboxes (batch-) export -------------------------------------------
@@ -474,7 +482,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.3") # check also version in __init__
+        box.label(text="MGTO tools v0.6.4") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2021")
 

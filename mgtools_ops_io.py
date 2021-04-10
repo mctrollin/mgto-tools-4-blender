@@ -34,19 +34,23 @@ class MGTOOLS_OT_export_collections(Operator):
         filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
         filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
         filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
+        filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
         filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
         include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
         include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
         set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
-        animation_export_strips = mgtools_props_scene.p_io_export_animation_strips
+        # anim
+        animation_export_mode = mgtools_props_scene.p_io_export_animation_mode
         animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
+        animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
+        animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
 
         # loop through all collections
         for collection in bpy.data.collections:
             print("Processing collection: " + collection.name)
             
             # filter only collections which should be exported
-            if False == collection.name.startswith(filter_prefix_collection) or len(collection.name) <= len(filter_prefix_collection):
+            if False == collection.name.startswith(filter_prefix_collection) or len(collection.name) < len(filter_prefix_collection):
                 print (" > Skipping: not tagged for export with '{}'".format(filter_prefix_collection))
                 continue
 
@@ -71,6 +75,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter = MGTOOLS_io_exporter(export_folder, filename)
             exporter.filename_prefix_static = filename_prefix
             exporter.filename_prefix_skeletal = filename_prefix_skeletal
+            exporter.filename_prefix_animation = filename_prefix_animation
             exporter.axis_forward = axis_forward
             exporter.axis_up = axis_up
             exporter.primary_bone_axis = primary_bone_axis
@@ -87,8 +92,11 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.include_pivot_dummy = include_pivot_dummy
             exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
             exporter.set_pivots_to_dummy = set_pivots_to_dummy
-            exporter.animation_export_strips = animation_export_strips
+            # anim
+            exporter.animation_export_mode = animation_export_mode
             exporter.animation_use_relative_frameranges = animation_use_relative_frameranges
+            exporter.animation_marker_start = animation_marker_start
+            exporter.animation_marker_end = animation_marker_end
 
 
             # start the export
