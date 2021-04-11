@@ -37,42 +37,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
 
     # Properties.IO ################################################################ 
 
-    # selection export ---------------------
-    p_io_export_filepath: StringProperty(name='Export file', default="", description="Export file for selection export", subtype='FILE_PATH',)
-   
-    # collection export ---------------------
-    p_io_export_folder_collections: StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export", subtype='DIR_PATH',)
-    p_io_export_prefix_filter_collection: StringProperty(name='Filter: Collections', default="x_", description="Filter prefix for collections which should be exported",)
-    p_io_export_prefix_filter_pivot: StringProperty(name='Filter: Pivot dummy', default="pivot_", description="Filter prefix for pivot dummies",)
-    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix (static)', default="", description="Optional filename prefix for static meshes",)
-    p_io_export_filename_prefix_skeletal: StringProperty(name='Filename: Prefix (skeletal)', default="", description="Optional filename prefix for skeletal meshes",)
-    p_io_export_filename_prefix_animation: StringProperty(name='Filename: Prefix (animation)', default="", description="Optional filename prefix for animations",)
-    p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
-
-    # animation export ---------------------
-    p_io_export_animation_folder: StringProperty(name='Animations export folder', default="", description="Export folder path for animations bath export", subtype='DIR_PATH',)
-    p_io_export_animation_actions_reference_override: PointerProperty(name="Action reference override", type=bpy.types.Object, description="Used as reference for action meta data. If not set the active object will be used.",)
-    p_io_export_animation_use_relative_frameranges: BoolProperty(name="Use relative frame ranges", default=True, description="Exported frame numbers will be relative to the exported action and not absolute to scene.",)
-    p_io_export_animation_file_prefix: StringProperty(name='Animation file prefix', default="@", description="Prefix added to all exported animation files",)
-
-    p_io_export_animation_mode: EnumProperty(
-        name="Framerange mode",
-        items=(
-            ('OFF', 'OFF', ''),
-            ('STRIPS', 'STRIPS', ''),
-            ('MARKERS', 'MARKERS', ''),
-            ),
-        default='OFF',
-        description="Mode for finding animation frame ranges for exporting",
-        )
-    p_io_export_animation_marker_start: StringProperty(name='Filter: Marker Start', default="x_", description="Filter string for to-export frame range start marker",)
-    p_io_export_animation_marker_end: StringProperty(name='Filter: Marker End', default="_END", description="Filter string for to-export frame range end marker",)
-
-    # hitboxes export ---------------------
-    p_io_export_prefix_filter_collection_hitboxes: StringProperty(name='Filter: Collections', default="h_", description="Filter prefix for collections containing hitboxes data",)
-
-
-    # shared settings ---------------------
+    # axis
     p_io_export_axis_forward: EnumProperty(
         name="Export forward axis",
         items=(
@@ -125,18 +90,61 @@ class MGTOOLS_properties_scene(PropertyGroup):
         default='X',
         description="Secondary bone axis definition when exporting",
         )
+    
+    # pivot
+    p_io_export_prefix_filter_pivot: StringProperty(name='Filter: Pivot dummy', default="pivot_", description="Filter prefix for pivot dummies",)
     p_io_export_include_pivot_dummy: BoolProperty(name="Include pivot dummy", default=True, description="Don't export the pivot dummy",)
     p_io_export_include_pivot_dummy_if_required: BoolProperty(name="Include pivot dummy if required", default=True, description="Don't export the pivot dummy if it's not necessary because we only export one single object",)
     p_io_export_set_pivots_to_dummy: BoolProperty(name="Set pivots to dummy", default=True, description="Will set all pivots to the pivot dummy transforms",)
     p_io_export_from_origin: BoolProperty(name="Move to origin", default=True, description="Export object from world origin",)
     p_io_export_alter_rotation: BoolProperty(name="Alter rotation", default=False, description="Change the rotation before exporting (and revert it afterwards)",)
     p_io_export_rotation: FloatVectorProperty(name="Export rotation", default=(0.0, 0.0, 0.0), description="Export object rotation",)
+    
+    # mesh
     p_io_export_use_mesh_modifiers: BoolProperty(name="Use mesh modifiers", default=True, description="Apply mesh modifiers during export (non-destructive)",)
     p_io_export_merge: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together",)
     p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all exported meshes",)
     p_io_export_objectname_posfix: StringProperty(name='Object name posfix', default="", description="Posfix added to all exported meshes",)
 
-    
+    # filename
+    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix (static)', default="", description="Optional filename prefix for static meshes",)
+    p_io_export_filename_prefix_skeletal: StringProperty(name='Filename: Prefix (skeletal)', default="", description="Optional filename prefix for skeletal meshes",)
+    p_io_export_filename_prefix_animation: StringProperty(name='Filename: Prefix (animation)', default="", description="Optional filename prefix for animations",)
+    p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
+
+    # armature
+    p_io_export_armature_rename: StringProperty(name='Armature temp export name', default="", description="Allows to rename the primary armature during export. Will be reverted afterwards.",)
+
+    # animation
+    p_io_export_animation_use_relative_frameranges: BoolProperty(name="Use relative frame ranges", default=True, description="Exported frame numbers will be relative to the exported action and not absolute to scene.",)
+    p_io_export_animation_mode: EnumProperty(
+        name="Framerange mode",
+        items=(
+            ('OFF', 'OFF', ''),
+            ('STRIPS', 'STRIPS', ''),
+            ('MARKERS', 'MARKERS', ''),
+            ),
+        default='OFF',
+        description="Mode for finding animation frame ranges for exporting",
+        )
+    p_io_export_animation_marker_start: StringProperty(name='Filter: Marker Start', default="x_", description="Filter string for to-export frame range start marker",)
+    p_io_export_animation_marker_end: StringProperty(name='Filter: Marker End', default="_END", description="Filter string for to-export frame range end marker",)
+
+
+    # selection export ---------------------
+    p_io_export_filepath: StringProperty(name='Export file', default="", description="Export file for selection export", subtype='FILE_PATH',)
+   
+    # collection export ---------------------
+    p_io_export_folder_collections: StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export", subtype='DIR_PATH',)
+    p_io_export_prefix_filter_collection: StringProperty(name='Filter: Collections', default="x_", description="Filter prefix for collections which should be exported",)
+
+    # animation export (legacy) ---------------------
+    p_io_export_animation_folder: StringProperty(name='Animations export folder', default="", description="Export folder path for animations bath export", subtype='DIR_PATH',)
+    p_io_export_animation_actions_reference_override: PointerProperty(name="Action reference override", type=bpy.types.Object, description="Used as reference for action meta data. If not set the active object will be used.",)
+
+    # hitboxes export ---------------------
+    p_io_export_prefix_filter_collection_hitboxes: StringProperty(name='Filter: Collections', default="h_", description="Filter prefix for collections containing hitboxes data",)
+
 
     # Register ################################################################ 
 

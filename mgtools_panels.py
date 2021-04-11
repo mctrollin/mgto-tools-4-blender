@@ -313,7 +313,7 @@ class MGTOOLS_PT_io(Panel):
 
         mgtools_props_scene = bpy.context.scene.mgtools
 
-        # main options
+        # main options -------------------------------------------
         main_options_box = col.box()
         row = main_options_box.row()
         row.label(text="Forward")
@@ -326,9 +326,12 @@ class MGTOOLS_PT_io(Panel):
         row.label(text="Bone Secondary Axis")
         row.prop(mgtools_props_scene, "p_io_export_secondary_bone_axis", text="")
         
-        
+        # pivot options -------------------------------------------
         pivot_options_box = col.box()
         pivot_options_box.label(text="Pivot")
+        row = pivot_options_box.row()
+        row.label(text="Filter:")
+        row.prop(mgtools_props_scene, "p_io_export_prefix_filter_pivot", text="")
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy",)
         if True == mgtools_props_scene.p_io_export_include_pivot_dummy:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy_if_required",)
@@ -338,6 +341,7 @@ class MGTOOLS_PT_io(Panel):
         if True == mgtools_props_scene.p_io_export_alter_rotation:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_rotation",)
 
+        # mesh options -------------------------------------------
         mesh_options_box = col.box()
         mesh_options_box.label(text="Mesh")
         mesh_options_box.prop(mgtools_props_scene, "p_io_export_merge",)
@@ -348,6 +352,13 @@ class MGTOOLS_PT_io(Panel):
 
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
+
+        # armature options -------------------------------------------
+        armature_options_box = col.box()
+        armature_options_box.label(text="Armature")
+        row = armature_options_box.row()
+        row.label(text="Rename:")
+        row.prop(mgtools_props_scene, "p_io_export_armature_rename", text="")
 
         # animation options -------------------------------------------
         animation_options_box = col.box()
@@ -363,13 +374,13 @@ class MGTOOLS_PT_io(Panel):
         box = col.box()
         box.label(text="File name")
         row = box.row()
-        row.label(text="Prefix Static")
+        row.label(text="Prefix Static:")
         row.prop(mgtools_props_scene, "p_io_export_filename_prefix", text="")
         row = box.row()
-        row.label(text="Prefix Skeletal")
+        row.label(text="Prefix Skeletal:")
         row.prop(mgtools_props_scene, "p_io_export_filename_prefix_skeletal", text="")
         row = box.row()
-        row.label(text="Prefix Animation")
+        row.label(text="Prefix Animation:")
         row.prop(mgtools_props_scene, "p_io_export_filename_prefix_animation", text="")
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename")
@@ -382,11 +393,9 @@ class MGTOOLS_PT_io(Panel):
         box.label(text="Collections batch export")
         # > filter
         row = box.row()
-        row.label(text="Filter: Collections")
+        row.label(text="Filter:")
         row.prop(mgtools_props_scene, "p_io_export_prefix_filter_collection", text="")
-        row = box.row()
-        row.label(text="Filter: Pivots")
-        row.prop(mgtools_props_scene, "p_io_export_prefix_filter_pivot", text="")
+        
        
         # > path options
         row = box.row()
@@ -416,7 +425,7 @@ class MGTOOLS_PT_io(Panel):
         # box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
         # row = box.row()
         # row.label(text="Prefix")
-        # row.prop(mgtools_props_scene, "p_io_export_animation_file_prefix", text="")
+        # row.prop(mgtools_props_scene, "p_io_export_filename_prefix_animation", text="")
         # row = box.row()
         # row.prop(mgtools_props_scene, "p_io_export_animation_folder", text="")
         # row.operator("mgtools.io_open_collections_export_folder", text="", icon='VIEWZOOM')

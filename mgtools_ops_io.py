@@ -15,9 +15,14 @@ class MGTOOLS_OT_export_collections(Operator):
     bl_description = ""
 
     def execute(self, context):
-        # read properties
+        # read properties -----------------------------------
         mgtools_props_scene = bpy.context.scene.mgtools
         
+        filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
+        filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
+        filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
+        filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
+
         export_folder = mgtools_props_scene.p_io_export_folder_collections
         export_from_origin = mgtools_props_scene.p_io_export_from_origin
         alter_rotation = mgtools_props_scene.p_io_export_alter_rotation
@@ -32,20 +37,17 @@ class MGTOOLS_OT_export_collections(Operator):
         export_objectname_posfix = mgtools_props_scene.p_io_export_objectname_posfix
         filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
         filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
-        filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
-        filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
-        filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
-        filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
         include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
         include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
         set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
+        armature_primary_rename = mgtools_props_scene.p_io_export_armature_rename
         # anim
         animation_export_mode = mgtools_props_scene.p_io_export_animation_mode
         animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
         animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
         animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
 
-        # loop through all collections
+        # loop through all collections -----------------------------------
         for collection in bpy.data.collections:
             print("Processing collection: " + collection.name)
             
@@ -64,6 +66,8 @@ class MGTOOLS_OT_export_collections(Operator):
             if True == layercollection.hide_viewport:
                 print (" > Skipping: collection is hidden in ViewLayer viewport")
                 continue
+            
+            # prepare -----------------------------------
 
             # prepare filename
             filename = collection.name[len(filter_prefix_collection):]
@@ -71,7 +75,7 @@ class MGTOOLS_OT_export_collections(Operator):
                 filename = os.path.splitext(bpy.path.basename(bpy.data.filepath))[0] + "_" + filename
             # filename = filename_prefix + filename # this is now done by the exporter class itself
 
-            # create new exporter instance and set it up
+            # create new exporter instance and set it up -----------------------------------
             exporter = MGTOOLS_io_exporter(export_folder, filename)
             exporter.filename_prefix_static = filename_prefix
             exporter.filename_prefix_skeletal = filename_prefix_skeletal
@@ -85,21 +89,21 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.alter_pivot_rotation = alter_rotation
             exporter.pivot_rotation = pivot_rotation
             exporter.combine_meshes = combine_meshes
-            exporter.to_export_collection = collection
             exporter.objectname_prefix = export_objectname_prefix
             exporter.objectname_posfix = export_objectname_posfix
             exporter.pivot_dummy_prefix = filter_prefix_pivot
             exporter.include_pivot_dummy = include_pivot_dummy
             exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
             exporter.set_pivots_to_dummy = set_pivots_to_dummy
+            exporter.armature_primary_rename = armature_primary_rename
             # anim
             exporter.animation_export_mode = animation_export_mode
             exporter.animation_use_relative_frameranges = animation_use_relative_frameranges
             exporter.animation_marker_start = animation_marker_start
             exporter.animation_marker_end = animation_marker_end
 
-
-            # start the export
+            # start the export -----------------------------------
+            exporter.to_export_collection = collection
             exporter.try_export_collection()
 
         return{'FINISHED'}
@@ -110,31 +114,77 @@ class MGTOOLS_OT_export_selection(Operator):
     bl_description = ""
 
     def execute(self, context):
-        # read properties
+        # read properties -----------------------------------
         mgtools_props_scene = bpy.context.scene.mgtools
 
-        export_filepath = mgtools_props_scene.p_io_export_filepath
-        export_folder = os.path.dirname(export_filepath)
-        filename = os.path.splitext(os.path.basename(export_filepath))[0]
+        filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
+        filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
+        filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
+        filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
+
+        export_folder = mgtools_props_scene.p_io_export_folder_collections
         export_from_origin = mgtools_props_scene.p_io_export_from_origin
         alter_rotation = mgtools_props_scene.p_io_export_alter_rotation
         pivot_rotation = mgtools_props_scene.p_io_export_rotation
         combine_meshes = mgtools_props_scene.p_io_export_merge
+        axis_forward = mgtools_props_scene.p_io_export_axis_forward
+        axis_up = mgtools_props_scene.p_io_export_axis_up
+        primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
+        secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
+        use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
+        export_objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix        
+        export_objectname_posfix = mgtools_props_scene.p_io_export_objectname_posfix
+        filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
         filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
+        include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
+        include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
+        set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
+        armature_primary_rename = mgtools_props_scene.p_io_export_armature_rename
+        # anim
+        animation_export_mode = mgtools_props_scene.p_io_export_animation_mode
+        animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
+        animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
+        animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
+
+        # prepare -----------------------------------
 
         # choose objects to export
         objects = bpy.context.selected_objects
 
-        # create new exporter instance and set it up
+        # prepare filename
+        export_filepath = mgtools_props_scene.p_io_export_filepath
+        export_folder = os.path.dirname(export_filepath)
+        filename = os.path.splitext(os.path.basename(export_filepath))[0]
+
+        # create new exporter instance and set it up -----------------------------------
         exporter = MGTOOLS_io_exporter(export_folder, filename)
-        exporter.to_export_selection = objects
+        exporter.filename_prefix_static = '' # this is skipped for a manual export
+        exporter.filename_prefix_skeletal = '' # this is skipped for a manual export
+        exporter.filename_prefix_animation = filename_prefix_animation
+        exporter.axis_forward = axis_forward
+        exporter.axis_up = axis_up
+        exporter.primary_bone_axis = primary_bone_axis
+        exporter.secondary_bone_axis = secondary_bone_axis
+        exporter.use_mesh_modifiers = use_mesh_modifiers
         exporter.export_from_origin = export_from_origin
         exporter.alter_pivot_rotation = alter_rotation
         exporter.pivot_rotation = pivot_rotation
         exporter.combine_meshes = combine_meshes
+        exporter.objectname_prefix = export_objectname_prefix
+        exporter.objectname_posfix = export_objectname_posfix
         exporter.pivot_dummy_prefix = filter_prefix_pivot
+        exporter.include_pivot_dummy = include_pivot_dummy
+        exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
+        exporter.set_pivots_to_dummy = set_pivots_to_dummy
+        exporter.armature_primary_rename = armature_primary_rename
+        # anim
+        exporter.animation_export_mode = animation_export_mode
+        exporter.animation_use_relative_frameranges = animation_use_relative_frameranges
+        exporter.animation_marker_start = animation_marker_start
+        exporter.animation_marker_end = animation_marker_end
 
-        # start the export
+        # start the export -----------------------------------
+        exporter.to_export_selection = objects
         exporter.try_export_selection()
 
         return{'FINISHED'}
@@ -151,7 +201,7 @@ class MGTOOLS_OT_export_animations(Operator):
         export_folder = mgtools_props_scene.p_io_export_animation_folder
         actions_source_override = mgtools_props_scene.p_io_export_animation_actions_reference_override
         use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
-        file_prefix = mgtools_props_scene.p_io_export_animation_file_prefix
+        file_prefix = mgtools_props_scene.p_io_export_filename_prefix_animation
 
         # choose object to export (make sure there is one selected)
         # objects = bpy.context.selected_objects

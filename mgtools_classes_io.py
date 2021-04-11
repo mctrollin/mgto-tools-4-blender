@@ -8,18 +8,42 @@ from . mgtools_functions_io import MGTOOLS_functions_io
 
 class MGTOOLS_io_exporter():
 
-    # mandatory settings
+    # filename
     path = ""
     filename = ""
     filename_prefix_static = ""
     filename_prefix_skeletal = ""
     filename_prefix_animation = ""
     filepath = ""
+
+    # axis
     axis_forward = '-Z'
     axis_up = 'Y'
-    use_mesh_modifiers = True
     primary_bone_axis = 'Y'
     secondary_bone_axis = 'X'
+
+    # pivot
+    include_pivot_dummy = True
+    include_pivot_dummy_if_required = False
+    set_pivots_to_dummy = True
+    export_from_origin = False
+    alter_pivot_rotation = False
+    pivot_rotation = (0,0,0)
+
+    # mesh
+    use_mesh_modifiers = True
+    combine_meshes = False
+    objectname_prefix = "to_export__"
+    objectname_posfix = ""
+
+    # armature
+    armature_primary_rename = ''
+
+    # animation settings
+    animation_export_mode = ''
+    animation_use_relative_frameranges = False
+    animation_marker_start = ''
+    animation_marker_end = ''
 
     # selection based options
     to_export_selection = []
@@ -27,21 +51,7 @@ class MGTOOLS_io_exporter():
     # collection based options
     to_export_collection = None
     pivot_dummy_prefix = ""
-    include_pivot_dummy = True
-    include_pivot_dummy_if_required = False
-    set_pivots_to_dummy = True
 
-    # animation settings
-    animation_export_strips = False
-    animation_use_relative_frameranges = False
-
-    # optional settings
-    combine_meshes = False
-    export_from_origin = False
-    alter_pivot_rotation = False
-    pivot_rotation = (0,0,0)
-    objectname_prefix = "to_export__"
-    objectname_posfix = ""
 
     def __init__(self, path, filename):
 
@@ -68,7 +78,7 @@ class MGTOOLS_io_exporter():
             print(" > Permission denied.")
             return
 
-        self.export_now(self.to_export_selection)
+        self.process_export(self.to_export_selection)
 
         print(" > Export (selection) finished for " + self.filepath)
 
@@ -93,7 +103,7 @@ class MGTOOLS_io_exporter():
             print(" > Permission denied.")
             return
 
-        self.export_now(self.to_export_collection.all_objects)
+        self.process_export(self.to_export_collection.all_objects.values())
 
         print(" > Export (collection) finished for " + self.filepath)
 
@@ -106,7 +116,7 @@ class MGTOOLS_io_exporter():
         if not os.path.exists(path):
             os.mkdir(path)
 
-    def call_fbx_export_now(self):
+    def call_fbx_export(self):
         
         # logging
         # for clone in to_export_clones:
@@ -191,10 +201,10 @@ class MGTOOLS_io_exporter():
         # axis_up='Y'
         ########################
 
-    def export_now(self, input_objects_raw):
+    def process_export(self, input_objects_raw):
         
         # copy incoming data into temporary var
-        values = input_objects_raw.values()
+        values = list(input_objects_raw)
         input_objects = []
         input_objects.extend(values)
 
@@ -387,9 +397,21 @@ class MGTOOLS_io_exporter():
         used_filename_prefix = self.filename_prefix_static if 0 >= len(to_export_armatures) else self.filename_prefix_skeletal 
         self.filepath = self.build_filepath(self.path, used_filename_prefix + self.filename)
 
+        # armature features
+        armature_primary = None
+        armature_primary_name_cached = ''
+        if 0 < len(to_export_armatures):
+            # we take the first armature in the list atm
+            armature_primary = to_export_armatures[0]
+            armature_primary_name_cached = armature_primary.name
+            # rename armatures
+            if '' != self.armature_primary_rename:
+                armature_primary.name = self.armature_primary_rename
+
+        # prepare anim related vars
         animation_strips_source = None
 
-         # cache frame range
+        # cache frame range
         cached_frame_start = bpy.context.scene.frame_start
         cached_frame_end = bpy.context.scene.frame_end
 
@@ -428,7 +450,7 @@ class MGTOOLS_io_exporter():
                 # update filename for animation export
                 self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + strip.action.name)
 
-                self.call_fbx_export_now()
+                self.call_fbx_export()
 
         elif 'MARKERS' == self.animation_export_mode:
             
@@ -472,16 +494,20 @@ class MGTOOLS_io_exporter():
                     # update filename for animation export
                     self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + animation_name)
 
-                    self.call_fbx_export_now()
+                    self.call_fbx_export()
 
                     # important: reset name
                     animation_name = ''
 
         else:
-            self.call_fbx_export_now()
+            self.call_fbx_export()
 
 
         # cleanup ------------------------------------
+
+        # revert armature name
+        if None != armature_primary:
+            armature_primary.name = armature_primary_name_cached
 
         # revert active action
         if None != animation_strips_source:
