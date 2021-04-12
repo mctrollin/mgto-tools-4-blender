@@ -450,7 +450,7 @@ class MGTOOLS_io_exporter():
                 # update filename for animation export
                 self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + strip.action.name)
 
-                self.call_fbx_export()
+                self.call_fbx_export() # < ============== EXPORT
 
         elif 'MARKERS' == self.animation_export_mode:
             
@@ -472,35 +472,36 @@ class MGTOOLS_io_exporter():
 
                 print(" > marker {}: {}, is_start:{}, is_end:{}, is_last:{}, current anim:{}".format(marker_idx, marker.name, is_start, is_end, is_last, animation_name))
 
-                # found start-marker
-                if True == is_start:
-                    # set scene frame start
-                    bpy.context.scene.frame_start = marker.frame
-
-                    animation_name = marker.name.replace(self.animation_marker_start, '')
-
-                # found end-marker (terminator) or if last marker
-                elif True == is_end:
-                    # set scene frame end
-                    bpy.context.scene.frame_end = marker.frame
-                
+                # set end frame
                 if True == is_last:
                     # set scene frame end
                     bpy.context.scene.frame_end = cached_frame_end if cached_frame_end > bpy.context.scene.frame_start else marker.frame
 
-                if True == is_end or True == is_last and 0 < len(animation_name):
-                    print(" > export now {}".format(animation_name))
+                elif True == is_end or (True == is_start and 0 < len(animation_name)):
+                    # set scene frame end
+                    bpy.context.scene.frame_end = marker.frame
+
+                # export
+                if (True == is_start or True == is_end or True == is_last) and 0 < len(animation_name):
+                    print(" > export now {}, from {} to {}".format(animation_name, bpy.context.scene.frame_start, bpy.context.scene.frame_end))
 
                     # update filename for animation export
                     self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + animation_name)
 
-                    self.call_fbx_export()
+                    self.call_fbx_export() # < ============== EXPORT
 
                     # important: reset name
                     animation_name = ''
 
+                 # set start frame
+                if True == is_start:
+                    # set scene frame start
+                    bpy.context.scene.frame_start = marker.frame
+                    # set animation name for the following export
+                    animation_name = marker.name.replace(self.animation_marker_start, '')
+
         else:
-            self.call_fbx_export()
+            self.call_fbx_export() # < ============== EXPORT
 
 
         # cleanup ------------------------------------
