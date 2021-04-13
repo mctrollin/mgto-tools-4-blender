@@ -410,6 +410,7 @@ class MGTOOLS_io_exporter():
 
         # prepare anim related vars
         animation_strips_source = None
+        animation_strips_source_active_action_cached = None
 
         # cache frame range
         cached_frame_start = bpy.context.scene.frame_start
@@ -418,12 +419,18 @@ class MGTOOLS_io_exporter():
         if 'STRIPS' == self.animation_export_mode:
             # get object which holds animation strips information
             # Note: (here we are only interested on the frame ranges, not the actual animation data)
-            animation_strips_source = to_export_armatures[0] if 0 < len(to_export_armatures) else None # for now we use the first armature
+            for armature in to_export_armatures:
+                if None == armature:
+                    continue
+                if None == armature.animation_data:
+                    continue
+
+                animation_strips_source = armature # to_export_armatures[0] if 0 < len(to_export_armatures) else None # for now we use the first armature
+                animation_strips_source_active_action_cached = armature.animation_data.action
+                break
+
             # if None != actions_source_override: # TODO: if this is somehow necessary the property needs to be added (or moved from the obsolete animation batch export)
             #     animation_strips_source = actions_source_override
-
-            # cache active action
-            active_action_cached = animation_strips_source.animation_data.action if None != animation_strips_source else None
 
             strips = MGTOOLS_functions_helper.get_all_animstrips(animation_strips_source)
         
@@ -512,7 +519,7 @@ class MGTOOLS_io_exporter():
 
         # revert active action
         if None != animation_strips_source:
-            animation_strips_source.animation_data.action = active_action_cached
+            animation_strips_source.animation_data.action = animation_strips_source_active_action_cached
 
         # revert scene frame range
         bpy.context.scene.frame_start = cached_frame_start
