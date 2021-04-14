@@ -80,7 +80,7 @@ class MGTOOLS_io_exporter():
 
         self.process_export(self.to_export_selection)
 
-        print(" > Export (selection) finished for " + self.filepath)
+        print(" > Export (selection) finished.")
 
     def try_export_collection(self):
         print("Export (collection) to: " + self.filepath)
@@ -105,7 +105,7 @@ class MGTOOLS_io_exporter():
 
         self.process_export(self.to_export_collection.all_objects.values())
 
-        print(" > Export (collection) finished for " + self.filepath)
+        print(" > Export (collection) finished.")
 
     def build_filepath(self, path, filename):
         return path + '\\' + filename + '.fbx'
@@ -121,8 +121,7 @@ class MGTOOLS_io_exporter():
         # logging
         # for clone in to_export_clones:
         #     print("  > to_export_clone: {}".format(clone.name))
-        print(" > export FBX:  filepath={}, axis_forward={}, axis_up={}, use_mesh_modifiers={},".format(
-            self.filepath, self.axis_forward, self.axis_up, self.use_mesh_modifiers))
+        print(" > export FBX:  filepath={}".format(self.filepath))
 
         # debug exit ----
         # return
@@ -462,7 +461,7 @@ class MGTOOLS_io_exporter():
         elif 'MARKERS' == self.animation_export_mode:
             
             marker_idx = -1
-            animation_name = ''
+            current_start_marker_name = ''
             
             timeline_markers_sorted = bpy.context.scene.timeline_markers.values()
             timeline_markers_sorted.sort(key=lambda x: x.frame, reverse=False)
@@ -477,35 +476,47 @@ class MGTOOLS_io_exporter():
                 # very last marker in the scene
                 is_last = len(timeline_markers_sorted) - 1 == marker_idx
 
-                print(" > marker {}: {}, is_start:{}, is_end:{}, is_last:{}, current anim:{}".format(marker_idx, marker.name, is_start, is_end, is_last, animation_name))
+                print(" > marker {}: {}, is_start:{}, is_end:{}, is_last:{}, current anim:{}".format(marker_idx, marker.name, is_start, is_end, is_last, current_start_marker_name))
 
-                # set end frame
+                # set start
+                # special case: it's a start marker and the last marker at the same time
+                # this is the only time we have to set this before the export call
+                if True == is_start and True == is_last:
+                    # set scene frame start
+                    bpy.context.scene.frame_start = marker.frame
+                    # set animation name for the following export
+                    current_start_marker_name = marker.name.replace(self.animation_marker_start, '')
+
+                # set end
                 if True == is_last:
                     # set scene frame end
                     bpy.context.scene.frame_end = cached_frame_end if cached_frame_end > bpy.context.scene.frame_start else marker.frame
 
-                elif True == is_end or (True == is_start and 0 < len(animation_name)):
+                elif True == is_end or (True == is_start and 0 < len(current_start_marker_name)):
                     # set scene frame end
                     bpy.context.scene.frame_end = marker.frame
 
                 # export
-                if (True == is_start or True == is_end or True == is_last) and 0 < len(animation_name):
-                    print(" > export now {}, from {} to {}".format(animation_name, bpy.context.scene.frame_start, bpy.context.scene.frame_end))
+                # usually we export at every end marker - but there are two special cases:
+                # - a start marker follows directly after a start marker (so serving as start and end marker at the same time)
+                # - it's the last marker of the timeline (even if it's not a start nor end marker)
+                if (True == is_start or True == is_end or True == is_last) and 0 < len(current_start_marker_name):
+                    print(" > export now {}, from {} to {}".format(current_start_marker_name, bpy.context.scene.frame_start, bpy.context.scene.frame_end))
 
                     # update filename for animation export
-                    self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + animation_name)
+                    self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + current_start_marker_name)
 
                     self.call_fbx_export() # < ============== EXPORT
 
                     # important: reset name
-                    animation_name = ''
+                    current_start_marker_name = ''
 
-                 # set start frame
-                if True == is_start:
+                # set start
+                if True == is_start and False == is_last:
                     # set scene frame start
                     bpy.context.scene.frame_start = marker.frame
                     # set animation name for the following export
-                    animation_name = marker.name.replace(self.animation_marker_start, '')
+                    current_start_marker_name = marker.name.replace(self.animation_marker_start, '')
 
         else:
             self.call_fbx_export() # < ============== EXPORT
