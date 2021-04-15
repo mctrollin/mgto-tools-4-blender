@@ -235,6 +235,9 @@ class MGTOOLS_functions_macros():
 
             clone.name = new_name
 
+            # make local
+            bpy.ops.object.make_local(type='SELECT_OBDATA')
+
             # mesh specific processing
             if 'MESH' == source_object.type:
                 # apply all modifiers
