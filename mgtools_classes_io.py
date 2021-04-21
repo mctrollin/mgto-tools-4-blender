@@ -29,6 +29,7 @@ class MGTOOLS_io_exporter():
     export_from_origin = False
     alter_pivot_rotation = False
     pivot_rotation = (0,0,0)
+    pivot_dummy_disable_constraints = False
 
     # mesh
     use_mesh_modifiers = True
@@ -368,14 +369,26 @@ class MGTOOLS_io_exporter():
 
 
         # options ----------------------------------
-        # option: move to origion
+        # @ pivot dummy
+        pivot_dummy_muted_constraints = []
         if None != to_export_pivot_dummy:
+            # option: move to origion
             if True == self.export_from_origin:
                 print (" > exporting from origin")
                 to_export_pivot_dummy.location = (0,0,0)
             if True == self.alter_pivot_rotation:
                 to_export_pivot_dummy.rotation_euler = tuple(radians(a) for a in self.pivot_rotation)
        
+            # option: disable pivot dummy constraints
+            self.pivot_dummy_disable_constraints = True
+            if True == self.pivot_dummy_disable_constraints:
+                print (" > muting pivot dummy constraints...")
+                for constraint in to_export_pivot_dummy.constraints:
+                    if False == constraint.mute:
+                        print(" ... > {}".format(constraint.name))
+                        pivot_dummy_muted_constraints.append(constraint)
+                        constraint.mute = True
+
 
         # export ------------------------------------
         # select
@@ -461,6 +474,7 @@ class MGTOOLS_io_exporter():
         elif 'MARKERS' == self.animation_export_mode:
             
             marker_idx = -1
+            current_start_marker_active = False
             current_start_marker_name = ''
             
             timeline_markers_sorted = bpy.context.scene.timeline_markers.values()
@@ -485,6 +499,7 @@ class MGTOOLS_io_exporter():
                     # set scene frame start
                     bpy.context.scene.frame_start = marker.frame
                     # set animation name for the following export
+                    current_start_marker_active = True
                     current_start_marker_name = marker.name.replace(self.animation_marker_start, '')
 
                 # set end
@@ -492,7 +507,7 @@ class MGTOOLS_io_exporter():
                     # set scene frame end
                     bpy.context.scene.frame_end = cached_frame_end if cached_frame_end > bpy.context.scene.frame_start else marker.frame
 
-                elif True == is_end or (True == is_start and 0 < len(current_start_marker_name)):
+                elif True == is_end or (True == is_start and True == current_start_marker_active):
                     # set scene frame end
                     bpy.context.scene.frame_end = marker.frame
 
@@ -500,7 +515,7 @@ class MGTOOLS_io_exporter():
                 # usually we export at every end marker - but there are two special cases:
                 # - a start marker follows directly after a start marker (so serving as start and end marker at the same time)
                 # - it's the last marker of the timeline (even if it's not a start nor end marker)
-                if (True == is_start or True == is_end or True == is_last) and 0 < len(current_start_marker_name):
+                if (True == is_start or True == is_end or True == is_last) and True == current_start_marker_active:
                     print(" > export now {}, from {} to {}".format(current_start_marker_name, bpy.context.scene.frame_start, bpy.context.scene.frame_end))
 
                     # update filename for animation export
@@ -509,6 +524,7 @@ class MGTOOLS_io_exporter():
                     self.call_fbx_export() # < ============== EXPORT
 
                     # important: reset name
+                    current_start_marker_active = False
                     current_start_marker_name = ''
 
                 # set start
@@ -516,6 +532,7 @@ class MGTOOLS_io_exporter():
                     # set scene frame start
                     bpy.context.scene.frame_start = marker.frame
                     # set animation name for the following export
+                    current_start_marker_active = True
                     current_start_marker_name = marker.name.replace(self.animation_marker_start, '')
 
         else:
@@ -542,6 +559,11 @@ class MGTOOLS_io_exporter():
             # print ("Cached transforms: {}, {}".format(pivot_pos_cached, pivot_rot_cached))
             to_export_pivot_dummy.location = pivot_pos_cached
             to_export_pivot_dummy.rotation_euler = pivot_rot_cached
+
+            print(" > reverting pivot constraints")
+            if 0 < len(pivot_dummy_muted_constraints):
+                for constraint in pivot_dummy_muted_constraints:
+                    constraint.mute = False
 
         # delete clones after export
         print(" > removing temporary export files")
