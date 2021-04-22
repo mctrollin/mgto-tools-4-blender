@@ -504,12 +504,16 @@ class MGTOOLS_io_exporter():
 
                 # set end
                 if True == is_last:
-                    # set scene frame end
+                    # set scene frame end to the latest position we can analyse
                     bpy.context.scene.frame_end = cached_frame_end if cached_frame_end > bpy.context.scene.frame_start else marker.frame
 
-                elif True == is_end or (True == is_start and True == current_start_marker_active):
-                    # set scene frame end
+                elif True == is_end:
+                    # set scene frame end defined by the current end marker
                     bpy.context.scene.frame_end = marker.frame
+
+                elif (True == is_start and True == current_start_marker_active):
+                    # set scene frame end to be one frame before this new current start marker as this frame already belongs to the new animation
+                    bpy.context.scene.frame_end = marker.frame-1
 
                 # export
                 # usually we export at every end marker - but there are two special cases:
