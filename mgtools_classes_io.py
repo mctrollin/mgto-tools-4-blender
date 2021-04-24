@@ -480,45 +480,52 @@ class MGTOOLS_io_exporter():
             timeline_markers_sorted = bpy.context.scene.timeline_markers.values()
             timeline_markers_sorted.sort(key=lambda x: x.frame, reverse=False)
 
+            # add fake end-marker to make sure there is newer a start marker the last marker
+            timeline_markers_sorted.append(None)
+
             for marker in timeline_markers_sorted:
                 marker_idx += 1
 
+                marker_frame = marker.frame if None != marker else cached_frame_end
+                marker_name = marker.name if None != marker else '__terminator__'
+
                 # start marker of an animation
-                is_start = 0 < len(self.animation_marker_start) and 0 <= marker.name.find(self.animation_marker_start)
+                is_start = 0 < len(self.animation_marker_start) and 0 <= marker_name.find(self.animation_marker_start)
                 # end marker of an animation
-                is_end = 0 < len(self.animation_marker_end) and 0 <= marker.name.find(self.animation_marker_end)
+                is_end = 0 < len(self.animation_marker_end) and 0 <= marker_name.find(self.animation_marker_end)
                 # very last marker in the scene
                 is_last = len(timeline_markers_sorted) - 1 == marker_idx
 
-                print(" > marker {}: {}, is_start:{}, is_end:{}, is_last:{}, current anim:{}".format(marker_idx, marker.name, is_start, is_end, is_last, current_start_marker_name))
+                print(" > marker {}: {}, is_start:{}, is_end:{}, is_last:{}, current anim:{}".format(marker_idx, marker_name, is_start, is_end, is_last, current_start_marker_name))
 
                 # set start
                 # special case: it's a start marker and the last marker at the same time
                 # this is the only time we have to set this before the export call
                 if True == is_start and True == is_last:
                     # set scene frame start
-                    bpy.context.scene.frame_start = marker.frame
+                    bpy.context.scene.frame_start = marker_frame
                     # set animation name for the following export
                     current_start_marker_active = True
-                    current_start_marker_name = marker.name.replace(self.animation_marker_start, '')
+                    current_start_marker_name = marker_name.replace(self.animation_marker_start, '')
 
                 # set end
                 if True == is_last:
                     # set scene frame end to the latest position we can analyse
-                    bpy.context.scene.frame_end = cached_frame_end if cached_frame_end > bpy.context.scene.frame_start else marker.frame
+                    bpy.context.scene.frame_end = cached_frame_end if cached_frame_end > bpy.context.scene.frame_start else marker_frame
 
                 elif True == is_end:
                     # set scene frame end defined by the current end marker
-                    bpy.context.scene.frame_end = marker.frame
+                    bpy.context.scene.frame_end = marker_frame
 
                 elif (True == is_start and True == current_start_marker_active):
                     # set scene frame end to be one frame before this new current start marker as this frame already belongs to the new animation
-                    bpy.context.scene.frame_end = marker.frame-1
+                    bpy.context.scene.frame_end = marker_frame-1
 
                 # export
-                # usually we export at every end marker - but there are two special cases:
+                # usually we export at every end marker - but there are some special cases:
                 # - a start marker follows directly after a start marker (so serving as start and end marker at the same time)
                 # - it's the last marker of the timeline (even if it's not a start nor end marker)
+                # - a start marker which is also the last marker has another start marker in front (here we have to export both animations)
                 if (True == is_start or True == is_end or True == is_last) and True == current_start_marker_active:
                     print(" > export now {}, from {} to {}".format(current_start_marker_name, bpy.context.scene.frame_start, bpy.context.scene.frame_end))
 
@@ -534,10 +541,10 @@ class MGTOOLS_io_exporter():
                 # set start
                 if True == is_start and False == is_last:
                     # set scene frame start
-                    bpy.context.scene.frame_start = marker.frame
+                    bpy.context.scene.frame_start = marker_frame
                     # set animation name for the following export
                     current_start_marker_active = True
-                    current_start_marker_name = marker.name.replace(self.animation_marker_start, '')
+                    current_start_marker_name = marker_name.replace(self.animation_marker_start, '')
 
         else:
             self.call_fbx_export() # < ============== EXPORT
