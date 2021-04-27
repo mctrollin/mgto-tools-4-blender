@@ -125,6 +125,9 @@ class MGTOOLS_functions_macros():
     @classmethod
     def make_collection_instance_real(self, collection_instance):
 
+        if None == collection_instance:
+            return
+
         if None == collection_instance.instance_collection:
             return
 
@@ -144,6 +147,8 @@ class MGTOOLS_functions_macros():
         # get children
         childs = []
         childs.extend(collection_instance.children)
+        childs_all = MGTOOLS_functions_helper.get_children(collection_instance, [], True)
+        
 
         # remove all childs from the instance root dummy
         for child in collection_instance.children:
@@ -169,7 +174,7 @@ class MGTOOLS_functions_macros():
         # else:
         #     self.select_objects(clones_meshes, True)
 
-        return childs
+        return childs_all
 
 
     # Object.Manipulation #######################################################
@@ -206,7 +211,7 @@ class MGTOOLS_functions_macros():
         self.select_objects(source_objects, True)
         
         if 0 >= len(bpy.context.selected_objects):
-            print("Problem selecting object for duplication: {}".format(source_object))
+            print("Problem selecting object for duplication: {}".format(source_objects))
             return
 
         # create a copy of all selected objects and select these

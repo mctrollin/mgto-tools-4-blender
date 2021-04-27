@@ -49,7 +49,7 @@ class MGTOOLS_OT_export_collections(Operator):
 
         # loop through all collections -----------------------------------
         for collection in bpy.data.collections:
-            print("Processing collection: " + collection.name)
+            print("Processing collection: {} ".format(collection.name))
             
             # filter only collections which should be exported
             if False == collection.name.startswith(filter_prefix_collection) or len(collection.name) < len(filter_prefix_collection):

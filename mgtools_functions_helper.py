@@ -22,6 +22,14 @@ class MGTOOLS_functions_helper():
     # Objects #######################################################
 
     @classmethod
+    def get_children(self, obj, children_list, recursive):
+        for child in obj.children:
+            children_list.append(child)
+            if True == recursive:
+                children_list = self.get_children(child, children_list, True)
+        return children_list
+
+    @classmethod
     def set_parent(self, child, new_parent, keep_transforms):
         if True == keep_transforms:
             if None == new_parent:
@@ -43,7 +51,7 @@ class MGTOOLS_functions_helper():
         set_parent(object, new_parent, keep_transforms)
 
     @classmethod
-    def remove_recursive(self, object):
+    def remove_recursive(self, object):       
         for child in object.children:
             self.remove_recursive(child)
         bpy.data.objects.remove(object)

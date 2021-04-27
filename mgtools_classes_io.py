@@ -75,9 +75,10 @@ class MGTOOLS_io_exporter():
 
         self.prepare_export(self.path)
 
-        if False == MGTOOLS_functions_io.check_permissions(self.filepath):
-            print(" > Permission denied.")
-            return
+        # moved this right in front of the actual fbx export as we like to continue exporting e.g. animations even if one is locked
+        # if False == MGTOOLS_functions_io.check_permissions(self.filepath):
+        #     print(" > Permission denied.")
+        #     return
 
         self.process_export(self.to_export_selection)
 
@@ -100,9 +101,10 @@ class MGTOOLS_io_exporter():
 
         self.prepare_export(self.path)
 
-        if False == MGTOOLS_functions_io.check_permissions(self.filepath):
-            print(" > Permission denied.")
-            return
+        # moved this right in front of the actual fbx export as we like to continue exporting e.g. animations even if one is locked
+        # if False == MGTOOLS_functions_io.check_permissions(self.filepath):
+        #     print(" > Permission denied.")
+        #     return
 
         self.process_export(self.to_export_collection.all_objects.values())
 
@@ -122,7 +124,11 @@ class MGTOOLS_io_exporter():
         # logging
         # for clone in to_export_clones:
         #     print("  > to_export_clone: {}".format(clone.name))
-        print(" > export FBX:  filepath={}".format(self.filepath))
+        print(" > exporting FBX:  filepath={}".format(self.filepath))
+
+        if False == MGTOOLS_functions_io.check_permissions(self.filepath):
+            print(" > Permission denied! Sorry, I'm not able to write to this file. :(")
+            return
 
         # debug exit ----
         # return
@@ -255,11 +261,11 @@ class MGTOOLS_io_exporter():
                         ic_clone = bpy.context.selected_objects[0]
                         input_collection_instances_clones.append(ic_clone)
                 # make clones real
-                to_remove_stuff = []
+                collection_instances_content_clones = []
                 for icc in input_collection_instances_clones:
-                    to_remove_stuff.extend(MGTOOLS_functions_macros.make_collection_instance_real(icc))
+                    collection_instances_content_clones.extend(MGTOOLS_functions_macros.make_collection_instance_real(icc))
                 # add to to-process list
-                input_objects.extend(to_remove_stuff)
+                input_objects.extend(collection_instances_content_clones)
 
         # filter objects into separate lists and try to find pivot dummy
         input_meshes = []
@@ -330,7 +336,8 @@ class MGTOOLS_io_exporter():
             # create a throw-away snapshot of the object(s) we want to export
             print (" > creating to-export snapshots from {}".format(input_meshes))
             input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes, self.combine_meshes, self.objectname_prefix, self.objectname_posfix, False, None)
-            to_export_meshes = input_meshes_clones
+            if None != input_meshes_clones:
+                to_export_meshes = input_meshes_clones
             print (" > snapshots created: {}".format(to_export_meshes))
             
 
@@ -582,18 +589,22 @@ class MGTOOLS_io_exporter():
         # if None != pivot_dummy_clone:
         #     bpy.data.objects.remove(pivot_dummy_clone)
 
+        # remove cloned meshes
         if None != input_meshes_clones:
             for clone in input_meshes_clones:
                 bpy.data.objects.remove(clone)
 
+        # remove temporary export collections and their content
         if None != tmp_export_collection:
             for clone in tmp_export_collection.objects:
                 bpy.data.objects.remove(clone)
             bpy.data.collections.remove(tmp_export_collection)
 
-        if None != to_remove_stuff:
-            for clone in to_remove_stuff:
-                MGTOOLS_functions_helper.remove_recursive(clone)  # bpy.data.objects.remove(clone)
+        # remove clones from collection instances made real
+        if None != collection_instances_content_clones:
+            while 0 < len(collection_instances_content_clones):
+                clone = collection_instances_content_clones.pop(0)
+                bpy.data.objects.remove(clone)
 
     @classmethod
     def quick_export_anim(self, path, filename, frame_start, frame_end):
