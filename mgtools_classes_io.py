@@ -36,6 +36,7 @@ class MGTOOLS_io_exporter():
     combine_meshes = False
     objectname_prefix = "to_export__"
     objectname_posfix = ""
+    combine_meshes_filter = ""
 
     # armature
     armature_primary_rename = ''
@@ -334,21 +335,38 @@ class MGTOOLS_io_exporter():
             #     to_export_pivot_dummy = pivot_dummy_clone
         
             # create a throw-away snapshot of the object(s) we want to export
-            print (" > creating to-export snapshots from {}".format(input_meshes))
-            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes, self.combine_meshes, self.objectname_prefix, self.objectname_posfix, False, None)
-            if None != input_meshes_clones:
-                to_export_meshes = input_meshes_clones
-            print (" > snapshots created: {}".format(to_export_meshes))
+
+            # apply filter
+            input_meshes_to_snapshot = []
+            input_meshes_not_to_snapshot = []
+            combine_meshes_filter_list = self.combine_meshes_filter.split(",")
+            if 0 < len(combine_meshes_filter_list):
+                for input_mesh in input_meshes:
+                    # check exclude-by-name filter
+                    input_mesh_processed = False
+                    for merge_filter_name in combine_meshes_filter_list:
+                        if merge_filter_name in input_mesh.name:     
+                            input_meshes_not_to_snapshot.append(input_mesh)
+                            input_mesh_processed = True                    
+                            break
+                    if False == input_mesh_processed:
+                        input_meshes_to_snapshot.append(input_mesh)
+
+            print (" > creating to-export snapshots from: {} excluding: {}".format(input_meshes_to_snapshot, input_meshes_not_to_snapshot))
             
+            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes_to_snapshot, self.combine_meshes, self.objectname_prefix, self.objectname_posfix, False, None)
+            print (" > snapshots created: {}".format(input_meshes_clones))
+            if None != input_meshes_clones:
+                to_export_meshes = input_meshes_clones + input_meshes_not_to_snapshot
 
             # do a view_layer refresh after creating clones
             bpy.context.view_layer.update()
 
             # post process clones -----
 
-            # transfere modifier
+            # transfer modifier
             if True == self.combine_meshes:
-                print(" > transfere (armature) modifier")
+                print(" > transfer (armature) modifier")
                 MGTOOLS_functions_helper.transfere_modifier_armature(input_meshes, to_export_meshes)
 
             # adopt pivot from pivot-dummy
@@ -362,7 +380,7 @@ class MGTOOLS_io_exporter():
                 # if None != pivot_dummy_clone:
                 #     MGTOOLS_functions_helper.set_parent(clone, pivot_dummy_clone, True)
                 # set clone names (if merged)
-                if True == self.combine_meshes and 0 < len(pivot_dummy_name):
+                if True == self.combine_meshes and 0 < len(pivot_dummy_name) and '_joinedSnapshot' in clone.name:
                     clone.name = pivot_dummy_name  # will add numbering automatically
 
 

@@ -102,7 +102,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     
     # mesh
     p_io_export_use_mesh_modifiers: BoolProperty(name="Use mesh modifiers", default=True, description="Apply mesh modifiers during export (non-destructive)",)
-    p_io_export_merge: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together",)
+    p_io_export_combine_meshes: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together",)
+    p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing combined. Delimiter=,",)
     p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all exported meshes",)
     p_io_export_objectname_posfix: StringProperty(name='Object name posfix', default="", description="Posfix added to all exported meshes",)
 

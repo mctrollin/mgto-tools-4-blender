@@ -141,14 +141,15 @@ class MGTOOLS_functions_macros():
         MGTOOLS_functions_macros.select_only(collection_instance)
 
         # keep parent and hierarchy, we only want to get rid of the instance-state for now
-        bpy.ops.object.duplicates_make_real(
-            use_base_parent=True, use_hierarchy=True)
+        bpy.ops.object.duplicates_make_real(use_base_parent=True, use_hierarchy=True)
+
+        # make single user (as data block is still shared with the object from the instanzed collection)
+        bpy.ops.object.make_single_user(type='SELECTED_OBJECTS', object=True, obdata=True, material=False, animation=False)
 
         # get children
         childs = []
         childs.extend(collection_instance.children)
         childs_all = MGTOOLS_functions_helper.get_children(collection_instance, [], True)
-        
 
         # remove all childs from the instance root dummy
         for child in collection_instance.children:
@@ -294,22 +295,34 @@ class MGTOOLS_functions_macros():
         # print (" > clones_other: {}".format(clones_other))
         # print (" > clones_meshes: {}".format(clones_meshes))
 
-        # select clones for further processing with bpy.ops
-        self.select_objects(clones_meshes, True)
+        
+        # self.select_objects(clones_meshes, True)
+        bpy.ops.object.select_all(action='DESELECT')
 
         # option: join clones_meshes
+        clones_meshes_joined = []
         if True == merge:
             if 1 < len(clones_meshes):
-                print(" > joining objects: {}".format(clones_meshes))
-                ctx = bpy.context.copy()
-                ctx['selected_objects'] = clones_meshes
-                bpy.ops.object.join(ctx)
-                clones_meshes = bpy.context.selected_objects
-                for clone_meshes in clones_meshes:
-                    clone_meshes.name += "_merged"
+                clones_meshes_to_join = []
+                clones_meshes_to_join.extend(clones_meshes)               
+                
+                print(" > joining objects: {}".format(clones_meshes_to_join))
+                for clone_mesh_to_join in clones_meshes_to_join:
+                    clones_meshes.remove(clone_mesh_to_join)
+
+                # join
+                # ctx = bpy.context.copy() # does not work
+                # ctx['selected_objects'] = clones_meshes_to_join
+                # bpy.ops.object.join(ctx)
+                self.select_objects(clones_meshes_to_join, True) # select clones for further processing with bpy.ops
+                bpy.ops.object.join()
+
+                clones_meshes_joined = bpy.context.selected_objects
+                # for clone_mesh_joined in clones_meshes_joined:
+                #     clone_mesh_joined.name += "_joinedSnapshot" # this name can and will be used to filtering later
 
         # get list of all final clones
-        clones = clones_other + clones_meshes
+        clones = clones_other + clones_meshes + clones_meshes_joined
 
         # option: revert selection or not
         # print(" > set selection")

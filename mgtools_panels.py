@@ -344,8 +344,13 @@ class MGTOOLS_PT_io(Panel):
         # mesh options -------------------------------------------
         mesh_options_box = col.box()
         mesh_options_box.label(text="Mesh")
-        mesh_options_box.prop(mgtools_props_scene, "p_io_export_merge",)
+        mesh_options_box.prop(mgtools_props_scene, "p_io_export_combine_meshes",)
+        if True == mgtools_props_scene.p_io_export_combine_meshes:
+            row = mesh_options_box.row()
+            row.label(text="Filter:")
+            row.prop(mgtools_props_scene, "p_io_export_combine_meshes_filter", text="")
         mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
+        row = mesh_options_box.row()
         row = mesh_options_box.row()
         row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
         row.prop(mgtools_props_scene, "p_io_export_objectname_posfix", text="Pos")
@@ -491,7 +496,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.10") # check also version in __init__
+        box.label(text="MGTO tools v0.6.11") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2021")
 

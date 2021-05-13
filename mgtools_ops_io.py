@@ -27,7 +27,8 @@ class MGTOOLS_OT_export_collections(Operator):
         export_from_origin = mgtools_props_scene.p_io_export_from_origin
         alter_rotation = mgtools_props_scene.p_io_export_alter_rotation
         pivot_rotation = mgtools_props_scene.p_io_export_rotation
-        combine_meshes = mgtools_props_scene.p_io_export_merge
+        combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
+        combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
         axis_forward = mgtools_props_scene.p_io_export_axis_forward
         axis_up = mgtools_props_scene.p_io_export_axis_up
         primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
@@ -89,6 +90,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.alter_pivot_rotation = alter_rotation
             exporter.pivot_rotation = pivot_rotation
             exporter.combine_meshes = combine_meshes
+            exporter.combine_meshes_filter = combine_meshes_filter
             exporter.objectname_prefix = export_objectname_prefix
             exporter.objectname_posfix = export_objectname_posfix
             exporter.pivot_dummy_prefix = filter_prefix_pivot
@@ -126,7 +128,8 @@ class MGTOOLS_OT_export_selection(Operator):
         export_from_origin = mgtools_props_scene.p_io_export_from_origin
         alter_rotation = mgtools_props_scene.p_io_export_alter_rotation
         pivot_rotation = mgtools_props_scene.p_io_export_rotation
-        combine_meshes = mgtools_props_scene.p_io_export_merge
+        combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
+        combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
         axis_forward = mgtools_props_scene.p_io_export_axis_forward
         axis_up = mgtools_props_scene.p_io_export_axis_up
         primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
@@ -170,6 +173,7 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.alter_pivot_rotation = alter_rotation
         exporter.pivot_rotation = pivot_rotation
         exporter.combine_meshes = combine_meshes
+        exporter.combine_meshes_filter = combine_meshes_filter
         exporter.objectname_prefix = export_objectname_prefix
         exporter.objectname_posfix = export_objectname_posfix
         exporter.pivot_dummy_prefix = filter_prefix_pivot
