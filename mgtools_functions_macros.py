@@ -182,8 +182,11 @@ class MGTOOLS_functions_macros():
 
     @classmethod
     def make_snapshot_from(self, source_objects_raw, merge, prefix, posfix, select_clones, type_filter):
+        
+        clones = []
+
         if None == source_objects_raw or 0 >= len(source_objects_raw):
-            return
+            return clones
 
         # prepare source objects list
         source_objects = []
@@ -192,7 +195,7 @@ class MGTOOLS_functions_macros():
                 if type_filter == source_object.type:
                     source_objects.append(source_object)
             if 0 >= len(source_objects):
-                return
+                return clones
         else:
             source_objects = source_objects_raw
 
@@ -213,14 +216,14 @@ class MGTOOLS_functions_macros():
         
         if 0 >= len(bpy.context.selected_objects):
             print("Problem selecting object for duplication: {}".format(source_objects))
-            return
+            return clones
 
         # create a copy of all selected objects and select these
         bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
 
         if 0 >= len(bpy.context.selected_objects):
             print("Problem selecting clone of: {}".format(source_object))
-            return
+            return clones
         
         clones = bpy.context.selected_objects.copy()
 
@@ -231,15 +234,16 @@ class MGTOOLS_functions_macros():
             source_object = source_objects[idx]
 
             # add name pre- and posfix
-            new_name = source_object.name
+            if 0 < len(prefix) or 0 < len(posfix):
+                new_name = source_object.name
 
-            if 0 < len(prefix): 
-                new_name = prefix + new_name
+                if 0 < len(prefix): 
+                    new_name = prefix + new_name
 
-            if 0 < len(posfix):
-                new_name = new_name + posfix
+                if 0 < len(posfix):
+                    new_name = new_name + posfix
 
-            clone.name = new_name
+                clone.name = new_name
 
             # make local
             bpy.ops.object.make_local(type='SELECT_OBDATA')

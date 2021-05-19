@@ -320,7 +320,7 @@ class MGTOOLS_io_exporter():
 
         # option: created throw-away snapshots during export
         # pivot_dummy_clone = None
-        input_meshes_clones = None
+        input_meshes_clones = []
         if 0 < len(input_meshes) and True == create_clones:
             # create input_pivot_dummy throw-away snapshot
             # if None != input_pivot_dummy:
@@ -345,7 +345,7 @@ class MGTOOLS_io_exporter():
                     # check exclude-by-name filter
                     input_mesh_processed = False
                     for merge_filter_name in combine_meshes_filter_list:
-                        if merge_filter_name in input_mesh.name:     
+                        if 0 < len(merge_filter_name) and merge_filter_name in input_mesh.name:     
                             input_meshes_not_to_snapshot.append(input_mesh)
                             input_mesh_processed = True                    
                             break
