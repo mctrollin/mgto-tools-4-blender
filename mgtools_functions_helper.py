@@ -85,7 +85,7 @@ class MGTOOLS_functions_helper():
                     armature_modifier.append(mod)
                     armature = mod.object
                     # print("    found: {}".format(armature))
-                    if False == (armature in armatures):
+                    if None != armature and False == (armature in armatures):
                         armatures.append(armature)
 
         # noting to copy
@@ -95,8 +95,8 @@ class MGTOOLS_functions_helper():
 
         # too much to copy
         if 1 < len(armatures):
-            print (" > More then one target Armature detected. This is currently not supported: {}".format(armatures))
-            return
+            print (" > More then one target Armature detected, only the first ({}) will be used! {}".format(armatures[0], armatures))
+            # return
 
         # target objects shouldn't have an armature modifier applied 
         for target_object in target_objects:
