@@ -22,6 +22,7 @@ class MGTOOLS_OT_export_collections(Operator):
         filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
         filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
         filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
+        filename_ignore_collection_dot_prefix = mgtools_props_scene.p_io_export_filename_ignore_collection_dot_prefix
 
         export_folder = mgtools_props_scene.p_io_export_folder_collections
         export_from_origin = mgtools_props_scene.p_io_export_from_origin
@@ -72,6 +73,8 @@ class MGTOOLS_OT_export_collections(Operator):
 
             # prepare filename
             filename = collection.name[len(filter_prefix_collection):]
+            if True == filename_ignore_collection_dot_prefix:
+                filename = filename.rsplit('.', 1)[0]
             if True == filename_include_blendfilename:
                 filename = os.path.splitext(bpy.path.basename(bpy.data.filepath))[0] + "_" + filename
             # filename = filename_prefix + filename # this is now done by the exporter class itself
@@ -193,6 +196,7 @@ class MGTOOLS_OT_export_selection(Operator):
 
         return{'FINISHED'}
 
+# obsolte as we now export animations directly as part of the collection / selection export 
 class MGTOOLS_OT_export_animations(Operator):
     bl_idname = "mgtools.io_export_animations"
     bl_label = "Export Animations"

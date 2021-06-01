@@ -112,6 +112,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_filename_prefix_skeletal: StringProperty(name='Filename: Prefix (skeletal)', default="", description="Optional filename prefix for skeletal meshes",)
     p_io_export_filename_prefix_animation: StringProperty(name='Filename: Prefix (animation)', default="", description="Optional filename prefix for animations",)
     p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
+    p_io_export_filename_ignore_collection_dot_prefix: BoolProperty(name='Ignore .000', default=False, description="Excludes everything after the last dot in the collection name (e.g. 'bla.blub' will become just 'bla').",)
+
 
     # armature
     p_io_export_armature_rename: StringProperty(name='Armature temp export name', default="", description="Allows to rename the primary armature during export. Will be reverted afterwards.",)

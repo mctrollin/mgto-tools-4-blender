@@ -313,7 +313,7 @@ class MGTOOLS_PT_io(Panel):
 
         mgtools_props_scene = bpy.context.scene.mgtools
 
-        # main options -------------------------------------------
+        # axis options -------------------------------------------
         main_options_box = col.box()
         row = main_options_box.row()
         row.label(text="Forward")
@@ -390,6 +390,8 @@ class MGTOOLS_PT_io(Panel):
         row.prop(mgtools_props_scene, "p_io_export_filename_prefix_animation", text="")
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename")
+        row = box.row()
+        row.prop(mgtools_props_scene, "p_io_export_filename_ignore_collection_dot_prefix")
 
 
         # collection (batch-) export -------------------------------------------
@@ -497,7 +499,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.14") # check also version in __init__
+        box.label(text="MGTO tools v0.6.15") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2021")
 

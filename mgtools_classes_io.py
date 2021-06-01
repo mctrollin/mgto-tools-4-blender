@@ -210,12 +210,13 @@ class MGTOOLS_io_exporter():
 
     def process_export(self, input_objects_raw):
         
-        # copy incoming data into temporary var
-        values = list(input_objects_raw)
+        # copy incoming data into working list
         input_objects = []
-        input_objects.extend(values)
-
+        input_objects.extend(list(input_objects_raw))
         print ("Export now: {}".format(input_objects))
+        if None == input_objects:
+            print(" > Error: No objects defined for export!")
+            return
 
         # flags ----------------------------------
         # tmp: decide if we should create throw-away only-for-export clones or not
@@ -226,15 +227,11 @@ class MGTOOLS_io_exporter():
         # create a temporary collection and copy all input objects there
         create_temp_collection = False
 
-        # checks ----------------------------------
-        if None == input_objects:
-            print(" > error: No objects defined for export")
-            return
-
         # prepare ----------------------------------
         # create a temporary collection for exporting purposes
         tmp_export_collection = None
         if True == create_clones:
+            # create a temporary to-export collection
             if True == create_temp_collection:
                 # create temporary collection (problem with unique names if we don't want ".001" etc. added to our exported objects)
                 tmp_export_collection = MGTOOLS_functions_macros.duplicate_to_collection(input_objects, False)
@@ -246,14 +243,14 @@ class MGTOOLS_io_exporter():
                     MGTOOLS_functions_macros.make_collection_instance_real(obj)
                 # override to-process list with the new clones
                 input_objects = tmp_export_collection.all_objects
+            # find, clone and make-real any collection instances
             else:
-                ## make collection instances real
-                # collect collection instances
+                # get collection instances
                 input_collection_instances = []
                 for obj in input_objects:
                     if None != obj.instance_collection:
                         input_collection_instances.append(obj)
-                # create clones
+                # create clones of these instances
                 input_collection_instances_clones = []
                 for ic in input_collection_instances:
                     MGTOOLS_functions_macros.select_objects(ic, True)
