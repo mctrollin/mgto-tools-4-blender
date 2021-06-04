@@ -250,8 +250,9 @@ class MGTOOLS_functions_macros():
 
             # mesh specific processing
             if 'MESH' == source_object.type:
-                # apply all modifiers
-                bpy.ops.object.convert(target='MESH')
+                if True == merge:
+                    # apply all modifiers
+                    bpy.ops.object.convert(target='MESH')
                 # add to mesh list
                 clones_meshes.append(clone)
             else:
