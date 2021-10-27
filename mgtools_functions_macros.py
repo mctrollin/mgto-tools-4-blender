@@ -181,7 +181,7 @@ class MGTOOLS_functions_macros():
     # Object.Manipulation #######################################################
 
     @classmethod
-    def make_snapshot_from(self, source_objects_raw, merge, prefix, posfix, select_clones, type_filter):
+    def make_snapshot_from(self, source_objects_raw, merge, prefix, postfix, select_clones, type_filter):
         
         clones = []
 
@@ -233,15 +233,15 @@ class MGTOOLS_functions_macros():
             self.select_only(clone)
             source_object = source_objects[idx]
 
-            # add name pre- and posfix
-            if 0 < len(prefix) or 0 < len(posfix):
+            # add name pre- and postfix
+            if 0 < len(prefix) or 0 < len(postfix):
                 new_name = source_object.name
 
                 if 0 < len(prefix): 
                     new_name = prefix + new_name
 
-                if 0 < len(posfix):
-                    new_name = new_name + posfix
+                if 0 < len(postfix):
+                    new_name = new_name + postfix
 
                 clone.name = new_name
 
@@ -449,7 +449,7 @@ class MGTOOLS_functions_macros():
 
     # mode can be 'REPLACE', 'ADD' or 'SUBTRACT'
     @classmethod
-    def set_weights_to_selected_mesh(self, weight, mode):
+    def set_weights_to_selected_mesh(self, weight:float, mode:str, normalize:bool=False):
         # get mesh object
         meshobj = self.get_first_selected_mesh()
         if None == meshobj:
@@ -469,7 +469,8 @@ class MGTOOLS_functions_macros():
         MGTOOLS_functions_helper.set_weights(activeVG, selected_vert_indices, weight, mode)
 
         # normalize weights --------------
-        self.renormalize_weights()
+        if True == normalize:
+            self.renormalize_weights()
 
     # renormalize all weights with emphasis on selected vertex group (=bone influence)
     @classmethod

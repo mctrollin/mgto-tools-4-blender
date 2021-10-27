@@ -105,12 +105,14 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_combine_meshes: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together",)
     p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing combined. Delimiter=,",)
     p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all exported meshes",)
-    p_io_export_objectname_posfix: StringProperty(name='Object name posfix', default="", description="Posfix added to all exported meshes",)
+    p_io_export_objectname_postfix: StringProperty(name='Object name postfix', default="", description="Postfix added to all exported meshes",)
 
     # filename
-    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix (static)', default="", description="Optional filename prefix for static meshes",)
+    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix', default="", description="Optional filename prefix",)
+    p_io_export_filename_prefix_static: StringProperty(name='Filename: Prefix (static)', default="", description="Optional filename prefix for static meshes",)
     p_io_export_filename_prefix_skeletal: StringProperty(name='Filename: Prefix (skeletal)', default="", description="Optional filename prefix for skeletal meshes",)
     p_io_export_filename_prefix_animation: StringProperty(name='Filename: Prefix (animation)', default="", description="Optional filename prefix for animations",)
+    p_io_export_filename_postfix: StringProperty(name='Filename: Postfix', default="", description="Optional filename postfix",)
     p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
     p_io_export_filename_ignore_collection_dot_prefix: BoolProperty(name='Ignore .000', default=False, description="Excludes everything after the last dot in the collection name (e.g. 'bla.blub' will become just 'bla').",)
 

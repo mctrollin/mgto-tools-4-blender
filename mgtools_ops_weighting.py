@@ -46,7 +46,7 @@ class MGTOOLS_OT_weighting_add_weights(Operator):
 
     def execute(self, context):
         mgtools_props_obj = bpy.context.object.mgtools
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(mgtools_props_obj.p_weightedit_add_amount, 'ADD')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(mgtools_props_obj.p_weightedit_add_amount, 'ADD', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 # substract weight
 class MGTOOLS_OT_weighting_subtract_weights(Operator):
@@ -57,7 +57,7 @@ class MGTOOLS_OT_weighting_subtract_weights(Operator):
 
     def execute(self, context):
         mgtools_props_obj = bpy.context.object.mgtools
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(mgtools_props_obj.p_weightedit_add_amount, 'SUBTRACT')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(mgtools_props_obj.p_weightedit_add_amount, 'SUBTRACT', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 
 # set weight to 0.0
@@ -68,7 +68,7 @@ class MGTOOLS_OT_weighting_set_weights_to_0(Operator):
     bl_options = {'REGISTER'} 
 
     def execute(self, context):
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0, 'REPLACE')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0, 'REPLACE', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 # set weight to 0.1
 class MGTOOLS_OT_weighting_set_weights_to_01(Operator):
@@ -78,7 +78,7 @@ class MGTOOLS_OT_weighting_set_weights_to_01(Operator):
     bl_options = {'REGISTER'} 
 
     def execute(self, context):
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.1, 'REPLACE')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.1, 'REPLACE', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 # set weight to 0.25
 class MGTOOLS_OT_weighting_set_weights_to_025(Operator):
@@ -88,7 +88,7 @@ class MGTOOLS_OT_weighting_set_weights_to_025(Operator):
     bl_options = {'REGISTER'} 
 
     def execute(self, context):
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.25, 'REPLACE')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.25, 'REPLACE', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 # set weight to 0.5
 class MGTOOLS_OT_weighting_set_weights_to_05(Operator):
@@ -98,7 +98,7 @@ class MGTOOLS_OT_weighting_set_weights_to_05(Operator):
     bl_options = {'REGISTER'} 
 
     def execute(self, context):
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.5, 'REPLACE')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.5, 'REPLACE', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 # set weight to 0.75
 class MGTOOLS_OT_weighting_set_weights_to_075(Operator):
@@ -108,7 +108,7 @@ class MGTOOLS_OT_weighting_set_weights_to_075(Operator):
     bl_options = {'REGISTER'} 
 
     def execute(self, context):
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.75, 'REPLACE')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.75, 'REPLACE', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 # set weight to 0.9
 class MGTOOLS_OT_weighting_set_weights_to_09(Operator):
@@ -118,7 +118,7 @@ class MGTOOLS_OT_weighting_set_weights_to_09(Operator):
     bl_options = {'REGISTER'} 
 
     def execute(self, context):
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.9, 'REPLACE')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(0.9, 'REPLACE', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 # set weight to 1.0
 class MGTOOLS_OT_weighting_set_weights_to_1(Operator):
@@ -128,7 +128,7 @@ class MGTOOLS_OT_weighting_set_weights_to_1(Operator):
     bl_options = {'REGISTER'} 
 
     def execute(self, context):
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(1, 'REPLACE')
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(1, 'REPLACE', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 
 # mirror all weights from all vertices along the y-z-plane from -x to +x

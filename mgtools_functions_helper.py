@@ -202,7 +202,7 @@ class MGTOOLS_functions_helper():
 
     # mode can be 'REPLACE', 'ADD' or 'SUBTRACT'
     @classmethod
-    def set_weights(self, vgroup, vindices, weight, mode):
+    def set_weights(self, vgroup, vindices, weight:float, mode):
         vgroup.add(vindices, weight, mode)
 
     # returns (for a given mesh and a given vertex group) a list with the weight of every vertice

@@ -60,7 +60,7 @@ class MGTOOLS_OT_rename_vertexgroups(Operator):
 class MGTOOLS_OT_rename_print_bones(Operator):
     bl_idname = "mgtools.rename_print_bones"
     bl_label = "Print bone names"
-    bl_description = "Outputs bone names as string in the console"
+    bl_description = "Outputs bone names as string in the console and to the clipboard"
 
     def execute(self, context):
         print ("MGTOOLS_OT_rename_print_bones")
@@ -73,7 +73,10 @@ class MGTOOLS_OT_rename_print_bones(Operator):
             for bone in armature_object.data.bones:
                 out_string += bone.name + "\n"
             print(out_string)
-       
+
+            # copy to clipboard
+            bpy.context.window_manager.clipboard = out_string
+
         return{'FINISHED'}
 
 class MGTOOLS_OT_rename_mesh_from_object(Operator):

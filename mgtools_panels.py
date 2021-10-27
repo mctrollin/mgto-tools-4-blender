@@ -110,6 +110,9 @@ class MGTOOLS_PT_weighting(Panel):
 
         # Weight tools --------------------------------------------------------
 
+        row = l.row()
+        row.prop(bpy.context.scene.tool_settings, 'use_auto_normalize', text="Auto Normalize")
+
         # create vertex groups for selected bones
         row = l.row()
         row.operator('mgtools.weighting_create_vertex_groups_for_selected_bones', text="Create missing VGs for sel. bones")
@@ -354,7 +357,7 @@ class MGTOOLS_PT_io(Panel):
         row = mesh_options_box2.row()
         row = mesh_options_box2.row()
         row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
-        row.prop(mgtools_props_scene, "p_io_export_objectname_posfix", text="Pos")
+        row.prop(mgtools_props_scene, "p_io_export_objectname_postfix", text="Pos")
 
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
@@ -380,14 +383,20 @@ class MGTOOLS_PT_io(Panel):
         box = col.box()
         box.label(text="File name")
         row = box.row()
-        row.label(text="Prefix Static:")
+        row.label(text="Prefix:")
         row.prop(mgtools_props_scene, "p_io_export_filename_prefix", text="")
+        row = box.row()
+        row.label(text="Prefix Static:")
+        row.prop(mgtools_props_scene, "p_io_export_filename_prefix_static", text="")
         row = box.row()
         row.label(text="Prefix Skeletal:")
         row.prop(mgtools_props_scene, "p_io_export_filename_prefix_skeletal", text="")
         row = box.row()
         row.label(text="Prefix Animation:")
         row.prop(mgtools_props_scene, "p_io_export_filename_prefix_animation", text="")
+        row = box.row()
+        row.label(text="Postfix:")
+        row.prop(mgtools_props_scene, "p_io_export_filename_postfix", text="")
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename")
         row = box.row()
@@ -499,7 +508,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.16") # check also version in __init__
+        box.label(text="MGTO tools v0.6.17") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2021")
 

@@ -19,8 +19,10 @@ class MGTOOLS_OT_export_collections(Operator):
         mgtools_props_scene = bpy.context.scene.mgtools
         
         filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
+        filename_prefix_static = mgtools_props_scene.p_io_export_filename_prefix_static
         filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
         filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
+        filename_postfix = mgtools_props_scene.p_io_export_filename_postfix
         filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
         filename_ignore_collection_dot_prefix = mgtools_props_scene.p_io_export_filename_ignore_collection_dot_prefix
 
@@ -36,7 +38,7 @@ class MGTOOLS_OT_export_collections(Operator):
         secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
         use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
         export_objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix        
-        export_objectname_posfix = mgtools_props_scene.p_io_export_objectname_posfix
+        export_objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
         filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
         filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
         include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
@@ -81,9 +83,11 @@ class MGTOOLS_OT_export_collections(Operator):
 
             # create new exporter instance and set it up -----------------------------------
             exporter = MGTOOLS_io_exporter(export_folder, filename)
-            exporter.filename_prefix_static = filename_prefix
+            exporter.filename_prefix = filename_prefix
+            exporter.filename_prefix_static = filename_prefix_static
             exporter.filename_prefix_skeletal = filename_prefix_skeletal
             exporter.filename_prefix_animation = filename_prefix_animation
+            exporter.filename_postfix = filename_postfix
             exporter.axis_forward = axis_forward
             exporter.axis_up = axis_up
             exporter.primary_bone_axis = primary_bone_axis
@@ -95,7 +99,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.combine_meshes = combine_meshes
             exporter.combine_meshes_filter = combine_meshes_filter
             exporter.objectname_prefix = export_objectname_prefix
-            exporter.objectname_posfix = export_objectname_posfix
+            exporter.objectname_postfix = export_objectname_postfix
             exporter.pivot_dummy_prefix = filter_prefix_pivot
             exporter.include_pivot_dummy = include_pivot_dummy
             exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
@@ -123,8 +127,10 @@ class MGTOOLS_OT_export_selection(Operator):
         mgtools_props_scene = bpy.context.scene.mgtools
 
         filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
+        filename_prefix_static = mgtools_props_scene.p_io_export_filename_prefix_static
         filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
         filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
+        filename_postfix = mgtools_props_scene.p_io_export_filename_postfix
         filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
 
         export_folder = mgtools_props_scene.p_io_export_folder_collections
@@ -139,7 +145,7 @@ class MGTOOLS_OT_export_selection(Operator):
         secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
         use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
         export_objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix        
-        export_objectname_posfix = mgtools_props_scene.p_io_export_objectname_posfix
+        export_objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
         filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
         filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
         include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
@@ -164,9 +170,11 @@ class MGTOOLS_OT_export_selection(Operator):
 
         # create new exporter instance and set it up -----------------------------------
         exporter = MGTOOLS_io_exporter(export_folder, filename)
+        exporter.filename_prefix = '' # this is skipped for a manual export
         exporter.filename_prefix_static = '' # this is skipped for a manual export
         exporter.filename_prefix_skeletal = '' # this is skipped for a manual export
         exporter.filename_prefix_animation = filename_prefix_animation
+        exporter.filename_postfix = '' # this is skipped for a manual export
         exporter.axis_forward = axis_forward
         exporter.axis_up = axis_up
         exporter.primary_bone_axis = primary_bone_axis
@@ -178,7 +186,7 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.combine_meshes = combine_meshes
         exporter.combine_meshes_filter = combine_meshes_filter
         exporter.objectname_prefix = export_objectname_prefix
-        exporter.objectname_posfix = export_objectname_posfix
+        exporter.objectname_postfix = export_objectname_postfix
         exporter.pivot_dummy_prefix = filter_prefix_pivot
         exporter.include_pivot_dummy = include_pivot_dummy
         exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
@@ -196,7 +204,7 @@ class MGTOOLS_OT_export_selection(Operator):
 
         return{'FINISHED'}
 
-# obsolte as we now export animations directly as part of the collection / selection export 
+# obsolete as we now export animations directly as part of the collection / selection export 
 class MGTOOLS_OT_export_animations(Operator):
     bl_idname = "mgtools.io_export_animations"
     bl_label = "Export Animations"

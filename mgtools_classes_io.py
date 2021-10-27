@@ -11,9 +11,11 @@ class MGTOOLS_io_exporter():
     # filename
     path = ""
     filename = ""
+    filename_prefix = ""
     filename_prefix_static = ""
     filename_prefix_skeletal = ""
     filename_prefix_animation = ""
+    filename_postfix = ""
     filepath = ""
 
     # axis
@@ -35,7 +37,7 @@ class MGTOOLS_io_exporter():
     use_mesh_modifiers = True
     combine_meshes = False
     objectname_prefix = "to_export__"
-    objectname_posfix = ""
+    objectname_postfix = ""
     combine_meshes_filter = ""
 
     # armature
@@ -352,12 +354,12 @@ class MGTOOLS_io_exporter():
             print (" > creating to-export snapshots from: {} excluding: {}".format(input_meshes_to_snapshot, input_meshes_not_to_snapshot))
             
             # create snapshot(s) -----
-            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes_to_snapshot, self.combine_meshes, self.objectname_prefix, self.objectname_posfix, False, None)
+            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes_to_snapshot, self.combine_meshes, self.objectname_prefix, self.objectname_postfix, False, None)
             
             # set clone names (if merged - should be only one object anyway..)
             if True == self.combine_meshes and 0 < len(input_meshes_clones):
                 for input_meshes_clone in input_meshes_clones:
-                    input_meshes_clone.name = self.objectname_prefix + pivot_dummy_name + self.objectname_posfix  # will add numbering automatically
+                    input_meshes_clone.name = self.objectname_prefix + pivot_dummy_name + self.objectname_postfix  # will add numbering automatically
             
             print (" > snapshots created: {}".format(input_meshes_clones))
 
@@ -434,7 +436,7 @@ class MGTOOLS_io_exporter():
 
         # update filepath
         used_filename_prefix = self.filename_prefix_static if 0 >= len(to_export_armatures) else self.filename_prefix_skeletal 
-        self.filepath = self.build_filepath(self.path, used_filename_prefix + self.filename)
+        self.filepath = self.build_filepath(self.path, self.filename_prefix + used_filename_prefix + self.filename + self.filename_postfix)
 
         # armature features
         armature_primary = None
@@ -494,7 +496,7 @@ class MGTOOLS_io_exporter():
                     strip.name, strip.action.name, strip.frame_start, strip.frame_end, frame_start, frame_end))
 
                 # update filename for animation export
-                self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + strip.action.name)
+                self.filepath = self.build_filepath(self.path, self.filename_prefix + self.filename_prefix_animation + self.filename + strip.action.name + self.filename_postfix)
 
                 self.call_fbx_export() # < ============== EXPORT
 
@@ -557,7 +559,7 @@ class MGTOOLS_io_exporter():
                     print(" > export now {}, from {} to {}".format(current_start_marker_name, bpy.context.scene.frame_start, bpy.context.scene.frame_end))
 
                     # update filename for animation export
-                    self.filepath = self.build_filepath(self.path, self.filename_prefix_animation + self.filename + current_start_marker_name)
+                    self.filepath = self.build_filepath(self.path, self.filename_prefix + self.filename_prefix_animation + self.filename + current_start_marker_name + self.filename_postfix)
 
                     self.call_fbx_export() # < ============== EXPORT
 
