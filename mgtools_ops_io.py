@@ -19,6 +19,11 @@ class MGTOOLS_OT_export_collections(Operator):
         mgtools_props_scene = bpy.context.scene.mgtools
         
         filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
+        # backward compatibility fix TODO: remove this later
+        if 'SM_' == filename_prefix: 
+            mgtools_props_scene.p_io_export_filename_prefix = ''
+            mgtools_props_scene.p_io_export_filename_prefix_static = 'SM_'
+        ####################################################
         filename_prefix_static = mgtools_props_scene.p_io_export_filename_prefix_static
         filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
         filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation

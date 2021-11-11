@@ -476,7 +476,38 @@ class MGTOOLS_PT_misc(Panel):
     def draw(self, context):
         l = self.layout
         col = l.column()
+
+        # get scene props
+        if None == bpy.context.scene:
+            col.label(text="Scene properties not yet initialized", icon='ERROR', )
+            return
+        mgtools_props_scene = bpy.context.scene.mgtools
+
         col.label(text="Misc Stuff...")
+
+        ### particle hair
+        particlehair_box = col.box()
+        # label
+        particlehair_box.label(text="Particle Hair")
+
+        # > to mesh
+        row = particlehair_box.row()
+        row.prop(mgtools_props_scene, "p_particle_hair_to_mesh_thickness", text="Thickness")
+        row = particlehair_box.row()
+        row.prop(mgtools_props_scene, "p_particle_hair_to_mesh_resolution", text="Resolution")
+        row = particlehair_box.row()
+        row.prop(mgtools_props_scene, "p_particle_hair_to_mesh_name", text="Name")
+        particlehair_box.operator("mgtools.particle_hair_to_mesh", text="Particle Hair > Mesh",)
+
+        ### toggle modifier
+        modifier_box = col.box()
+        # label
+        modifier_box.label(text="Modifier")
+
+        # > to mesh
+        row = modifier_box.row()
+        row.prop(mgtools_props_scene, "p_modifier_toggle_name", text="Name")
+        modifier_box.operator("mgtools.modifier_toggle", text="Toggle",)
 
 class MGTOOLS_PT_sandbox(Panel):
     bl_idname = "MGTOOLS_PT_sandbox"
@@ -508,7 +539,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.17") # check also version in __init__
+        box.label(text="MGTO tools v0.6.18") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2021")
 

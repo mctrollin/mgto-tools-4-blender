@@ -151,11 +151,20 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_prefix_filter_collection_hitboxes: StringProperty(name='Filter: Collections', default="h_", description="Filter prefix for collections containing hitboxes data",)
 
 
+    # Properties.Misc ################################################################ 
+
+    p_particle_hair_to_mesh_thickness: FloatProperty(name="Thickness", default=0.0001, min=0.00001, max=1000.0, precision=5, subtype='FACTOR', description="The hair tickness when converting the particle hair to a mesh", )
+    p_particle_hair_to_mesh_resolution: FloatProperty(name="Resolution", default=0, min=0, max=100, precision=0, subtype='FACTOR', description="The hair resolution when converting the particle hair to a mesh", )
+    p_particle_hair_to_mesh_name: StringProperty(name="Name", default="HairMesh", description="Basename of all hair mesh objects which will be created", )
+
+    p_modifier_toggle_name: StringProperty(name="Mod Name", default="Mirror", description="Modifier Name", )
+
+
     # Register ################################################################ 
 
     @classmethod
     def register(self):
-        bpy.types.Scene.mgtools = PointerProperty(type=self)
+        bpy.types.Scene.mgtools = PointerProperty(type=self)       
     
     @classmethod
     def unregister(self):
