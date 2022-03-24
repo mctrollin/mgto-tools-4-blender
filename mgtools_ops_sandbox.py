@@ -46,9 +46,9 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
 
         # ---------------------------------------------
         # TEST: mesh snapshot
-        # meshobj = MGTOOLS_functions_macros.get_first_selected_mesh()
-        # MGTOOLS_functions_macros.make_snapshot_from(meshobj)
-        # MGTOOLS_functions_macros.select_only(meshobj)
+        meshobj = MGTOOLS_functions_macros.get_first_selected_mesh()
+        MGTOOLS_functions_macros.make_snapshot_from([meshobj], False, "a_", "_o", False, None)
+        MGTOOLS_functions_macros.select_only(meshobj)
 
 
         # ---------------------------------------------
@@ -100,7 +100,11 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
         # ---------------------------------------------
         # TEST: copy to new collection
         # MGTOOLS_functions_macros.duplicate_to_collection(bpy.context.selected_objects, False)
-        MGTOOLS_functions_macros.make_collection_instance_real(bpy.context.view_layer.objects.active)
+        # MGTOOLS_functions_macros.make_collection_instance_real(bpy.context.view_layer.objects.active)
+
+        # ---------------------------------------------
+        # for i in range(10, -1, -1):
+        #     print(i)
 
         # ---------------------------------------------
         return{'FINISHED'}

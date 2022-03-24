@@ -69,15 +69,20 @@ class MGTOOLS_OT_particle_hair_to_mesh(Operator):
 class MGTOOLS_OT_modifier_toggle(Operator):
     bl_idname = "mgtools.modifier_toggle"
     bl_label = "Modifier Toggle"
-    bl_description = "Convert particle hair to meshes"
+    bl_description = "Toggles show-in-viewport state of all modifiers with the given name on all selected objects"
+
+    modifier_toggle_name: bpy.props.StringProperty(
+        name = 'Modifier',
+        default = ''
+        )
 
     def execute(self, context):
         print ("MGTOOLS_OT_modifier_toggle")
         
         # read properties -----------------------------------
-        mgtools_props_scene = bpy.context.scene.mgtools
+        # mgtools_props_scene = bpy.context.scene.mgtools
 
-        modifier_toggle_name = mgtools_props_scene.p_modifier_toggle_name
+        # modifier_toggle_name = mgtools_props_scene.p_modifier_toggle_name
 
         # vars -----------------------------------
         selected_objects_count = len(bpy.context.selected_objects)
@@ -94,7 +99,7 @@ class MGTOOLS_OT_modifier_toggle(Operator):
         for obj in to_process:
             # find relevant modifier and get converted meshes
             for mod in obj.modifiers:
-                if modifier_toggle_name == mod.name:
+                if self.modifier_toggle_name == mod.name:
                     if 0 > toggle_state:
                         toggle_state = not mod.show_viewport
                     mod.show_viewport = toggle_state

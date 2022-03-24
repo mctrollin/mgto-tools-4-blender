@@ -5,6 +5,7 @@ import re
 import bpy
 from mathutils import Vector, Euler, Matrix
 from . mgtools_functions_helper import MGTOOLS_functions_helper
+from . mgtools_functions_macros import MGTOOLS_functions_macros
 
 class MGTOOLS_functions_rename():
 
@@ -58,7 +59,7 @@ class MGTOOLS_functions_rename():
             print("No mapping entries")
             return
 
-         # loop through all vertex groups
+        # loop through all vertex groups
         for vg in mesh_object.vertex_groups:
             # print ("Prosessing vertex group: {}".format(vg.name))
 
@@ -67,7 +68,13 @@ class MGTOOLS_functions_rename():
 
             # apply new name 
             if "" != name_new:
-                vg.name = name_new
+                # use existing
+                if 0 <= mesh_object.vertex_groups.find(name_new):
+                    MGTOOLS_functions_macros.transfer_weights(vg, mesh_object.vertex_groups[name_new], mesh_object.data)
+                    mesh_object.vertex_groups.remove(vg)
+                # rename
+                else:
+                    vg.name = name_new
 
 
     # Rename.Helper #######################################################
@@ -106,8 +113,18 @@ class MGTOOLS_functions_rename():
         mapping_file_string = mapping_file.read() 
         mapping_file.close() 
 
+        # pre-split
+        mapping_list_pre =  re.split('[;]', mapping_file_string)
+
+        mapping_list = []
+        for tmp_str in mapping_list_pre:
+            if '#' in tmp_str: continue
+            if ':' not in tmp_str: continue
+            mapping_list.extend(tmp_str.split(':'))
+
+
         # split file string
-        mapping_list =  re.split('[:;]', mapping_file_string)
+        #mapping_list =  re.split('[:;]', mapping_file_string)
 
         # remove white spaces
         for idx in range(len(mapping_list)):

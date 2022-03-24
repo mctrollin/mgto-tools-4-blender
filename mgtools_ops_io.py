@@ -23,38 +23,12 @@ class MGTOOLS_OT_export_collections(Operator):
             mgtools_props_scene.p_io_export_filename_prefix = ''
             mgtools_props_scene.p_io_export_filename_prefix_static = 'SM_'
         ####################################################
-        filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
-        filename_prefix_static = mgtools_props_scene.p_io_export_filename_prefix_static
-        filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
-        filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
-        filename_postfix = mgtools_props_scene.p_io_export_filename_postfix
         filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
         filename_ignore_collection_dot_prefix = mgtools_props_scene.p_io_export_filename_ignore_collection_dot_prefix
 
         export_folder = mgtools_props_scene.p_io_export_folder_collections
-        export_from_origin = mgtools_props_scene.p_io_export_from_origin
-        alter_rotation = mgtools_props_scene.p_io_export_alter_rotation
-        pivot_rotation = mgtools_props_scene.p_io_export_rotation
-        combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
-        combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
-        axis_forward = mgtools_props_scene.p_io_export_axis_forward
-        axis_up = mgtools_props_scene.p_io_export_axis_up
-        primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
-        secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
-        use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
-        export_objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix        
-        export_objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
+
         filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
-        filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
-        include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
-        include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
-        set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
-        armature_primary_rename = mgtools_props_scene.p_io_export_armature_rename
-        # anim
-        animation_export_mode = mgtools_props_scene.p_io_export_animation_mode
-        animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
-        animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
-        animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
 
         # loop through all collections -----------------------------------
         for collection in bpy.data.collections:
@@ -83,39 +57,54 @@ class MGTOOLS_OT_export_collections(Operator):
             if True == filename_ignore_collection_dot_prefix:
                 filename = filename.rsplit('.', 1)[0]
             if True == filename_include_blendfilename:
-                filename = os.path.splitext(bpy.path.basename(bpy.data.filepath))[0] + "_" + filename
+                if 0 < len(filename):
+                    filename = "_" + filename
+                filename = os.path.splitext(bpy.path.basename(bpy.data.filepath))[0] + filename
             # filename = filename_prefix + filename # this is now done by the exporter class itself
 
             # create new exporter instance and set it up -----------------------------------
             exporter = MGTOOLS_io_exporter(export_folder, filename)
-            exporter.filename_prefix = filename_prefix
-            exporter.filename_prefix_static = filename_prefix_static
-            exporter.filename_prefix_skeletal = filename_prefix_skeletal
-            exporter.filename_prefix_animation = filename_prefix_animation
-            exporter.filename_postfix = filename_postfix
-            exporter.axis_forward = axis_forward
-            exporter.axis_up = axis_up
-            exporter.primary_bone_axis = primary_bone_axis
-            exporter.secondary_bone_axis = secondary_bone_axis
-            exporter.use_mesh_modifiers = use_mesh_modifiers
-            exporter.export_from_origin = export_from_origin
-            exporter.alter_pivot_rotation = alter_rotation
-            exporter.pivot_rotation = pivot_rotation
-            exporter.combine_meshes = combine_meshes
-            exporter.combine_meshes_filter = combine_meshes_filter
-            exporter.objectname_prefix = export_objectname_prefix
-            exporter.objectname_postfix = export_objectname_postfix
-            exporter.pivot_dummy_prefix = filter_prefix_pivot
-            exporter.include_pivot_dummy = include_pivot_dummy
-            exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
-            exporter.set_pivots_to_dummy = set_pivots_to_dummy
-            exporter.armature_primary_rename = armature_primary_rename
+            # filename
+            exporter.filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
+            exporter.filename_prefix_static = mgtools_props_scene.p_io_export_filename_prefix_static
+            exporter.filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
+            exporter.filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
+            exporter.filename_postfix = mgtools_props_scene.p_io_export_filename_postfix
+            # axis
+            exporter.axis_forward = mgtools_props_scene.p_io_export_axis_forward
+            exporter.axis_up = mgtools_props_scene.p_io_export_axis_up
+            exporter.primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
+            exporter.secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
+            # pivot
+            exporter.pivot_dummy_prefix = mgtools_props_scene.p_io_export_prefix_filter_pivot
+            exporter.include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
+            exporter.include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
+            exporter.set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
+            exporter.export_from_origin = mgtools_props_scene.p_io_export_from_origin
+            exporter.alter_pivot_rotation = mgtools_props_scene.p_io_export_alter_rotation
+            exporter.pivot_rotation = mgtools_props_scene.p_io_export_rotation
+            exporter.export_pivot_dummy_disable_constraints = mgtools_props_scene.p_io_export_pivot_dummy_disable_constraints
+            # helper
+            exporter.export_helper_strip_dotnumbers = mgtools_props_scene.p_io_export_helper_strip_dotnumbers
+            # mesh
+            exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
+            exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
+            exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
+            exporter.objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix
+            exporter.objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
+            exporter.vgroups_rename = mgtools_props_scene.p_io_export_vgroups_rename
+            exporter.vgroups_rename_mapping_file_path = mgtools_props_scene.p_io_export_vgroups_rename_mapping_file_path
+            exporter.vgroups_rename_invert_mapping = mgtools_props_scene.p_io_export_vgroups_rename_mapping_inverse
+            exporter.armature_replacement = mgtools_props_scene.p_io_export_armature_replacement
+            # armature
+            exporter.armature_primary_rename = mgtools_props_scene.p_io_export_armature_rename
             # anim
-            exporter.animation_export_mode = animation_export_mode
-            exporter.animation_use_relative_frameranges = animation_use_relative_frameranges
-            exporter.animation_marker_start = animation_marker_start
-            exporter.animation_marker_end = animation_marker_end
-
+            exporter.animation_export_mode = mgtools_props_scene.p_io_export_animation_mode
+            exporter.export_frame = mgtools_props_scene.p_io_export_frame
+            exporter.animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
+            exporter.animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
+            exporter.animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
+            
             # start the export -----------------------------------
             exporter.to_export_collection = collection
             exporter.try_export_collection()
@@ -131,37 +120,7 @@ class MGTOOLS_OT_export_selection(Operator):
         # read properties -----------------------------------
         mgtools_props_scene = bpy.context.scene.mgtools
 
-        filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
-        filename_prefix_static = mgtools_props_scene.p_io_export_filename_prefix_static
-        filename_prefix_skeletal = mgtools_props_scene.p_io_export_filename_prefix_skeletal
-        filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
-        filename_postfix = mgtools_props_scene.p_io_export_filename_postfix
-        filename_include_blendfilename = mgtools_props_scene.p_io_export_filename_include_blendfilename
-
-        export_folder = mgtools_props_scene.p_io_export_folder_collections
-        export_from_origin = mgtools_props_scene.p_io_export_from_origin
-        alter_rotation = mgtools_props_scene.p_io_export_alter_rotation
-        pivot_rotation = mgtools_props_scene.p_io_export_rotation
-        combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
-        combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
-        axis_forward = mgtools_props_scene.p_io_export_axis_forward
-        axis_up = mgtools_props_scene.p_io_export_axis_up
-        primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
-        secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
-        use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
-        export_objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix        
-        export_objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
-        filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
-        filter_prefix_pivot = mgtools_props_scene.p_io_export_prefix_filter_pivot
-        include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
-        include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
-        set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
-        armature_primary_rename = mgtools_props_scene.p_io_export_armature_rename
-        # anim
-        animation_export_mode = mgtools_props_scene.p_io_export_animation_mode
-        animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
-        animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
-        animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
+        # export_folder = mgtools_props_scene.p_io_export_folder_collections
 
         # prepare -----------------------------------
 
@@ -178,30 +137,42 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.filename_prefix = '' # this is skipped for a manual export
         exporter.filename_prefix_static = '' # this is skipped for a manual export
         exporter.filename_prefix_skeletal = '' # this is skipped for a manual export
-        exporter.filename_prefix_animation = filename_prefix_animation
+        exporter.filename_prefix_animation = mgtools_props_scene.p_io_export_filename_prefix_animation
         exporter.filename_postfix = '' # this is skipped for a manual export
-        exporter.axis_forward = axis_forward
-        exporter.axis_up = axis_up
-        exporter.primary_bone_axis = primary_bone_axis
-        exporter.secondary_bone_axis = secondary_bone_axis
-        exporter.use_mesh_modifiers = use_mesh_modifiers
-        exporter.export_from_origin = export_from_origin
-        exporter.alter_pivot_rotation = alter_rotation
-        exporter.pivot_rotation = pivot_rotation
-        exporter.combine_meshes = combine_meshes
-        exporter.combine_meshes_filter = combine_meshes_filter
-        exporter.objectname_prefix = export_objectname_prefix
-        exporter.objectname_postfix = export_objectname_postfix
-        exporter.pivot_dummy_prefix = filter_prefix_pivot
-        exporter.include_pivot_dummy = include_pivot_dummy
-        exporter.include_pivot_dummy_if_required = include_pivot_dummy_if_required
-        exporter.set_pivots_to_dummy = set_pivots_to_dummy
-        exporter.armature_primary_rename = armature_primary_rename
+        # axis
+        exporter.axis_forward = mgtools_props_scene.p_io_export_axis_forward
+        exporter.axis_up = mgtools_props_scene.p_io_export_axis_up
+        exporter.primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
+        exporter.secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
+        # pivot
+        exporter.pivot_dummy_prefix = mgtools_props_scene.p_io_export_prefix_filter_pivot
+        exporter.include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
+        exporter.include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
+        exporter.set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
+        exporter.export_from_origin = mgtools_props_scene.p_io_export_from_origin
+        exporter.alter_pivot_rotation = mgtools_props_scene.p_io_export_alter_rotation
+        exporter.pivot_rotation = mgtools_props_scene.p_io_export_rotation
+        exporter.export_pivot_dummy_disable_constraints = mgtools_props_scene.p_io_export_pivot_dummy_disable_constraints
+        # helper
+        exporter.export_helper_strip_dotnumbers = mgtools_props_scene.p_io_export_helper_strip_dotnumbers
+        # mesh
+        exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
+        exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
+        exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
+        exporter.objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix
+        exporter.objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
+        exporter.vgroups_rename = mgtools_props_scene.p_io_export_vgroups_rename
+        exporter.vgroups_rename_mapping_file_path = mgtools_props_scene.p_io_export_vgroups_rename_mapping_file_path
+        exporter.vgroups_rename_invert_mapping = mgtools_props_scene.p_io_export_vgroups_rename_mapping_inverse
+        exporter.armature_replacement = mgtools_props_scene.p_io_export_armature_replacement
+        # armature
+        exporter.armature_primary_rename = mgtools_props_scene.p_io_export_armature_rename
         # anim
-        exporter.animation_export_mode = animation_export_mode
-        exporter.animation_use_relative_frameranges = animation_use_relative_frameranges
-        exporter.animation_marker_start = animation_marker_start
-        exporter.animation_marker_end = animation_marker_end
+        exporter.animation_export_mode = mgtools_props_scene.p_io_export_animation_mode
+        exporter.export_frame = mgtools_props_scene.p_io_export_frame
+        exporter.animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
+        exporter.animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
+        exporter.animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
 
         # start the export -----------------------------------
         exporter.to_export_selection = objects
@@ -320,6 +291,7 @@ class MGTOOLS_OT_open_collections_export_folder(Operator):
     def execute(self, context):
         mgtools_props_scene = bpy.context.scene.mgtools
         path = mgtools_props_scene.p_io_export_folder_collections
+        path = bpy.path.abspath(path)
         subprocess.Popen('explorer {path}'.format(path = path))
         return {'FINISHED'}
 
@@ -331,6 +303,7 @@ class MGTOOLS_OT_open_selection_export_folder(Operator):
     def execute(self, context):
         mgtools_props_scene = bpy.context.scene.mgtools
         path = os.path.dirname(mgtools_props_scene.p_io_export_filepath)
+        path = bpy.path.abspath(path)
         subprocess.Popen('explorer {path}'.format(path = path))
         return {'FINISHED'}
 
@@ -342,5 +315,6 @@ class MGTOOLS_OT_open_animations_export_folder(Operator):
     def execute(self, context):
         mgtools_props_scene = bpy.context.scene.mgtools
         path = mgtools_props_scene.p_io_export_animation_folder
+        path = bpy.path.abspath(path)
         subprocess.Popen('explorer {path}'.format(path = path))
         return {'FINISHED'}

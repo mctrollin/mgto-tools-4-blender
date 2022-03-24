@@ -226,6 +226,37 @@ class MGTOOLS_OT_weighting_create_vertex_groups_for_selected_bones(Operator):
         MGTOOLS_functions_helper.create_vgroups_from_names(obj, bone_names)
         return {'FINISHED'}
 
+class MGTOOLS_OT_weighting_remove_vertex_groups_unused(Operator):
+    bl_idname =  "mgtools.weighting_remove_vertex_groups_unused"
+    bl_label = "Remove unused vertex groups"
+    bl_description = "Remove all vertex groups without any assigned vertices"
+    bl_options = {'REGISTER'} 
+
+    def execute(self, context):
+        meshobj = MGTOOLS_functions_macros.get_first_selected_mesh()
+        if None == meshobj:
+            print("No mesh object selected")
+            return {'CANCELLED'}
+
+        vgroups = meshobj.vertex_groups
+
+        if 0 >= len(vgroups):
+            print("Model has no vertex groups")
+            return {'CANCELLED'}
+
+        # properties
+        mgtools_props_obj = bpy.context.object.mgtools
+        
+        # prepare vars
+        only_unused = mgtools_props_obj.p_weightedit_remove_empty
+        include_locked = mgtools_props_obj.p_weightedit_remove_locked
+
+        MGTOOLS_functions_helper.remove_vgroups(meshobj, only_unused, include_locked)
+
+
+        return {'FINISHED'}
+
+
 class MGTOOLS_OT_weighting_set_max_influences(Operator):
     bl_idname =  "mgtools.weighting_set_max_influences"
     bl_label = "Set max influences"

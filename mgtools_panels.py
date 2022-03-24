@@ -45,9 +45,14 @@ class MGTOOLS_PT_rigging(Panel):
                 
         
         box = col.box()
+        box.label(text="Retarget object constraints")
+        box.prop(mgtools_props_scene, 'p_rigging_object_constraints_retarget_target', text = "Target",)
+        box.operator('mgtools.rigging_object_constraints_retarget', text="Retarget Constraints")
+
+        box = col.box()
         box.label(text="Retarget bone constraints")
-        box.prop(mgtools_props_scene, 'p_rigging_constraints_retarget_target_armature', text = "Target",)
-        box.operator('mgtools.rigging_constraints_retarget', text="Retarget Constraints")
+        box.prop(mgtools_props_scene, 'p_rigging_bone_constraints_retarget_target', text = "Target",)
+        box.operator('mgtools.rigging_bone_constraints_retarget', text="Retarget Constraints")
 
 
 class MGTOOLS_PT_weighting(Panel):
@@ -86,14 +91,22 @@ class MGTOOLS_PT_weighting(Panel):
         col.prop(bpy.context.preferences.view, "use_weight_color_range", toggle=True, text="Use custom weight colors")
         # col.separator()
         
+        # remove weights
+        box_remove = l.box()
+        row = box_remove.row()
+        row.prop(mgtools_props_obj, 'p_weightedit_remove_empty', text="Only Empty")
+        row.prop(mgtools_props_obj, 'p_weightedit_remove_locked', text="+ Locked")
+        box_remove.operator('mgtools.weighting_remove_vertex_groups_unused', text="Remove VGs")
+
 
         # Infos --------------------------------------------------------
         l.separator()
+        col = l.column()
 
         meshobj = MGTOOLS_functions_macros.get_first_selected_mesh()
 
         if None == meshobj:
-            col.label(text="No mesh object active and selected", icon='INFO', )
+            col.label(text="No active selected mesh!", icon='INFO', )
             return
         
         box = l.box()
@@ -101,10 +114,10 @@ class MGTOOLS_PT_weighting(Panel):
         box.label(text="{} ({})".format(meshobj.name, meshobj.type), )
 
         verts_selected = MGTOOLS_functions_helper.get_selected_verts(meshobj)
-        box.label(text="v:{}/{} | vg:{}".format(len(verts_selected), len(meshobj.data.vertices), len(meshobj.vertex_groups) ))
+        box.label(text="v: {} / {} | vg: {}".format(len(verts_selected), len(meshobj.data.vertices), len(meshobj.vertex_groups) ))
 
         if 'WEIGHT_PAINT' != meshobj.mode:
-            col.label(text="Weight paint mode needs to be active", icon='INFO', )
+            col.label(text="Requires WeightPaintMode!", icon='INFO', )
             return
 
 
@@ -128,7 +141,6 @@ class MGTOOLS_PT_weighting(Panel):
         row.operator('mgtools.weighting_set_weights_to_075', text=".75")
         row.operator('mgtools.weighting_set_weights_to_09', text=".9")
         row.operator('mgtools.weighting_set_weights_to_1', text="1")
-
 
         # set weight to
         row = l.row()
@@ -343,6 +355,12 @@ class MGTOOLS_PT_io(Panel):
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_alter_rotation",)
         if True == mgtools_props_scene.p_io_export_alter_rotation:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_rotation",)
+        pivot_options_box.prop(mgtools_props_scene, "p_io_export_pivot_dummy_disable_constraints",)
+
+        # helper options -------------------------------------------
+        helper_options_box = col.box()
+        helper_options_box.label(text="Helper")
+        helper_options_box.prop(mgtools_props_scene, "p_io_export_helper_strip_dotnumbers",)
 
         # mesh options -------------------------------------------
         mesh_options_box = col.box()
@@ -350,14 +368,21 @@ class MGTOOLS_PT_io(Panel):
         mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
 
         mesh_options_box2 = mesh_options_box.box()
+        mesh_options_box2.label(text="Clones")
         row = mesh_options_box2.row()
         row.label(text="Filter:")
         row.prop(mgtools_props_scene, "p_io_export_combine_meshes_filter", text="")
-        mesh_options_box2.prop(mgtools_props_scene, "p_io_export_combine_meshes",)
-        row = mesh_options_box2.row()
+        mesh_options_box2.prop(mgtools_props_scene, "p_io_export_combine_meshes", text="Combine Cloned Meshes")
         row = mesh_options_box2.row()
         row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
         row.prop(mgtools_props_scene, "p_io_export_objectname_postfix", text="Pos")
+        mesh_options_box2.prop(mgtools_props_scene, "p_io_export_armature_replacement",)
+
+        mesh_options_box3 = mesh_options_box.box()
+        mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename",)
+        if True == mgtools_props_scene.p_io_export_vgroups_rename:
+            mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename_mapping_file_path",)
+            mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename_mapping_inverse",)
 
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
@@ -373,6 +398,8 @@ class MGTOOLS_PT_io(Panel):
         animation_options_box = col.box()
         animation_options_box.label(text="Animation")
         animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_mode", text="Mode")
+        if 'OFF' == mgtools_props_scene.p_io_export_animation_mode:
+            animation_options_box.prop(mgtools_props_scene, "p_io_export_frame",)
         if 'STRIPS' == mgtools_props_scene.p_io_export_animation_mode:
             animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
         if 'MARKERS' == mgtools_props_scene.p_io_export_animation_mode:
@@ -507,7 +534,18 @@ class MGTOOLS_PT_misc(Panel):
         # > to mesh
         row = modifier_box.row()
         row.prop(mgtools_props_scene, "p_modifier_toggle_name", text="Name")
-        modifier_box.operator("mgtools.modifier_toggle", text="Toggle",)
+        op = row.operator("mgtools.modifier_toggle", text="", icon="RESTRICT_VIEW_ON")
+        op.modifier_toggle_name = mgtools_props_scene.p_modifier_toggle_name
+
+        row = modifier_box.row()
+        row.prop(mgtools_props_scene, "p_modifier_toggle_name_2", text="Name")
+        op = row.operator("mgtools.modifier_toggle", text="", icon="RESTRICT_VIEW_ON")
+        op.modifier_toggle_name = mgtools_props_scene.p_modifier_toggle_name_2
+
+        row = modifier_box.row()
+        row.prop(mgtools_props_scene, "p_modifier_toggle_name_3", text="Name")
+        op = row.operator("mgtools.modifier_toggle", text="", icon="RESTRICT_VIEW_ON")
+        op.modifier_toggle_name = mgtools_props_scene.p_modifier_toggle_name_3
 
 class MGTOOLS_PT_sandbox(Panel):
     bl_idname = "MGTOOLS_PT_sandbox"
@@ -539,9 +577,9 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.18") # check also version in __init__
+        box.label(text="MGTO tools v0.6.19") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
-        box.label(text="(C) 2021")
+        box.label(text="(C) 2022")
 
         python_version_info = sys.version_info
         box = l.column()

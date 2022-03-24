@@ -5,6 +5,7 @@ from mathutils import Matrix # Vector, Euler,
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . mgtools_functions_macros import MGTOOLS_functions_macros
 from . mgtools_functions_io import MGTOOLS_functions_io
+from . mgtools_functions_rename import MGTOOLS_functions_rename
 
 class MGTOOLS_io_exporter():
 
@@ -25,6 +26,7 @@ class MGTOOLS_io_exporter():
     secondary_bone_axis = 'X'
 
     # pivot
+    pivot_dummy_prefix = ""
     include_pivot_dummy = True
     include_pivot_dummy_if_required = False
     set_pivots_to_dummy = True
@@ -33,18 +35,26 @@ class MGTOOLS_io_exporter():
     pivot_rotation = (0,0,0)
     pivot_dummy_disable_constraints = False
 
+    # helper
+    helper_strip_dotnumbers = False
+
     # mesh
     use_mesh_modifiers = True
     combine_meshes = False
+    combine_meshes_filter = ""
     objectname_prefix = "to_export__"
     objectname_postfix = ""
-    combine_meshes_filter = ""
+    vgroups_rename = False
+    vgroups_rename_mapping_file_path = ""
+    vgroups_rename_invert_mapping = False
+    armature_replacement = None
 
     # armature
     armature_primary_rename = ''
 
     # animation settings
     animation_export_mode = ''
+    export_frame = 0
     animation_use_relative_frameranges = False
     animation_marker_start = ''
     animation_marker_end = ''
@@ -54,7 +64,6 @@ class MGTOOLS_io_exporter():
 
     # collection based options
     to_export_collection = None
-    pivot_dummy_prefix = ""
 
 
     def __init__(self, path, filename):
@@ -171,6 +180,8 @@ class MGTOOLS_io_exporter():
             bake_anim_simplify_factor=1.0,
         )
 
+        print(" > exporting FBX done")
+
         ###### defaults: #########
         # filepath="",
         # check_existing=True,
@@ -230,6 +241,21 @@ class MGTOOLS_io_exporter():
         create_temp_collection = False
 
         # prepare ----------------------------------
+
+
+        # Cache edit mode and activate object mode
+        active_mode_cached = bpy.context.object.mode if None != bpy.context.object else ''
+        if '' != active_mode_cached:
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Cache selection
+        active_object_cached = bpy.context.view_layer.objects.active
+        selected_objects_cached = bpy.context.selected_objects
+
+        # if None == active_object_cached:
+        #     print(" > Error: No active objects defined for export!")
+        #     return
+
         # create a temporary collection for exporting purposes
         tmp_export_collection = None
         if True == create_clones:
@@ -267,13 +293,23 @@ class MGTOOLS_io_exporter():
                 # add to to-process list
                 input_objects.extend(collection_instances_content_clones)
 
-        # filter objects into separate lists and try to find pivot dummy
+       
+        # -------------------
         input_meshes = []
         input_helper = []
         input_armatures = []
         input_collectioninstances = []
         input_other = []
         input_pivot_dummy = None
+
+        # pre-set armatures
+        if None != self.armature_replacement and False == (self.armature_replacement in input_armatures):
+                if not self.armature_replacement.visible_get():
+                    print(" > Warning: armature is hidden and therefore can't be exported: {} ".format(self.armature_replacement))
+                else:
+                    input_armatures.append(self.armature_replacement)
+
+        # filter objects into separate lists and try to find pivot dummy
         for obj in input_objects:
             # meshs
             if 'MESH' == obj.type:
@@ -294,13 +330,20 @@ class MGTOOLS_io_exporter():
                 input_other.append(obj)
 
             # process modifiers
+            
             for mod in obj.modifiers:
                 # armatures
-                if 'ARMATURE' == mod.type:
-                    # auto select armatures
-                    armature_ref = mod.object
-                    if False == (armature_ref in input_armatures):
-                        input_armatures.append(armature_ref)
+                # skip if an armature replacement is set (not perfect but the least complex solution atm)
+                if None == self.armature_replacement:
+                    if 'ARMATURE' == mod.type:
+                        # get armature ref
+                        armature_ref = mod.object
+                        # auto select armatures (if not hidden)
+                        if None != armature_ref and False == (armature_ref in input_armatures):
+                            if not armature_ref.visible_get():
+                                print(" > Warning: armature is hidden and therefore can't be exported: {} ".format(armature_ref))
+                            else:
+                                input_armatures.append(armature_ref)
 
 
         to_export_meshes = input_meshes
@@ -359,9 +402,11 @@ class MGTOOLS_io_exporter():
             # set clone names (if merged - should be only one object anyway..)
             if True == self.combine_meshes and 0 < len(input_meshes_clones):
                 for input_meshes_clone in input_meshes_clones:
-                    input_meshes_clone.name = self.objectname_prefix + pivot_dummy_name + self.objectname_postfix  # will add numbering automatically
+                    name_new = self.objectname_prefix + pivot_dummy_name + self.objectname_postfix
+                    if 0 < len(name_new):
+                        input_meshes_clone.name = name_new # will add numbering automatically
             
-            print (" > snapshots created: {}".format(input_meshes_clones))
+            print (" >> snapshots created: {}".format(input_meshes_clones))
 
             # do a view_layer refresh after creating clones
             bpy.context.view_layer.update()
@@ -370,13 +415,29 @@ class MGTOOLS_io_exporter():
 
             # transfer modifier
             if True == self.combine_meshes:
-                print(" > transfer (armature) modifier")
+                print(" >> transfer (armature) modifier")
                 MGTOOLS_functions_helper.transfere_modifier_armature(input_meshes, input_meshes_clones)
 
             # adopt pivot from pivot-dummy
             if True == self.set_pivots_to_dummy and None != to_export_pivot_dummy:
-                print(" > set pivot")
+                print(" >> set pivot")
                 MGTOOLS_functions_macros.set_pivot(input_meshes_clones, to_export_pivot_dummy.location, to_export_pivot_dummy.rotation_euler, True)
+
+            # rename vertex groups
+            if True == self.vgroups_rename:
+                print(" >> rename vertex groups")
+                for input_meshes_clone in input_meshes_clones:
+                    MGTOOLS_functions_rename.rename_vertexgroups(input_meshes_clone, self.vgroups_rename_mapping_file_path, self.vgroups_rename_invert_mapping)
+
+            # change modifier
+            print(" >> preprocess modifier")
+            for input_meshes_clone in input_meshes_clones:
+                for mod in input_meshes_clone.modifiers:
+                    # armatures
+                    if 'ARMATURE' == mod.type:
+                        # replacement armatures
+                        if None != self.armature_replacement:
+                            mod.object = self.armature_replacement
 
             # misc
             # for clone in input_meshes_clones:
@@ -399,6 +460,7 @@ class MGTOOLS_io_exporter():
 
         # options ----------------------------------
         # @ pivot dummy
+        print (" > apply pivot dummy options")
         pivot_dummy_muted_constraints = []
         if None != to_export_pivot_dummy:
             # option: move to origion
@@ -409,14 +471,26 @@ class MGTOOLS_io_exporter():
                 to_export_pivot_dummy.rotation_euler = tuple(radians(a) for a in self.pivot_rotation)
        
             # option: disable pivot dummy constraints
-            self.pivot_dummy_disable_constraints = True
-            if True == self.pivot_dummy_disable_constraints:
+            self.export_pivot_dummy_disable_constraints = True
+            if True == self.export_pivot_dummy_disable_constraints:
                 print (" > muting pivot dummy constraints...")
                 for constraint in to_export_pivot_dummy.constraints:
                     if False == constraint.mute:
                         print(" ... > {}".format(constraint.name))
                         pivot_dummy_muted_constraints.append(constraint)
                         constraint.mute = True
+
+        # @ helper
+        print (" > apply helper options")
+        if True == self.export_helper_strip_dotnumbers:
+            for helper in to_export_helper:
+                last_dot_idx = helper.name.rfind('.')
+                if 1 > last_dot_idx : continue
+                stripped_name = helper.name[:last_dot_idx]
+                helper.name = stripped_name
+                # sometime blender requires to retry renaming the object a 2nd time (not sure why)
+                if stripped_name != helper.name:
+                    helper.name = stripped_name
 
 
         # export ------------------------------------
@@ -575,8 +649,15 @@ class MGTOOLS_io_exporter():
                     current_start_marker_active = True
                     current_start_marker_name = marker_name.replace(self.animation_marker_start, '')
 
-        else:
+        elif 'OFF' == self.animation_export_mode:
+
+            bpy.context.scene.frame_start = self.export_frame
+            bpy.context.scene.frame_end = self.export_frame
+
             self.call_fbx_export() # < ============== EXPORT
+
+        else:
+            print('Unhandled animation export mode: {}.'.format(self.animation_export_mode))
 
 
         # cleanup ------------------------------------
@@ -627,6 +708,14 @@ class MGTOOLS_io_exporter():
             while 0 < len(collection_instances_content_clones):
                 clone = collection_instances_content_clones.pop(0)
                 bpy.data.objects.remove(clone)
+
+        # Reset selection
+        bpy.context.view_layer.objects.active = active_object_cached
+        MGTOOLS_functions_macros.select_objects(selected_objects_cached, False)
+
+        # Reset edit mode
+        if '' != active_mode_cached:
+            bpy.ops.object.mode_set(mode=active_mode_cached)
 
     @classmethod
     def quick_export_anim(self, path, filename, frame_start, frame_end):

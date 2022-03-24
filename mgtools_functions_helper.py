@@ -182,7 +182,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def create_vgroups_from_names(self, meshobj, vg_names):
-         # check if meshobj is really a mesh type
+        # check if meshobj is really a mesh type
         if 'MESH' != meshobj.type:
             return
         for vg_name in vg_names:
@@ -194,6 +194,29 @@ class MGTOOLS_functions_helper():
             # create new vertex group
             vg = meshobj.vertex_groups.new(name=vg_name)
 
+    @classmethod
+    def remove_vgroups(self, meshobj, only_unused, include_locked):
+        # check if meshobj is really a mesh type
+        if 'MESH' != meshobj.type:
+            return
+
+        for vg in meshobj.vertex_groups:
+            
+            # filter locked groups
+            if True == vg.lock_weight and False == include_locked:
+                continue
+
+            if True == only_unused:
+                # check if weights are set for this vg
+                has_weights = 0 < self.get_weights_count(meshobj.data, vg)
+
+                # filter vgs to be removed
+                if True == has_weights:
+                    continue
+            
+            #remove
+            print (" > Removing vertex group ({})! ".format(vg.name))
+            meshobj.vertex_groups.remove(vg)
 
     # Armature #######################################################
 
@@ -254,6 +277,20 @@ class MGTOOLS_functions_helper():
         # calculate average
         weight_average = weight_accum / selected_verts_count
         return weight_average
+
+    # returns the number of vertices which are part of this vertex group
+    @classmethod
+    def get_weights_count(self, mesh, vgroup):
+        weights = 0
+        group_index = vgroup.index
+        for vidx in range(len(mesh.vertices)):
+            v = mesh.vertices[vidx]
+            for vge in v.groups:
+                if vge.group != group_index:
+                    continue           
+                weights += 1
+                break
+        return weights
 
     # for every vertex remove all weights except the highest ones up the supplied maximum count
     @classmethod

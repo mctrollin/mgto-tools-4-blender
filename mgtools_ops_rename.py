@@ -45,16 +45,13 @@ class MGTOOLS_OT_rename_vertexgroups(Operator):
         # properties
         bone_names_mapping_file_path = mgtools_props_scene.p_rename_mapping_file_path
         invert_mapping = mgtools_props_scene.p_rename_mapping_inverse
-        
+
         # get mesh
-        mesh_object = MGTOOLS_functions_macros.get_first_selected_mesh()
-       
-        if None != mesh_object:
-            # rename vertex groups
-            MGTOOLS_functions_rename.rename_vertexgroups(mesh_object, bone_names_mapping_file_path, invert_mapping)
-        else:
-            print("No mesh")
-       
+        for tmpObj in bpy.context.selected_objects:
+            if 'MESH' == tmpObj.type:
+                # rename vertex groups
+                MGTOOLS_functions_rename.rename_vertexgroups(tmpObj, bone_names_mapping_file_path, invert_mapping)
+
         return{'FINISHED'}
 
 class MGTOOLS_OT_rename_print_bones(Operator):

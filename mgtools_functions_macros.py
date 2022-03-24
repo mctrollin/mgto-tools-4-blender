@@ -52,7 +52,7 @@ class MGTOOLS_functions_macros():
         bpy.context.view_layer.objects.active = refobj
 
     @classmethod
-    def select_objects(self, ref_objects, set_active):
+    def select_objects(self, ref_objects, set_active:bool=False):
 
         try:
             len(ref_objects)
@@ -479,6 +479,16 @@ class MGTOOLS_functions_macros():
         bpy.ops.object.vertex_group_normalize_all(lock_active=True)
         # normalize all - this will effectively only set vertices of the active bone which don't have any other bone influence to 1
         bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+
+    # transfere weights from one vertex group to another of the same mesh
+    @classmethod
+    def transfer_weights(self, vg_from, vg_to, mesh):
+        for idx in range(len(mesh.vertices)):
+            # atm we can't simply check if a certain index is defined in the vertex group. 
+            # So we have to awkwardly ask the mesh vertex if it is part of the group. 
+            # I hope this will be improved in the future
+            if [True for g in mesh.vertices[idx].groups if g.group == vg_from.index]:
+                vg_to.add([idx], vg_from.weight(idx), 'ADD')
 
 
     # Animations #######################################################

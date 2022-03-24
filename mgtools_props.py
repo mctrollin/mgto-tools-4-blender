@@ -22,8 +22,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_rigging_add_scale_constraints_to_cloned_bones: BoolProperty(name="Add scale constraints", default=False, description="Add to each bone a scale constraint referencing the corresponding source bone",)
 
 
-    p_rigging_constraints_retarget_target_armature: PointerProperty(name="Target", type=bpy.types.Object, description="New constraints target armature. ",)
-
+    p_rigging_bone_constraints_retarget_target: PointerProperty(name="Target", type=bpy.types.Object, description="New constraints target armature. ",)
+    p_rigging_object_constraints_retarget_target: PointerProperty(name="Target", type=bpy.types.Object, description="New constraints target object. ",)
 
     # Properties.Animation ################################################################ 
 
@@ -96,16 +96,24 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_include_pivot_dummy: BoolProperty(name="Include pivot dummy", default=True, description="Don't export the pivot dummy",)
     p_io_export_include_pivot_dummy_if_required: BoolProperty(name="Include pivot dummy if required", default=True, description="Don't export the pivot dummy if it's not necessary because we only export one single object",)
     p_io_export_set_pivots_to_dummy: BoolProperty(name="Set pivots to dummy", default=True, description="Will set all pivots to the pivot dummy transforms",)
-    p_io_export_from_origin: BoolProperty(name="Move to origin", default=True, description="Export object from world origin",)
-    p_io_export_alter_rotation: BoolProperty(name="Alter rotation", default=False, description="Change the rotation before exporting (and revert it afterwards)",)
-    p_io_export_rotation: FloatVectorProperty(name="Export rotation", default=(0.0, 0.0, 0.0), description="Export object rotation",)
-    
+    p_io_export_from_origin: BoolProperty(name="Revert Location", default=True, description="Export object from world origin",)
+    p_io_export_alter_rotation: BoolProperty(name="Revert Rotation", default=False, description="Export object without rotation + offset",)
+    p_io_export_rotation: FloatVectorProperty(name="Export rotation offset", default=(0.0, 0.0, 0.0), description="Export object rotation",)
+    p_io_export_pivot_dummy_disable_constraints: BoolProperty(name="Disable constraints", default=False, description="Disable constraints on the pivot dummy",)
+
+    #helper
+    p_io_export_helper_strip_dotnumbers: BoolProperty(name="Strip dot-numbers", default=False, description="Try to remove blenders .000 numbering on helper objects",)
+
     # mesh
-    p_io_export_use_mesh_modifiers: BoolProperty(name="Use mesh modifiers", default=True, description="Apply mesh modifiers during export (non-destructive)",)
+    p_io_export_use_mesh_modifiers: BoolProperty(name="Apply modifiers", default=True, description="Apply mesh modifiers during export (excluding armature modifier, non-destructive)",)
     p_io_export_combine_meshes: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together",)
-    p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing combined. Delimiter=,",)
-    p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all exported meshes",)
-    p_io_export_objectname_postfix: StringProperty(name='Object name postfix', default="", description="Postfix added to all exported meshes",)
+    p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing cloned and combined during export. Delimiter=','",)
+    p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all cloned meshes",)
+    p_io_export_objectname_postfix: StringProperty(name='Object name postfix', default="", description="Postfix added to all cloned meshes",)
+    p_io_export_vgroups_rename: BoolProperty(name="Rename Vertex Groups", default=False, description="Rename vertex groups based on a mapping file",)
+    p_io_export_vgroups_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
+    p_io_export_vgroups_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
+    p_io_export_armature_replacement: PointerProperty(name="Replacement Armature", type=bpy.types.Object, description="For clones it will replace any possible armature reference inside armature modifier",)
 
     # filename
     p_io_export_filename_prefix: StringProperty(name='Filename: Prefix', default="", description="Optional filename prefix",)
@@ -116,12 +124,10 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
     p_io_export_filename_ignore_collection_dot_prefix: BoolProperty(name='Ignore .000', default=False, description="Excludes everything after the last dot in the collection name (e.g. 'bla.blub' will become just 'bla').",)
 
-
     # armature
     p_io_export_armature_rename: StringProperty(name='Armature temp export name', default="", description="Allows to rename the primary armature during export. Will be reverted afterwards.",)
 
     # animation
-    p_io_export_animation_use_relative_frameranges: BoolProperty(name="Use relative frame ranges", default=True, description="Exported frame numbers will be relative to the exported action and not absolute to scene.",)
     p_io_export_animation_mode: EnumProperty(
         name="Framerange mode",
         items=(
@@ -132,6 +138,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
         default='OFF',
         description="Mode for finding animation frame ranges for exporting",
         )
+    p_io_export_frame: IntProperty(name='Export Frame', default=0, description="Export frame number if animation export is disabled.",)
+    p_io_export_animation_use_relative_frameranges: BoolProperty(name="Use relative frame ranges", default=True, description="Exported frame numbers will be relative to the exported action and not absolute to scene.",)
     p_io_export_animation_marker_start: StringProperty(name='Filter: Marker Start', default="x_", description="Filter string for to-export frame range start marker",)
     p_io_export_animation_marker_end: StringProperty(name='Filter: Marker End', default="_END", description="Filter string for to-export frame range end marker",)
 
@@ -158,6 +166,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_particle_hair_to_mesh_name: StringProperty(name="Name", default="HairMesh", description="Basename of all hair mesh objects which will be created", )
 
     p_modifier_toggle_name: StringProperty(name="Mod Name", default="Mirror", description="Modifier Name", )
+    p_modifier_toggle_name_2: StringProperty(name="Mod Name", default="Mirror", description="Modifier Name", )
+    p_modifier_toggle_name_3: StringProperty(name="Mod Name", default="Mirror", description="Modifier Name", )
 
 
     # Register ################################################################ 
@@ -251,6 +261,9 @@ class MGTOOLS_properties_object(PropertyGroup):
 
     # Weights editing  ---------------------
     p_weightedit_add_amount: FloatProperty(name="Add", default=0.1, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Weight add amount", )
+
+    p_weightedit_remove_empty: BoolProperty(name="Remove only Empty", default=True, description="Will remove only empty vertex groups", )
+    p_weightedit_remove_locked: BoolProperty(name="Remove also Locked", default=False,  description="Remove also locked vertex groups", )
 
     p_weightedit_max_influences: IntProperty(name="Max Influences", default=3, min=1, max=100, description="Maximum amount of influences per vertex", )
     p_weightedit_min_weight: FloatProperty(name="Add", default=0.01, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Minimum influence strength per vertex", )

@@ -195,10 +195,10 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
         return None
 
 # Change target armature of all bone constraints
-class MGTOOLS_OT_retarget_constraints(Operator):
-    bl_idname = "mgtools.rigging_constraints_retarget"
+class MGTOOLS_OT_rigging_bone_constraints_retarget(Operator):
+    bl_idname = "mgtools.rigging_bone_constraints_retarget"
     bl_label = ""
-    bl_description = ""
+    bl_description = "Replaces the target reference of all bone constraints to another armature."
 
     def execute(self, context):
 
@@ -223,7 +223,7 @@ class MGTOOLS_OT_retarget_constraints(Operator):
 
         # read properties
         mgtools_props_scene = bpy.context.scene.mgtools
-        retarget_target_armature = mgtools_props_scene.p_rigging_constraints_retarget_target_armature
+        retarget_target_armature = mgtools_props_scene.p_rigging_bone_constraints_retarget_target
 
         if None == retarget_target_armature:
             print ("Target armature must be set.")
@@ -236,6 +236,33 @@ class MGTOOLS_OT_retarget_constraints(Operator):
 
         return{'FINISHED'}
 
-        
+# Change target armature of all bone constraints
+class MGTOOLS_OT_rigging_object_constraints_retarget(Operator):
+    bl_idname = "mgtools.rigging_object_constraints_retarget"
+    bl_label = ""
+    bl_description = "Replaces the target reference of all object constraints to another object."
+
+    def execute(self, context):
+
+        # get sources ---------------------------
+        if 0 >= len(bpy.context.selected_objects):
+            print ("Nothing selected")
+            return {'CANCELLED'}
+
+        # read properties
+        mgtools_props_scene = bpy.context.scene.mgtools
+        retarget_target = mgtools_props_scene.p_rigging_object_constraints_retarget_target
+
+        if None == retarget_target:
+            print ("Target object must be set.")
+            return {'CANCELLED'}
+
+        # get source armature
+        for tmpObj in bpy.context.selected_objects:
+            for constraint in tmpObj.constraints:
+                if hasattr(constraint, 'target'):
+                    constraint.target = retarget_target
+
+        return{'FINISHED'}
 
 
