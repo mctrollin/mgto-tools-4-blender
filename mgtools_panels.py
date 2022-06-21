@@ -154,7 +154,7 @@ class MGTOOLS_PT_weighting(Panel):
         row.operator('mgtools.weighting_subtract_weights', text="-")
 
         row = l.row()
-        row.operator('mgtools.weighting_flatten_weights', text="Flatten")
+        row.operator('mgtools.weighting_average_weights', text="Average")
        
         l.separator()
 
@@ -329,18 +329,25 @@ class MGTOOLS_PT_io(Panel):
         mgtools_props_scene = bpy.context.scene.mgtools
 
         # axis options -------------------------------------------
-        main_options_box = col.box()
-        row = main_options_box.row()
+        axis_options_box = col.box()
+        row = axis_options_box.row()
         row.label(text="Forward")
         row.prop(mgtools_props_scene, "p_io_export_axis_forward", text="",)
         row.label(text="Up")
         row.prop(mgtools_props_scene, "p_io_export_axis_up", text="")
-        row = main_options_box.row()
-        row.label(text="Bone Primary Axis")
+        row = axis_options_box.row()
+        row.label(text="P Bone Axis")
         row.prop(mgtools_props_scene, "p_io_export_primary_bone_axis", text="",)
-        row.label(text="Bone Secondary Axis")
+        row.label(text="S Bone Axis")
         row.prop(mgtools_props_scene, "p_io_export_secondary_bone_axis", text="")
-        
+
+        # scale options -------------------------------------------
+        scale_options_box = col.box()
+        row = scale_options_box.row()
+        row.prop(mgtools_props_scene, "p_io_export_scale", text="")
+        row.prop(mgtools_props_scene, "p_io_export_scale_apply_options", text="")
+        row.prop(mgtools_props_scene, "p_io_export_apply_unit_scale",)
+
         # pivot options -------------------------------------------
         pivot_options_box = col.box()
         pivot_options_box.label(text="Pivot")
@@ -351,9 +358,12 @@ class MGTOOLS_PT_io(Panel):
         if True == mgtools_props_scene.p_io_export_include_pivot_dummy:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy_if_required",)
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_set_pivots_to_dummy",)
-        pivot_options_box.prop(mgtools_props_scene, "p_io_export_from_origin",)
-        pivot_options_box.prop(mgtools_props_scene, "p_io_export_alter_rotation",)
-        if True == mgtools_props_scene.p_io_export_alter_rotation:
+        row = pivot_options_box.row()
+        row.label(text="Reset:")
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_location", text="location")
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_rotation", text="rotation")
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_scale", text="scale")
+        if True == mgtools_props_scene.p_io_export_pivot_reset_rotation:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_rotation",)
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_pivot_dummy_disable_constraints",)
 
@@ -366,6 +376,7 @@ class MGTOOLS_PT_io(Panel):
         mesh_options_box = col.box()
         mesh_options_box.label(text="Mesh")
         mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
+        mesh_options_box.prop(mgtools_props_scene, "p_io_export_mesh_smooth_type",)
 
         mesh_options_box2 = mesh_options_box.box()
         mesh_options_box2.label(text="Clones")
@@ -577,7 +588,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.19") # check also version in __init__
+        box.label(text="MGTO tools v0.6.20") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2022")
 

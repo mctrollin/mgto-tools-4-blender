@@ -25,13 +25,19 @@ class MGTOOLS_io_exporter():
     primary_bone_axis = 'Y'
     secondary_bone_axis = 'X'
 
+    # scale
+    scale_apply_options = 'FBX_SCALE_ALL'
+    scale = 1
+    apply_unit_scale = True
+
     # pivot
     pivot_dummy_prefix = ""
     include_pivot_dummy = True
     include_pivot_dummy_if_required = False
     set_pivots_to_dummy = True
-    export_from_origin = False
-    alter_pivot_rotation = False
+    pivot_reset_location = False
+    pivot_reset_rotation = False
+    pivot_reset_scale = False
     pivot_rotation = (0,0,0)
     pivot_dummy_disable_constraints = False
 
@@ -154,13 +160,14 @@ class MGTOOLS_io_exporter():
             axis_forward=self.axis_forward,
             axis_up=self.axis_up,
             use_selection=True,
-            global_scale=1.0,
-            apply_unit_scale=True,
-            apply_scale_options='FBX_SCALE_ALL',
+            global_scale=self.scale,
+            apply_unit_scale=self.apply_unit_scale,
+            apply_scale_options=self.scale_apply_options,
             bake_space_transform=False,
             object_types={'ARMATURE', 'EMPTY', 'MESH'},
             # mesh
             use_mesh_modifiers=self.use_mesh_modifiers,
+            mesh_smooth_type=self.mesh_smooth_type,
             # material
             embed_textures=False,
             # rig
@@ -421,7 +428,12 @@ class MGTOOLS_io_exporter():
             # adopt pivot from pivot-dummy
             if True == self.set_pivots_to_dummy and None != to_export_pivot_dummy:
                 print(" >> set pivot")
-                MGTOOLS_functions_macros.set_pivot(input_meshes_clones, to_export_pivot_dummy.location, to_export_pivot_dummy.rotation_euler, True)
+                MGTOOLS_functions_macros.set_pivot(
+                    target_objects=input_meshes_clones, 
+                    new_loc=to_export_pivot_dummy.location, 
+                    new_rot_euler=to_export_pivot_dummy.rotation_euler, 
+                    new_scale=to_export_pivot_dummy.scale,
+                    apply_scale=True)
 
             # rename vertex groups
             if True == self.vgroups_rename:
@@ -452,9 +464,11 @@ class MGTOOLS_io_exporter():
         # cache original pivot-dummy transforms so we can revert it after export
         pivot_pos_cached = None
         pivot_rot_cached = None
+        pivot_scale_cached = None
         if None != to_export_pivot_dummy:
             pivot_pos_cached = to_export_pivot_dummy.location.copy()
             pivot_rot_cached = to_export_pivot_dummy.rotation_euler.copy()
+            pivot_scale_cached = to_export_pivot_dummy.scale.copy()
             # print ("Cached transforms: {}, {}".format(pivot_pos_cached, pivot_rot_cached))
 
 
@@ -463,12 +477,14 @@ class MGTOOLS_io_exporter():
         print (" > apply pivot dummy options")
         pivot_dummy_muted_constraints = []
         if None != to_export_pivot_dummy:
-            # option: move to origion
-            if True == self.export_from_origin:
+            # option: reset transforms
+            if True == self.pivot_reset_location:
                 print (" > exporting from origin")
                 to_export_pivot_dummy.location = (0,0,0)
-            if True == self.alter_pivot_rotation:
+            if True == self.pivot_reset_rotation:
                 to_export_pivot_dummy.rotation_euler = tuple(radians(a) for a in self.pivot_rotation)
+            if True == self.pivot_reset_scale:
+                to_export_pivot_dummy.scale = (1,1,1)
        
             # option: disable pivot dummy constraints
             self.export_pivot_dummy_disable_constraints = True
@@ -492,6 +508,10 @@ class MGTOOLS_io_exporter():
                 if stripped_name != helper.name:
                     helper.name = stripped_name
 
+
+        # for mesh in to_export_meshes:
+        #     MGTOOLS_functions_macros.select_objects(mesh, True)
+        #     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
         # export ------------------------------------
         # select
@@ -518,8 +538,8 @@ class MGTOOLS_io_exporter():
         if 0 < len(to_export_armatures):
             # we take the first armature in the list atm
             armature_primary = to_export_armatures[0]
-            armature_primary_name_cached = armature_primary.name
             # rename armatures
+            armature_primary_name_cached = armature_primary.name
             if '' != self.armature_primary_rename:
                 armature_primary.name = self.armature_primary_rename
 
@@ -680,6 +700,7 @@ class MGTOOLS_io_exporter():
             # print ("Cached transforms: {}, {}".format(pivot_pos_cached, pivot_rot_cached))
             to_export_pivot_dummy.location = pivot_pos_cached
             to_export_pivot_dummy.rotation_euler = pivot_rot_cached
+            to_export_pivot_dummy.scale = pivot_scale_cached
 
             print(" > reverting pivot constraints")
             if 0 < len(pivot_dummy_muted_constraints):

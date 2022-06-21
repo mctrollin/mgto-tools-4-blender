@@ -90,37 +90,63 @@ class MGTOOLS_properties_scene(PropertyGroup):
         default='X',
         description="Secondary bone axis definition when exporting",
         )
+
+    p_io_export_scale_apply_options: EnumProperty(
+        name="Apply Scalings",
+        items=(
+            ('FBX_SCALE_NONE', "All Local", "Apply custom scaling and units scaling to each object transformation, FBX scale remains at 1.0."),
+            ('FBX_SCALE_UNITS', "FBX Units Scale", "Apply custom scaling to each object transformation, and units scaling to FBX scale."),
+            ('FBX_SCALE_CUSTOM', "FBX Custom Scale", "Apply custom scaling to FBX scale, and units scaling to each object transformation."),
+            ('FBX_SCALE_ALL', "FBX All", "Apply custom scaling and units scaling to FBX scale."),
+            ),
+        default='FBX_SCALE_ALL',
+        description="How to apply custom and units scalings in generated FBX file (Blender uses FBX scale to detect units on import, but many other applications do not handle the same way)",
+        )
+    p_io_export_scale: FloatProperty(name="Scale", default=1, description="Scale all data (Some importers do not support scaled armatures!).",)
+    p_io_export_apply_unit_scale: BoolProperty(name="Apply Unit", default=True, description="Take into account current Blender units settings (if unset, raw Blender Units values are used as-is).",)
     
+
     # pivot
-    p_io_export_prefix_filter_pivot: StringProperty(name='Filter: Pivot dummy', default="pivot_", description="Filter prefix for pivot dummies",)
-    p_io_export_include_pivot_dummy: BoolProperty(name="Include pivot dummy", default=True, description="Don't export the pivot dummy",)
-    p_io_export_include_pivot_dummy_if_required: BoolProperty(name="Include pivot dummy if required", default=True, description="Don't export the pivot dummy if it's not necessary because we only export one single object",)
-    p_io_export_set_pivots_to_dummy: BoolProperty(name="Set pivots to dummy", default=True, description="Will set all pivots to the pivot dummy transforms",)
-    p_io_export_from_origin: BoolProperty(name="Revert Location", default=True, description="Export object from world origin",)
-    p_io_export_alter_rotation: BoolProperty(name="Revert Rotation", default=False, description="Export object without rotation + offset",)
-    p_io_export_rotation: FloatVectorProperty(name="Export rotation offset", default=(0.0, 0.0, 0.0), description="Export object rotation",)
-    p_io_export_pivot_dummy_disable_constraints: BoolProperty(name="Disable constraints", default=False, description="Disable constraints on the pivot dummy",)
+    p_io_export_prefix_filter_pivot: StringProperty(name='Filter: Pivot dummy', default="pivot_", description="Filter prefix for pivot dummies.",)
+    p_io_export_include_pivot_dummy: BoolProperty(name="Include pivot dummy", default=True, description="Don't export the pivot dummy.",)
+    p_io_export_include_pivot_dummy_if_required: BoolProperty(name="Include pivot dummy if required", default=True, description="Don't export the pivot dummy if it's not necessary because we only export one single object.",)
+    p_io_export_set_pivots_to_dummy: BoolProperty(name="Set pivots to dummy", default=True, description="Will set all pivots to the pivot dummy transforms.",)
+    p_io_export_pivot_reset_location: BoolProperty(name="Revert Location", default=True, description="Export object from world origin.",)
+    p_io_export_pivot_reset_rotation: BoolProperty(name="Revert Rotation", default=False, description="Export object without rotation (except offset).",)
+    p_io_export_pivot_reset_scale: BoolProperty(name="Revert Scale", default=False, description="Export object without scale.",)
+    p_io_export_rotation: FloatVectorProperty(name="Export rotation offset", default=(0.0, 0.0, 0.0), description="Export object rotation.",)
+    p_io_export_pivot_dummy_disable_constraints: BoolProperty(name="Disable constraints", default=False, description="Disable constraints on the pivot dummy.",)
 
     #helper
-    p_io_export_helper_strip_dotnumbers: BoolProperty(name="Strip dot-numbers", default=False, description="Try to remove blenders .000 numbering on helper objects",)
+    p_io_export_helper_strip_dotnumbers: BoolProperty(name="Strip dot-numbers", default=False, description="Try to remove blenders .000 numbering on helper objects.",)
 
     # mesh
-    p_io_export_use_mesh_modifiers: BoolProperty(name="Apply modifiers", default=True, description="Apply mesh modifiers during export (excluding armature modifier, non-destructive)",)
-    p_io_export_combine_meshes: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together",)
-    p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing cloned and combined during export. Delimiter=','",)
-    p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all cloned meshes",)
-    p_io_export_objectname_postfix: StringProperty(name='Object name postfix', default="", description="Postfix added to all cloned meshes",)
-    p_io_export_vgroups_rename: BoolProperty(name="Rename Vertex Groups", default=False, description="Rename vertex groups based on a mapping file",)
+    p_io_export_use_mesh_modifiers: BoolProperty(name="Apply modifiers", default=True, description="Apply mesh modifiers during export (excluding armature modifier, non-destructive).",)
+    p_io_export_mesh_smooth_type: EnumProperty(
+        name="Smoothing",
+        items=(
+            ('OFF', "Normals Only", "Export only normals instead of writing edge or face smoothing data"),
+            ('FACE', "Face", "Write face smoothing"),
+            ('EDGE', "Edge", "Write edge smoothing"),
+            ),
+        default='OFF',
+        description="Export smoothing information (prefer ‘Normals Only’ option if your target importer understand split normals)",
+        )
+    p_io_export_combine_meshes: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together.",)
+    p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing cloned and combined during export. Delimiter=','.",)
+    p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all cloned meshes.",)
+    p_io_export_objectname_postfix: StringProperty(name='Object name postfix', default="", description="Postfix added to all cloned meshes.",)
+    p_io_export_vgroups_rename: BoolProperty(name="Rename Vertex Groups", default=False, description="Rename vertex groups based on a mapping file.",)
     p_io_export_vgroups_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
     p_io_export_vgroups_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
-    p_io_export_armature_replacement: PointerProperty(name="Replacement Armature", type=bpy.types.Object, description="For clones it will replace any possible armature reference inside armature modifier",)
+    p_io_export_armature_replacement: PointerProperty(name="Replacement Armature", type=bpy.types.Object, description="For clones it will replace any possible armature reference inside armature modifier.",)
 
     # filename
-    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix', default="", description="Optional filename prefix",)
-    p_io_export_filename_prefix_static: StringProperty(name='Filename: Prefix (static)', default="", description="Optional filename prefix for static meshes",)
-    p_io_export_filename_prefix_skeletal: StringProperty(name='Filename: Prefix (skeletal)', default="", description="Optional filename prefix for skeletal meshes",)
-    p_io_export_filename_prefix_animation: StringProperty(name='Filename: Prefix (animation)', default="", description="Optional filename prefix for animations",)
-    p_io_export_filename_postfix: StringProperty(name='Filename: Postfix', default="", description="Optional filename postfix",)
+    p_io_export_filename_prefix: StringProperty(name='Filename: Prefix', default="", description="Optional filename prefix.",)
+    p_io_export_filename_prefix_static: StringProperty(name='Filename: Prefix (static)', default="", description="Optional filename prefix for static meshes.",)
+    p_io_export_filename_prefix_skeletal: StringProperty(name='Filename: Prefix (skeletal)', default="", description="Optional filename prefix for skeletal meshes.",)
+    p_io_export_filename_prefix_animation: StringProperty(name='Filename: Prefix (animation)', default="", description="Optional filename prefix for animations.",)
+    p_io_export_filename_postfix: StringProperty(name='Filename: Postfix', default="", description="Optional filename postfix.",)
     p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
     p_io_export_filename_ignore_collection_dot_prefix: BoolProperty(name='Ignore .000', default=False, description="Excludes everything after the last dot in the collection name (e.g. 'bla.blub' will become just 'bla').",)
 
@@ -140,30 +166,30 @@ class MGTOOLS_properties_scene(PropertyGroup):
         )
     p_io_export_frame: IntProperty(name='Export Frame', default=0, description="Export frame number if animation export is disabled.",)
     p_io_export_animation_use_relative_frameranges: BoolProperty(name="Use relative frame ranges", default=True, description="Exported frame numbers will be relative to the exported action and not absolute to scene.",)
-    p_io_export_animation_marker_start: StringProperty(name='Filter: Marker Start', default="x_", description="Filter string for to-export frame range start marker",)
-    p_io_export_animation_marker_end: StringProperty(name='Filter: Marker End', default="_END", description="Filter string for to-export frame range end marker",)
+    p_io_export_animation_marker_start: StringProperty(name='Filter: Marker Start', default="x_", description="Filter string for to-export frame range start marker.",)
+    p_io_export_animation_marker_end: StringProperty(name='Filter: Marker End', default="_END", description="Filter string for to-export frame range end marker.",)
 
 
     # selection export ---------------------
-    p_io_export_filepath: StringProperty(name='Export file', default="", description="Export file for selection export", subtype='FILE_PATH',)
+    p_io_export_filepath: StringProperty(name='Export file', default="", description="Export file for selection export.", subtype='FILE_PATH',)
    
     # collection export ---------------------
-    p_io_export_folder_collections: StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export", subtype='DIR_PATH',)
-    p_io_export_prefix_filter_collection: StringProperty(name='Filter: Collections', default="x_", description="Filter prefix for collections which should be exported",)
+    p_io_export_folder_collections: StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export.", subtype='DIR_PATH',)
+    p_io_export_prefix_filter_collection: StringProperty(name='Filter: Collections', default="x_", description="Filter prefix for collections which should be exported.",)
 
     # animation export (legacy) ---------------------
-    p_io_export_animation_folder: StringProperty(name='Animations export folder', default="", description="Export folder path for animations bath export", subtype='DIR_PATH',)
+    p_io_export_animation_folder: StringProperty(name='Animations export folder', default="", description="Export folder path for animations bath export.", subtype='DIR_PATH',)
     p_io_export_animation_actions_reference_override: PointerProperty(name="Action reference override", type=bpy.types.Object, description="Used as reference for action meta data. If not set the active object will be used.",)
 
     # hitboxes export ---------------------
-    p_io_export_prefix_filter_collection_hitboxes: StringProperty(name='Filter: Collections', default="h_", description="Filter prefix for collections containing hitboxes data",)
+    p_io_export_prefix_filter_collection_hitboxes: StringProperty(name='Filter: Collections', default="h_", description="Filter prefix for collections containing hitboxes data.",)
 
 
     # Properties.Misc ################################################################ 
 
-    p_particle_hair_to_mesh_thickness: FloatProperty(name="Thickness", default=0.0001, min=0.00001, max=1000.0, precision=5, subtype='FACTOR', description="The hair tickness when converting the particle hair to a mesh", )
-    p_particle_hair_to_mesh_resolution: FloatProperty(name="Resolution", default=0, min=0, max=100, precision=0, subtype='FACTOR', description="The hair resolution when converting the particle hair to a mesh", )
-    p_particle_hair_to_mesh_name: StringProperty(name="Name", default="HairMesh", description="Basename of all hair mesh objects which will be created", )
+    p_particle_hair_to_mesh_thickness: FloatProperty(name="Thickness", default=0.0001, min=0.00001, max=1000.0, precision=5, subtype='FACTOR', description="The hair tickness when converting the particle hair to a mesh.", )
+    p_particle_hair_to_mesh_resolution: FloatProperty(name="Resolution", default=0, min=0, max=100, precision=0, subtype='FACTOR', description="The hair resolution when converting the particle hair to a mesh.", )
+    p_particle_hair_to_mesh_name: StringProperty(name="Name", default="HairMesh", description="Basename of all hair mesh objects which will be created.", )
 
     p_modifier_toggle_name: StringProperty(name="Mod Name", default="Mirror", description="Modifier Name", )
     p_modifier_toggle_name_2: StringProperty(name="Mod Name", default="Mirror", description="Modifier Name", )

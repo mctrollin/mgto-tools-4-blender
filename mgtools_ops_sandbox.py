@@ -46,8 +46,9 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
 
         # ---------------------------------------------
         # TEST: mesh snapshot
-        meshobj = MGTOOLS_functions_macros.get_first_selected_mesh()
-        MGTOOLS_functions_macros.make_snapshot_from([meshobj], False, "a_", "_o", False, None)
+        meshobj = bpy.context.selected_objects
+        do_merge = True
+        MGTOOLS_functions_macros.make_snapshot_from(meshobj, do_merge, "a_", "_o", False, None)
         MGTOOLS_functions_macros.select_only(meshobj)
 
 

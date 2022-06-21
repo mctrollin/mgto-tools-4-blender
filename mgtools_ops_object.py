@@ -54,7 +54,7 @@ class MGTOOLS_OT_object_pivot_copy(Operator):
         selected_objects_count = len(bpy.context.selected_objects)
 
         if 2 > selected_objects_count:
-            return
+            return{'FINISHED'}
 
         ref_object = bpy.context.view_layer.objects.active
         target_objects = bpy.context.selected_objects.copy()
@@ -64,7 +64,12 @@ class MGTOOLS_OT_object_pivot_copy(Operator):
         print("ref_object: {}".format(ref_object))
         print("target_objects: {}".format(target_objects))
 
-        MGTOOLS_functions_macros.set_pivot(target_objects, ref_object.location, ref_object.rotation_euler, False)
+        MGTOOLS_functions_macros.set_pivot(
+            target_objects=target_objects, 
+            new_loc=ref_object.location, 
+            new_rot_euler=ref_object.rotation_euler, 
+            new_scale=ref_object.scale, 
+            apply_scale=False)
 
         return{'FINISHED'}
 

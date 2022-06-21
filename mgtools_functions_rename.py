@@ -59,22 +59,50 @@ class MGTOOLS_functions_rename():
             print("No mapping entries")
             return
 
-        # loop through all vertex groups
-        for vg in mesh_object.vertex_groups:
-            # print ("Prosessing vertex group: {}".format(vg.name))
+        # mapping based loop
+        # loop through mapping list
+        entries_count = math.floor(len(mapping_list)*0.5)
+        name_from = ''
+        name_to = ''
+        for i in range(entries_count):
+            idx = i * 2
+            if False == mapping_invert:
+                name_from = mapping_list[idx]
+                name_to = mapping_list[idx+1]
+            else:
+                name_from = mapping_list[idx+1]
+                name_to = mapping_list[idx]
 
-            # try get new name
-            name_new = self.get_mapped_name(vg.name, mapping_list, mapping_invert)
-
+            
             # apply new name 
-            if "" != name_new:
-                # use existing
-                if 0 <= mesh_object.vertex_groups.find(name_new):
-                    MGTOOLS_functions_macros.transfer_weights(vg, mesh_object.vertex_groups[name_new], mesh_object.data)
-                    mesh_object.vertex_groups.remove(vg)
-                # rename
-                else:
-                    vg.name = name_new
+            if 0 <= mesh_object.vertex_groups.find(name_from):
+                vg_from = mesh_object.vertex_groups[name_from]
+                if "" != name_from and name_from != name_to:
+                    # use existing
+                    if 0 <= mesh_object.vertex_groups.find(name_to):
+                        MGTOOLS_functions_macros.transfer_weights(vg_from, mesh_object.vertex_groups[name_to], mesh_object.data)
+                        mesh_object.vertex_groups.remove(vg_from)
+                    # rename
+                    else:
+                        vg_from.name = name_to
+
+        # vertex-group based loop
+        # # loop through all vertex groups
+        # for vg in mesh_object.vertex_groups:
+        #     # print ("Prosessing vertex group: {}".format(vg.name))
+
+        #     # try get new name
+        #     name_new = self.get_mapped_name(vg.name, mapping_list, mapping_invert)
+
+        #     # apply new name 
+        #     if "" != name_new and vg.name != name_new:
+        #         # use existing
+        #         if 0 <= mesh_object.vertex_groups.find(name_new):
+        #             MGTOOLS_functions_macros.transfer_weights(vg, mesh_object.vertex_groups[name_new], mesh_object.data)
+        #             mesh_object.vertex_groups.remove(vg)
+        #         # rename
+        #         else:
+        #             vg.name = name_new
 
 
     # Rename.Helper #######################################################

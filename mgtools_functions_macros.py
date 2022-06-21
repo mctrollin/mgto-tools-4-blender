@@ -1,4 +1,5 @@
 import bpy
+import mathutils
 from mathutils import Vector, Euler, Matrix
 import uuid
 from . mgtools_functions_helper import MGTOOLS_functions_helper
@@ -245,8 +246,17 @@ class MGTOOLS_functions_macros():
 
                 clone.name = new_name
 
-            # make local
+            # make library linked data-blocks local to this file
             bpy.ops.object.make_local(type='SELECT_OBDATA')
+            # make linked data local to each object
+            bpy.ops.object.make_single_user(
+                type='SELECTED_OBJECTS', 
+                object=True, 
+                obdata=True, 
+                material=False, 
+                animation=False, 
+                #obdata_animation=False
+                )
 
             # mesh specific processing
             if 'MESH' == source_object.type:
@@ -299,32 +309,31 @@ class MGTOOLS_functions_macros():
         # print (" > source_objects: {}".format(source_objects))
         # print (" > clones_other: {}".format(clones_other))
         # print (" > clones_meshes: {}".format(clones_meshes))
-
+        
         
         # self.select_objects(clones_meshes, True)
         bpy.ops.object.select_all(action='DESELECT')
 
         # option: join clones_meshes
         clones_meshes_joined = []
-        if True == merge:
-            if 1 < len(clones_meshes):
-                clones_meshes_to_join = []
-                clones_meshes_to_join.extend(clones_meshes)               
-                
-                print(" > joining objects: {}".format(clones_meshes_to_join))
-                for clone_mesh_to_join in clones_meshes_to_join:
-                    clones_meshes.remove(clone_mesh_to_join)
+        if True == merge and 1 < len(clones_meshes):
+            clones_meshes_to_join = []
+            clones_meshes_to_join.extend(clones_meshes)               
+            
+            print(" > joining objects: {}".format(clones_meshes_to_join))
+            for clone_mesh_to_join in clones_meshes_to_join:
+                clones_meshes.remove(clone_mesh_to_join)
 
-                # join
-                # ctx = bpy.context.copy() # does not work
-                # ctx['selected_objects'] = clones_meshes_to_join
-                # bpy.ops.object.join(ctx)
-                self.select_objects(clones_meshes_to_join, True) # select clones for further processing with bpy.ops
-                bpy.ops.object.join()
+            # join
+            # ctx = bpy.context.copy() # does not work
+            # ctx['selected_objects'] = clones_meshes_to_join
+            # bpy.ops.object.join(ctx)
+            self.select_objects(clones_meshes_to_join, True) # select clones for further processing with bpy.ops
+            bpy.ops.object.join()
 
-                clones_meshes_joined = bpy.context.selected_objects
-                # for clone_mesh_joined in clones_meshes_joined:
-                #     clone_mesh_joined.name += "_joinedSnapshot" # this name can and will be used to filtering later
+            clones_meshes_joined = bpy.context.selected_objects
+            # for clone_mesh_joined in clones_meshes_joined:
+            #     clone_mesh_joined.name += "_joinedSnapshot" # this name can and will be used to filtering later
 
         # get list of all final clones
         clones = clones_other + clones_meshes + clones_meshes_joined
@@ -340,7 +349,7 @@ class MGTOOLS_functions_macros():
         return clones
 
     @classmethod
-    def set_pivot(self, target_objects, new_loc, new_rot_euler, apply_scale):
+    def set_pivot(self, target_objects, new_loc=(0,0,0), new_rot_euler=(0,0,0), new_scale=(1,1,1), apply_scale=False):
         # checks
         if None == target_objects or 0 >= len(target_objects):
             return
@@ -371,31 +380,43 @@ class MGTOOLS_functions_macros():
         for i, target_object in enumerate(target_objects):
             parents_cache[i] = target_object.parent
             # un-parent
-            MGTOOLS_functions_helper.set_parent(target_object, None, True)
+            MGTOOLS_functions_helper.set_parent(child=target_object, new_parent=None, keep_transforms=True)
+
+        # Scale -------------------------------------------
+        for obj in target_objects:
+            # apply inverse target scale (object will be smaller) and apply scale (scale will be 1)
+            obj.scale = obj.scale * mathutils.Vector((1.0/new_scale[0], 1.0/new_scale[1], 1.0/new_scale[2]))
+            self.select_objects(obj, False)
+            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+            # now apply target scale (object gets old size but pivot has new scale)
+            obj.scale = new_scale
 
         # Position -------------------------------------------
         # Set origin location to cursor location
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
         # Rotation -------------------------------------------
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=apply_scale)
-        
         new_rot_mat = new_rot_euler.to_matrix()
-        new_rot_mat_twice = new_rot_mat @ new_rot_mat
-        new_rot_euler_twice_inverted = new_rot_mat_twice.inverted().to_euler()
+        # new_rot_mat_twice = new_rot_mat @ new_rot_mat
+        # new_rot_euler_twice_inverted = new_rot_mat_twice.inverted().to_euler()
 
         for obj in target_objects:
-            # 'apply' or 'freeze' rotation
-            obj.delta_rotation_euler = new_rot_euler 
-             # revert back so object stays in place and pivot matches target
-            obj.rotation_euler = new_rot_euler_twice_inverted
-        
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-
+            # set selection for the following ops
+            self.select_objects(obj, False)
+            # the below works only if the object has not rotation transforms
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+            # rotate in inverse target rotation
+            obj.rotation_euler = new_rot_mat.inverted().to_euler()
+            # apply rotation
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+            # rotate back
+            obj.rotation_euler = ( new_rot_mat).to_euler()
+       
         # Reset parents -------------------------------------------
         for i, target_object in enumerate(target_objects):
-            # re-parent
-            MGTOOLS_functions_helper.set_parent(target_object, parents_cache[i], True)
+            # re-parent (if there wasn't a parent we have to skip or it would reset any transforms!)
+            if None != parents_cache[i]:
+                MGTOOLS_functions_helper.set_parent(child=target_object, new_parent=parents_cache[i], keep_transforms=True)
 
         # Cleanup -------------------------------------------
         # Reset cursor

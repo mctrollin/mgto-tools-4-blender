@@ -75,19 +75,25 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.axis_up = mgtools_props_scene.p_io_export_axis_up
             exporter.primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
             exporter.secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
+            # scale
+            exporter.scale_apply_options = mgtools_props_scene.p_io_export_scale_apply_options
+            exporter.scale = mgtools_props_scene.p_io_export_scale
+            exporter.apply_unit_scale = mgtools_props_scene.p_io_export_apply_unit_scale
             # pivot
             exporter.pivot_dummy_prefix = mgtools_props_scene.p_io_export_prefix_filter_pivot
             exporter.include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
             exporter.include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
             exporter.set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
-            exporter.export_from_origin = mgtools_props_scene.p_io_export_from_origin
-            exporter.alter_pivot_rotation = mgtools_props_scene.p_io_export_alter_rotation
+            exporter.pivot_reset_location = mgtools_props_scene.p_io_export_pivot_reset_location
+            exporter.pivot_reset_rotation = mgtools_props_scene.p_io_export_pivot_reset_rotation
+            exporter.pivot_reset_scale = mgtools_props_scene.p_io_export_pivot_reset_scale
             exporter.pivot_rotation = mgtools_props_scene.p_io_export_rotation
             exporter.export_pivot_dummy_disable_constraints = mgtools_props_scene.p_io_export_pivot_dummy_disable_constraints
             # helper
             exporter.export_helper_strip_dotnumbers = mgtools_props_scene.p_io_export_helper_strip_dotnumbers
             # mesh
             exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
+            exporter.mesh_smooth_type = mgtools_props_scene.p_io_export_mesh_smooth_type
             exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
             exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
             exporter.objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix
@@ -144,19 +150,25 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.axis_up = mgtools_props_scene.p_io_export_axis_up
         exporter.primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
         exporter.secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
+        # scale
+        exporter.scale_apply_options = mgtools_props_scene.p_io_export_scale_apply_options
+        exporter.scale = mgtools_props_scene.p_io_export_scale
+        exporter.apply_unit_scale = mgtools_props_scene.p_io_export_apply_unit_scale
         # pivot
         exporter.pivot_dummy_prefix = mgtools_props_scene.p_io_export_prefix_filter_pivot
         exporter.include_pivot_dummy = mgtools_props_scene.p_io_export_include_pivot_dummy
         exporter.include_pivot_dummy_if_required = mgtools_props_scene.p_io_export_include_pivot_dummy_if_required
         exporter.set_pivots_to_dummy = mgtools_props_scene.p_io_export_set_pivots_to_dummy
-        exporter.export_from_origin = mgtools_props_scene.p_io_export_from_origin
-        exporter.alter_pivot_rotation = mgtools_props_scene.p_io_export_alter_rotation
+        exporter.pivot_reset_location = mgtools_props_scene.p_io_export_pivot_reset_location
+        exporter.pivot_reset_rotation = mgtools_props_scene.p_io_export_pivot_reset_rotation
+        exporter.pivot_reset_scale = mgtools_props_scene.p_io_export_pivot_reset_scale
         exporter.pivot_rotation = mgtools_props_scene.p_io_export_rotation
         exporter.export_pivot_dummy_disable_constraints = mgtools_props_scene.p_io_export_pivot_dummy_disable_constraints
         # helper
         exporter.export_helper_strip_dotnumbers = mgtools_props_scene.p_io_export_helper_strip_dotnumbers
         # mesh
         exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
+        exporter.mesh_smooth_type = mgtools_props_scene.p_io_export_mesh_smooth_type
         exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
         exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
         exporter.objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix

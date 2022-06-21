@@ -173,8 +173,8 @@ class MGTOOLS_OT_weighting_quick_mirror(Operator):
 
 
 # set weights of selected vertices to their mean
-class MGTOOLS_OT_weighting_flatten_weights(Operator):
-    bl_idname =  "mgtools.weighting_flatten_weights"
+class MGTOOLS_OT_weighting_average_weights(Operator):
+    bl_idname =  "mgtools.weighting_average_weights"
     bl_label = "Substract vertex weights"
     bl_description = "Substract a defined amount of weigh to the selected vertices"
     bl_options = {'REGISTER'} 
