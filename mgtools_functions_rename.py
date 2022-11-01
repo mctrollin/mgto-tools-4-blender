@@ -86,6 +86,12 @@ class MGTOOLS_functions_rename():
                     else:
                         vg_from.name = name_to
 
+                    # rename vertex groups in modifiers
+                    for mod in mesh_object.modifiers:
+                        if hasattr(mod, 'vertex_group'):
+                            if name_from == mod.vertex_group:
+                                mod.vertex_group = name_to
+
         # vertex-group based loop
         # # loop through all vertex groups
         # for vg in mesh_object.vertex_groups:

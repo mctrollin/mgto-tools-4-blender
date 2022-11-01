@@ -348,6 +348,9 @@ class MGTOOLS_PT_io(Panel):
         row.prop(mgtools_props_scene, "p_io_export_scale_apply_options", text="")
         row.prop(mgtools_props_scene, "p_io_export_apply_unit_scale",)
 
+        row = scale_options_box.row()
+        row.prop(mgtools_props_scene, "p_io_export_use_space_transform",)
+
         # pivot options -------------------------------------------
         pivot_options_box = col.box()
         pivot_options_box.label(text="Pivot")
@@ -588,7 +591,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.20") # check also version in __init__
+        box.label(text="MGTO tools v0.6.21") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2022")
 

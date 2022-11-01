@@ -104,6 +104,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
         )
     p_io_export_scale: FloatProperty(name="Scale", default=1, description="Scale all data (Some importers do not support scaled armatures!).",)
     p_io_export_apply_unit_scale: BoolProperty(name="Apply Unit", default=True, description="Take into account current Blender units settings (if unset, raw Blender Units values are used as-is).",)
+    p_io_export_use_space_transform: BoolProperty(name="Use Space Transform", default=True, description="Apply global space transform to the object rotations. When disabled only the axis space is written to the file and all object transforms are left as-is.",)
     
 
     # pivot
@@ -157,9 +158,10 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_animation_mode: EnumProperty(
         name="Framerange mode",
         items=(
-            ('OFF', 'OFF', ''),
-            ('STRIPS', 'STRIPS', ''),
-            ('MARKERS', 'MARKERS', ''),
+            ('OFF', 'OFF', 'Export just a single frame.'),
+            ('STRIPS', 'STRIPS', 'Export is based on animation strips.'),
+            ('MARKERS', 'MARKERS', 'Export will use markers to find and output one or multiple animation sequences.'),
+            ('RANGE', 'RANGE', 'Export one animation defined by the playback range'),
             ),
         default='OFF',
         description="Mode for finding animation frame ranges for exporting",

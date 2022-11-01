@@ -77,6 +77,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
             # scale
             exporter.scale_apply_options = mgtools_props_scene.p_io_export_scale_apply_options
+            exporter.use_space_transform = mgtools_props_scene.p_io_export_use_space_transform
             exporter.scale = mgtools_props_scene.p_io_export_scale
             exporter.apply_unit_scale = mgtools_props_scene.p_io_export_apply_unit_scale
             # pivot
@@ -152,6 +153,7 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
         # scale
         exporter.scale_apply_options = mgtools_props_scene.p_io_export_scale_apply_options
+        exporter.use_space_transform = mgtools_props_scene.p_io_export_use_space_transform
         exporter.scale = mgtools_props_scene.p_io_export_scale
         exporter.apply_unit_scale = mgtools_props_scene.p_io_export_apply_unit_scale
         # pivot

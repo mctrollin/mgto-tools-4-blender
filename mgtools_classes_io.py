@@ -27,6 +27,7 @@ class MGTOOLS_io_exporter():
 
     # scale
     scale_apply_options = 'FBX_SCALE_ALL'
+    use_space_transform = True
     scale = 1
     apply_unit_scale = True
 
@@ -163,6 +164,7 @@ class MGTOOLS_io_exporter():
             global_scale=self.scale,
             apply_unit_scale=self.apply_unit_scale,
             apply_scale_options=self.scale_apply_options,
+            use_space_transform=self.use_space_transform,
             bake_space_transform=False,
             object_types={'ARMATURE', 'EMPTY', 'MESH'},
             # mesh
@@ -184,7 +186,7 @@ class MGTOOLS_io_exporter():
             bake_anim_use_all_actions=False,
             bake_anim_force_startend_keying=True,
             bake_anim_step=1.0,
-            bake_anim_simplify_factor=1.0,
+            bake_anim_simplify_factor=0.0,
         )
 
         print(" > exporting FBX done")
@@ -382,7 +384,9 @@ class MGTOOLS_io_exporter():
             #     pivot_dummy_clone.scale = input_pivot_dummy.scale
             #     # set as active pivot
             #     to_export_pivot_dummy = pivot_dummy_clone
-        
+
+            transfer_modifier = self.combine_meshes
+
             # create a throw-away snapshot of the object(s) we want to export
 
             # apply filter -----
@@ -404,7 +408,25 @@ class MGTOOLS_io_exporter():
             print (" > creating to-export snapshots from: {} excluding: {}".format(input_meshes_to_snapshot, input_meshes_not_to_snapshot))
             
             # create snapshot(s) -----
-            input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(input_meshes_to_snapshot, self.combine_meshes, self.objectname_prefix, self.objectname_postfix, False, None)
+            if True == self.combine_meshes:
+                input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(
+                    source_objects_raw=input_meshes_to_snapshot,
+                    merge=self.combine_meshes, 
+                    prefix=self.objectname_prefix, 
+                    postfix=self.objectname_postfix, 
+                    select_clones=False, 
+                    type_filter=None)
+            else:
+                for input_mesh_to_snapshot in input_meshes_to_snapshot:
+                    input_mesh_snapshot = MGTOOLS_functions_macros.make_snapshot_from(
+                        source_objects_raw=[input_mesh_to_snapshot], 
+                        merge=True, 
+                        prefix=self.objectname_prefix, 
+                        postfix=self.objectname_postfix, 
+                        select_clones=False, 
+                        type_filter=None)
+                    input_meshes_clones += input_mesh_snapshot
+                transfer_modifier = True # necessary as the merge command applies them all
             
             # set clone names (if merged - should be only one object anyway..)
             if True == self.combine_meshes and 0 < len(input_meshes_clones):
@@ -421,7 +443,7 @@ class MGTOOLS_io_exporter():
             # post process (only!) clones -----
 
             # transfer modifier
-            if True == self.combine_meshes:
+            if True == transfer_modifier:
                 print(" >> transfer (armature) modifier")
                 MGTOOLS_functions_helper.transfere_modifier_armature(input_meshes, input_meshes_clones)
 
@@ -439,7 +461,10 @@ class MGTOOLS_io_exporter():
             if True == self.vgroups_rename:
                 print(" >> rename vertex groups")
                 for input_meshes_clone in input_meshes_clones:
-                    MGTOOLS_functions_rename.rename_vertexgroups(input_meshes_clone, self.vgroups_rename_mapping_file_path, self.vgroups_rename_invert_mapping)
+                    MGTOOLS_functions_rename.rename_vertexgroups(
+                        mesh_object=input_meshes_clone, 
+                        mapping_file_path=self.vgroups_rename_mapping_file_path, 
+                        mapping_invert=self.vgroups_rename_invert_mapping)
 
             # change modifier
             print(" >> preprocess modifier")
@@ -551,7 +576,12 @@ class MGTOOLS_io_exporter():
         cached_frame_start = bpy.context.scene.frame_start
         cached_frame_end = bpy.context.scene.frame_end
 
-        if 'STRIPS' == self.animation_export_mode:
+        if 'RANGE' == self.animation_export_mode:
+            
+            # this is kind of blenders default so we can just call export
+            self.call_fbx_export() # < ============== EXPORT
+
+        elif 'STRIPS' == self.animation_export_mode:
             # get object which holds animation strips information
             # Note: (here we are only interested on the frame ranges, not the actual animation data)
             for armature in to_export_armatures:
@@ -678,7 +708,6 @@ class MGTOOLS_io_exporter():
 
         else:
             print('Unhandled animation export mode: {}.'.format(self.animation_export_mode))
-
 
         # cleanup ------------------------------------
 

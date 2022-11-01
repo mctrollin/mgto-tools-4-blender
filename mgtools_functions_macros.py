@@ -214,7 +214,12 @@ class MGTOOLS_functions_macros():
 
         # set selection
         self.select_objects(source_objects, True)
-        
+
+        # Impportant! source_objects and clones array might not be ordered the same way!
+        # Therefore we create a new source_objects array from the current selection
+        # This one will have the same order as the clones array!
+        source_objects_cached = bpy.context.selected_objects.copy()
+
         if 0 >= len(bpy.context.selected_objects):
             print("Problem selecting object for duplication: {}".format(source_objects))
             return clones
@@ -225,14 +230,14 @@ class MGTOOLS_functions_macros():
         if 0 >= len(bpy.context.selected_objects):
             print("Problem selecting clone of: {}".format(source_object))
             return clones
-        
+
         clones = bpy.context.selected_objects.copy()
 
         print(" > processing duplicates: {}".format(clones))
         for idx, clone in enumerate(clones):
             
             self.select_only(clone)
-            source_object = source_objects[idx]
+            source_object = source_objects_cached[idx]
 
             # add name pre- and postfix
             if 0 < len(prefix) or 0 < len(postfix):
@@ -393,6 +398,7 @@ class MGTOOLS_functions_macros():
 
         # Position -------------------------------------------
         # Set origin location to cursor location
+        self.select_objects(target_objects, False)
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
         # Rotation -------------------------------------------
