@@ -378,7 +378,9 @@ class MGTOOLS_PT_io(Panel):
         # mesh options -------------------------------------------
         mesh_options_box = col.box()
         mesh_options_box.label(text="Mesh")
-        mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
+        # currently modifiers are always applied for multiple export features requiring it
+        # mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
+        mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers_armature",)
         mesh_options_box.prop(mgtools_props_scene, "p_io_export_mesh_smooth_type",)
 
         mesh_options_box2 = mesh_options_box.box()
@@ -591,7 +593,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.21") # check also version in __init__
+        box.label(text="MGTO tools v0.6.22") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2022")
 

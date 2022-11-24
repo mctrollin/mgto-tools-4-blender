@@ -46,7 +46,8 @@ class MGTOOLS_io_exporter():
     helper_strip_dotnumbers = False
 
     # mesh
-    use_mesh_modifiers = True
+    use_mesh_modifiers = False # used by fbx exporter
+    use_mesh_modifier_armature = False # usually we don't want to apply the armature
     combine_meshes = False
     combine_meshes_filter = ""
     objectname_prefix = "to_export__"
@@ -65,6 +66,7 @@ class MGTOOLS_io_exporter():
     animation_use_relative_frameranges = False
     animation_marker_start = ''
     animation_marker_end = ''
+    bake_anim_simplify_factor=0.0
 
     # selection based options
     to_export_selection = []
@@ -186,7 +188,7 @@ class MGTOOLS_io_exporter():
             bake_anim_use_all_actions=False,
             bake_anim_force_startend_keying=True,
             bake_anim_step=1.0,
-            bake_anim_simplify_factor=0.0,
+            bake_anim_simplify_factor=self.bake_anim_simplify_factor,
         )
 
         print(" > exporting FBX done")
@@ -338,13 +340,15 @@ class MGTOOLS_io_exporter():
             else:
                 input_other.append(obj)
 
-            # process modifiers
-            
+            # process modifiers            
             for mod in obj.modifiers:
                 # armatures
-                # skip if an armature replacement is set (not perfect but the least complex solution atm)
-                if None == self.armature_replacement:
-                    if 'ARMATURE' == mod.type:
+                if 'ARMATURE' == mod.type:
+                    # disable the modifier - when we later snapshot the mesh it gets not applied
+                    if False == self.use_mesh_modifier_armature:
+                        mod.is_active = False
+                    # skip if an armature replacement is set (not perfect but the least complex solution atm)
+                    if None == self.armature_replacement:
                         # get armature ref
                         armature_ref = mod.object
                         # auto select armatures (if not hidden)
@@ -428,7 +432,7 @@ class MGTOOLS_io_exporter():
                     input_meshes_clones += input_mesh_snapshot
                 transfer_modifier = True # necessary as the merge command applies them all
             
-            # set clone names (if merged - should be only one object anyway..)
+            # set clone names (if merged it should be only one object)
             if True == self.combine_meshes and 0 < len(input_meshes_clones):
                 for input_meshes_clone in input_meshes_clones:
                     name_new = self.objectname_prefix + pivot_dummy_name + self.objectname_postfix
@@ -819,7 +823,7 @@ class MGTOOLS_io_exporter():
             bake_anim_use_all_actions=False,
             bake_anim_force_startend_keying=True,
             bake_anim_step=1.0,
-            bake_anim_simplify_factor=1.0,
+            bake_anim_simplify_factor=self.bake_anim_simplify_factor,
         )
 
         # revert scene frame range

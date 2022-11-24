@@ -123,6 +123,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
 
     # mesh
     p_io_export_use_mesh_modifiers: BoolProperty(name="Apply modifiers", default=True, description="Apply mesh modifiers during export (excluding armature modifier, non-destructive).",)
+    p_io_export_use_mesh_modifiers_armature: BoolProperty(name="Apply armature", default=False, description="Apply armature modifiers during export (non-destructive).",)
     p_io_export_mesh_smooth_type: EnumProperty(
         name="Smoothing",
         items=(

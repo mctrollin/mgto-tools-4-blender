@@ -93,7 +93,8 @@ class MGTOOLS_OT_export_collections(Operator):
             # helper
             exporter.export_helper_strip_dotnumbers = mgtools_props_scene.p_io_export_helper_strip_dotnumbers
             # mesh
-            exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
+            #exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers # the exporter process currently requires to always apply them
+            exporter.use_mesh_modifiers_armature = mgtools_props_scene.p_io_export_use_mesh_modifiers_armature
             exporter.mesh_smooth_type = mgtools_props_scene.p_io_export_mesh_smooth_type
             exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
             exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
@@ -169,7 +170,8 @@ class MGTOOLS_OT_export_selection(Operator):
         # helper
         exporter.export_helper_strip_dotnumbers = mgtools_props_scene.p_io_export_helper_strip_dotnumbers
         # mesh
-        exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers
+        #exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers # the exporter process currently requires to always apply them
+        exporter.use_mesh_modifiers_armature = mgtools_props_scene.p_io_export_use_mesh_modifiers_armature
         exporter.mesh_smooth_type = mgtools_props_scene.p_io_export_mesh_smooth_type
         exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
         exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
