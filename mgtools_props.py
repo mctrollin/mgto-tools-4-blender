@@ -135,7 +135,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
         description="Export smoothing information (prefer ‘Normals Only’ option if your target importer understand split normals)",
         )
     p_io_export_combine_meshes: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together.",)
-    p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing cloned and combined during export. Delimiter=','.",)
+    p_io_export_clone_meshes_filter: StringProperty(name='Clone meshes filter', default="", description="Allows to exclude meshes from beeing cloned. Usually this should be off but allows to export models as-is in specific situations where a complex object setup doesn't survive the cloning process. Delimiter=','.",)
+    p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing combined during export when 'Combine meshes' option is enabled. Delimiter=','.",)
     p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all cloned meshes.",)
     p_io_export_objectname_postfix: StringProperty(name='Object name postfix', default="", description="Postfix added to all cloned meshes.",)
     p_io_export_vgroups_rename: BoolProperty(name="Rename Vertex Groups", default=False, description="Rename vertex groups based on a mapping file.",)
@@ -290,6 +291,7 @@ class MGTOOLS_properties_object(PropertyGroup):
 
     # Weights editing  ---------------------
     p_weightedit_add_amount: FloatProperty(name="Add", default=0.1, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Weight add amount", )
+    p_weightedit_average_factor: FloatProperty(name="Factor", default=1.0, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Weight average factor, 0: no change, 0.5: 50% between current and average, 1: average", )
 
     p_weightedit_remove_empty: BoolProperty(name="Remove only Empty", default=True, description="Will remove only empty vertex groups", )
     p_weightedit_remove_locked: BoolProperty(name="Remove also Locked", default=False,  description="Remove also locked vertex groups", )
@@ -300,7 +302,10 @@ class MGTOOLS_properties_object(PropertyGroup):
     p_weightedit_mirror_all_groups: BoolProperty(name="All Groups", default=True, description="Mirror weights from all groups", )
     p_weightedit_mirror_use_topology: BoolProperty(name="Use Topology", default=False, description="Use topology based mirroring (for when both sides of mesh have matching, unique topology)", )
 
+    p_weightedit_list_enabled: BoolProperty(name="Show weights list", default=False, description="Show weights list ui widget. Can be slow with many vertex groups.", update=on_weightdisplay_isenabled,)
     
+    p_weightedit_copy_vg: StringProperty(name='')
+
     # Properties.Misc ################################################################ 
 
     # Snapshotting  ---------------------

@@ -97,6 +97,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.use_mesh_modifiers_armature = mgtools_props_scene.p_io_export_use_mesh_modifiers_armature
             exporter.mesh_smooth_type = mgtools_props_scene.p_io_export_mesh_smooth_type
             exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
+            exporter.clone_meshes_filter = mgtools_props_scene.p_io_export_clone_meshes_filter
             exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
             exporter.objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix
             exporter.objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
@@ -174,6 +175,7 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.use_mesh_modifiers_armature = mgtools_props_scene.p_io_export_use_mesh_modifiers_armature
         exporter.mesh_smooth_type = mgtools_props_scene.p_io_export_mesh_smooth_type
         exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
+        exporter.clone_meshes_filter = mgtools_props_scene.p_io_export_clone_meshes_filter
         exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
         exporter.objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix
         exporter.objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix

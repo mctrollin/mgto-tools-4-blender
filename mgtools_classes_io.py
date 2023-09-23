@@ -49,6 +49,7 @@ class MGTOOLS_io_exporter():
     use_mesh_modifiers = False # used by fbx exporter
     use_mesh_modifier_armature = False # usually we don't want to apply the armature
     combine_meshes = False
+    clone_meshes_filter = ""
     combine_meshes_filter = ""
     objectname_prefix = "to_export__"
     objectname_postfix = ""
@@ -394,43 +395,57 @@ class MGTOOLS_io_exporter():
             # create a throw-away snapshot of the object(s) we want to export
 
             # apply filter -----
-            input_meshes_to_snapshot = []
             input_meshes_not_to_snapshot = []
-            combine_meshes_filter_list = self.combine_meshes_filter.split(",")
-            if 0 < len(combine_meshes_filter_list):
-                for input_mesh in input_meshes:
-                    # check exclude-by-name filter
-                    input_mesh_processed = False
-                    for merge_filter_name in combine_meshes_filter_list:
-                        if 0 < len(merge_filter_name) and merge_filter_name in input_mesh.name:     
-                            input_meshes_not_to_snapshot.append(input_mesh)
-                            input_mesh_processed = True                    
-                            break
-                    if False == input_mesh_processed:
-                        input_meshes_to_snapshot.append(input_mesh)
+            input_meshes_to_snapshot_without_merge = []
+            input_meshes_to_snapshot_and_merge = []
 
-            print (" > creating to-export snapshots from: {} excluding: {}".format(input_meshes_to_snapshot, input_meshes_not_to_snapshot))
+            clone_meshes_filter_list = self.clone_meshes_filter.split(",")
+            combine_meshes_filter_list = self.combine_meshes_filter.split(",")
+
+            # if 0 < len(clone_meshes_filter_list):
+            for input_mesh in input_meshes:
+                input_mesh_processed = False
+                # check input_meshes_not_to_snapshot
+                for clone_meshes_filter in clone_meshes_filter_list:
+                    if 0 < len(clone_meshes_filter) and clone_meshes_filter in input_mesh.name:
+                        input_meshes_not_to_snapshot.append(input_mesh)
+                        input_mesh_processed = True
+                        break
+                # check input_meshes_to_snapshot_without_merge
+                if False == input_mesh_processed:
+                    for combine_meshes_filter in combine_meshes_filter_list:
+                        if 0 < len(combine_meshes_filter) and combine_meshes_filter in input_mesh.name:
+                            input_meshes_to_snapshot_without_merge.append(input_mesh)
+                            input_mesh_processed = True
+                            break
+                # collect remaining meshes - default: input_meshes_to_snapshot_and_merge
+                if False == input_mesh_processed:
+                    input_meshes_to_snapshot_and_merge.append(input_mesh)
+
+            print (" > creating to-export snapshots from: {} excluding: {}".format(input_meshes_to_snapshot_and_merge, input_meshes_not_to_snapshot))
             
             # create snapshot(s) -----
-            if True == self.combine_meshes:
-                input_meshes_clones = MGTOOLS_functions_macros.make_snapshot_from(
-                    source_objects_raw=input_meshes_to_snapshot,
-                    merge=self.combine_meshes, 
+            # with merge
+            input_mesh_snapshot = MGTOOLS_functions_macros.make_snapshot_from(
+                source_objects_raw=input_meshes_to_snapshot_and_merge,
+                merge=self.combine_meshes, 
+                prefix=self.objectname_prefix, 
+                postfix=self.objectname_postfix, 
+                select_clones=False, 
+                type_filter=None)
+            input_meshes_clones += input_mesh_snapshot
+
+            # without merge (don't merge by processing mesh by mesh)
+            for input_mesh_to_snapshot in input_meshes_to_snapshot_without_merge:
+                input_mesh_snapshot = MGTOOLS_functions_macros.make_snapshot_from(
+                    source_objects_raw=[input_mesh_to_snapshot], 
+                    merge=True, 
                     prefix=self.objectname_prefix, 
                     postfix=self.objectname_postfix, 
                     select_clones=False, 
                     type_filter=None)
-            else:
-                for input_mesh_to_snapshot in input_meshes_to_snapshot:
-                    input_mesh_snapshot = MGTOOLS_functions_macros.make_snapshot_from(
-                        source_objects_raw=[input_mesh_to_snapshot], 
-                        merge=True, 
-                        prefix=self.objectname_prefix, 
-                        postfix=self.objectname_postfix, 
-                        select_clones=False, 
-                        type_filter=None)
-                    input_meshes_clones += input_mesh_snapshot
-                transfer_modifier = True # necessary as the merge command applies them all
+                input_meshes_clones += input_mesh_snapshot
+            transfer_modifier = True # necessary as the merge command applies them all
             
             # set clone names (if merged it should be only one object)
             if True == self.combine_meshes and 0 < len(input_meshes_clones):

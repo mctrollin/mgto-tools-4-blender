@@ -60,6 +60,70 @@ class MGTOOLS_OT_weighting_subtract_weights(Operator):
         MGTOOLS_functions_macros.set_weights_to_selected_mesh(mgtools_props_obj.p_weightedit_add_amount, 'SUBTRACT', bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 
+# copy weights - set vertex group target
+class MGTOOLS_OT_weighting_copy_weights(Operator):
+    bl_idname =  "mgtools.weighting_copy_weights"
+    bl_label = "Copy vertex weights"
+    bl_description = "..."
+    bl_options = {'REGISTER'} 
+
+    def execute(self, context):
+        meshobj = MGTOOLS_functions_macros.get_first_selected_mesh()
+        if None == meshobj:
+            print("No mesh object selected")
+            return {'CANCELLED'}
+
+        # get vertex group
+        activeVG = meshobj.vertex_groups.active
+        if None == activeVG:
+            print("No active vertex group")
+            return
+        
+        mgtools_props_obj = bpy.context.object.mgtools
+        mgtools_props_obj.p_weightedit_copy_vg = activeVG.name
+
+        return {'FINISHED'}
+
+class MGTOOLS_OT_weighting_paste_weights(Operator):
+    bl_idname =  "mgtools.weighting_paste_weights"
+    bl_label = "Paste vertex weights"
+    bl_description = "..."
+    bl_options = {'REGISTER'} 
+
+    def execute(self, context):
+        meshobj = MGTOOLS_functions_macros.get_first_selected_mesh()
+        if None == meshobj:
+            print("No mesh object selected")
+            return {'CANCELLED'}
+
+        # get vertex group
+        activeVG = meshobj.vertex_groups.active
+        if None == activeVG:
+            print("No active vertex group")
+            return {'CANCELLED'}
+        
+        mgtools_props_obj = bpy.context.object.mgtools
+
+        # select vertex group by name
+        vg_from = None
+        for vg in meshobj.vertex_groups:
+            if vg.name == mgtools_props_obj.p_weightedit_copy_vg:
+                vg_from = vg
+
+        if None == vg_from:
+            print("No vertex group defined to copy weights from")
+            return {'CANCELLED'}
+
+        vg_to = activeVG
+
+        # get selected vertices
+        selected_vert_indices = MGTOOLS_functions_helper.get_selected_vert_indicies(meshobj)
+
+        MGTOOLS_functions_macros.transfer_weights_from_selection(vg_from, vg_to, meshobj, selected_vert_indices, bpy.context.scene.tool_settings.use_auto_normalize)
+
+        return {'FINISHED'}
+
+
 # set weight to 0.0
 class MGTOOLS_OT_weighting_set_weights_to_0(Operator):
     bl_idname =  "mgtools.weighting_set_weights_to_0"
@@ -175,8 +239,8 @@ class MGTOOLS_OT_weighting_quick_mirror(Operator):
 # set weights of selected vertices to their mean
 class MGTOOLS_OT_weighting_average_weights(Operator):
     bl_idname =  "mgtools.weighting_average_weights"
-    bl_label = "Substract vertex weights"
-    bl_description = "Substract a defined amount of weigh to the selected vertices"
+    bl_label = "Average vertex weights"
+    bl_description = "Set weights of selected vertices to their mean"
     bl_options = {'REGISTER'} 
 
     def execute(self, context):	
@@ -198,11 +262,25 @@ class MGTOOLS_OT_weighting_average_weights(Operator):
             print("No vertices selected")
             return {'CANCELLED'}
 
+        # properties
+        mgtools_props_obj = bpy.context.object.mgtools
+
         # calculate average weights and assign them
         for idx, vg in enumerate(vgroups):
             weight_average = MGTOOLS_functions_helper.get_weight_average(meshobj, idx, selected_verts_indices)
-            MGTOOLS_functions_helper.set_weights(vg, selected_verts_indices, weight_average, 'REPLACE')
+            MGTOOLS_functions_helper.lerp_weights(vg, vindices=selected_verts_indices, weight=weight_average, factor=mgtools_props_obj.p_weightedit_average_factor, mode='REPLACE')
 
+        return {'FINISHED'}
+
+# smooth weights of selected vertices
+class MGTOOLS_OT_weighting_smooth_weights(Operator):
+    bl_idname =  "mgtools.weighting_smooth_weights"
+    bl_label = "Substract vertex weights"
+    bl_description = "Smooth weights of selected vertices"
+    bl_options = {'REGISTER'} 
+
+    def execute(self, context):	
+        bpy.ops.object.vertex_group_smooth(group_select_mode='ALL', factor=0.5, repeat=1, expand=0.0)
         return {'FINISHED'}
 
 class MGTOOLS_OT_weighting_create_vertex_groups_for_selected_bones(Operator):

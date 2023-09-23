@@ -91,12 +91,7 @@ class MGTOOLS_PT_weighting(Panel):
         col.prop(bpy.context.preferences.view, "use_weight_color_range", toggle=True, text="Use custom weight colors")
         # col.separator()
         
-        # remove weights
-        box_remove = l.box()
-        row = box_remove.row()
-        row.prop(mgtools_props_obj, 'p_weightedit_remove_empty', text="Only Empty")
-        row.prop(mgtools_props_obj, 'p_weightedit_remove_locked', text="+ Locked")
-        box_remove.operator('mgtools.weighting_remove_vertex_groups_unused', text="Remove VGs")
+        
 
 
         # Infos --------------------------------------------------------
@@ -124,16 +119,20 @@ class MGTOOLS_PT_weighting(Panel):
         # Weight tools --------------------------------------------------------
 
         row = l.row()
-        row.prop(bpy.context.scene.tool_settings, 'use_auto_normalize', text="Auto Normalize")
+        box_set_weights = row.box()
 
         # create vertex groups for selected bones
-        row = l.row()
+        row = box_set_weights.row()
         row.operator('mgtools.weighting_create_vertex_groups_for_selected_bones', text="Create missing VGs for sel. bones")
 
+        row = box_set_weights.row()
+        row.prop(bpy.context.scene.tool_settings, 'use_auto_normalize', text="Auto Normalize")
+
         # set weight shortcuts
-        row = l.row()
+        
         # row.scale_x = 0.1
         # row.scale_y = 0.5
+        row = box_set_weights.row()
         row.operator('mgtools.weighting_set_weights_to_0', text="0")
         row.operator('mgtools.weighting_set_weights_to_01', text=".1")
         row.operator('mgtools.weighting_set_weights_to_025', text=".25")
@@ -143,28 +142,42 @@ class MGTOOLS_PT_weighting(Panel):
         row.operator('mgtools.weighting_set_weights_to_1', text="1")
 
         # set weight to
-        row = l.row()
+        row = box_set_weights.row()
         row.prop(bpy.context.scene.tool_settings.unified_paint_settings, 'weight', text="")
         row.operator('mgtools.weighting_set_weights', text="Set")
 
         # add / subtract weight
-        row = l.row()
+        row = box_set_weights.row()
         row.prop(mgtools_props_obj, 'p_weightedit_add_amount', text="")
         row.operator('mgtools.weighting_add_weights', text="+")
         row.operator('mgtools.weighting_subtract_weights', text="-")
 
-        row = l.row()
+        row = box_set_weights.row()
+        row.operator('mgtools.weighting_copy_weights', text="copy")
+        row.prop(mgtools_props_obj, 'p_weightedit_copy_vg', text="")
+        row.operator('mgtools.weighting_paste_weights', text="paste")
+
+        row = box_set_weights.row()
+        row.prop(mgtools_props_obj, 'p_weightedit_average_factor', text="")
         row.operator('mgtools.weighting_average_weights', text="Average")
+
+        row = box_set_weights.row()
+        row.operator('mgtools.weighting_smooth_weights', text="Smooth (All Groups)")
        
-        l.separator()
+        # l.separator()
 
-        # default default
-        l.template_list("UI_UL_list", "testlist_id_default", meshobj, "vertex_groups", meshobj.vertex_groups, "active_index", item_dyntip_propname="", rows=5, maxrows=5, type='COMPACT', columns=9, sort_reverse=False, sort_lock=False)
+        # weight list
+        box_weight_lists = l.box()
+        box_weight_lists.prop(mgtools_props_obj, 'p_weightedit_list_enabled', text="Vertex Groups List View")
+        if mgtools_props_obj.p_weightedit_list_enabled:
         
-        # custom basic
-        l.template_list("MGTOOLS_UL_vgroups", "testlist_id_custom_basic", meshobj, "vertex_groups", meshobj.vertex_groups, "active_index", item_dyntip_propname="", rows=5, maxrows=5, type='DEFAULT', columns=9, sort_reverse=False, sort_lock=False)
+            # default default
+            box_weight_lists.template_list("UI_UL_list", "testlist_id_default", meshobj, "vertex_groups", meshobj.vertex_groups, "active_index", item_dyntip_propname="", rows=5, maxrows=5, type='COMPACT', columns=9, sort_reverse=False, sort_lock=False)
+            
+            # custom basic
+            box_weight_lists.template_list("MGTOOLS_UL_vgroups", "testlist_id_custom_basic", meshobj, "vertex_groups", meshobj.vertex_groups, "active_index", item_dyntip_propname="", rows=5, maxrows=5, type='DEFAULT', columns=9, sort_reverse=False, sort_lock=False)
 
-        l.separator()
+        # l.separator()
 
         # remove weakest influences up to allowed maximum influences count
         row = l.row()
@@ -178,11 +191,20 @@ class MGTOOLS_PT_weighting(Panel):
 
         # mirror weights
         box_mirror = l.box()
-        box_mirror.label(text="Mirror", )
+        # box_mirror.label(text="Mirror", )
         row = box_mirror.row()
         row.prop(mgtools_props_obj, 'p_weightedit_mirror_all_groups',)
         row.prop(mgtools_props_obj, 'p_weightedit_mirror_use_topology',)
         box_mirror.operator('mgtools.weighting_quick_mirror', text="Mirror X")
+
+        # remove vertex groups
+        box_remove = l.box()
+        row = box_remove.row()
+        row.prop(mgtools_props_obj, 'p_weightedit_remove_empty', text="Only Empty")
+        row.prop(mgtools_props_obj, 'p_weightedit_remove_locked', text="+ Locked")
+        box_remove.operator('mgtools.weighting_remove_vertex_groups_unused', text="Remove VGs")
+
+        
 
 
 class MGTOOLS_PT_animation(Panel):
@@ -386,9 +408,13 @@ class MGTOOLS_PT_io(Panel):
         mesh_options_box2 = mesh_options_box.box()
         mesh_options_box2.label(text="Clones")
         row = mesh_options_box2.row()
-        row.label(text="Filter:")
-        row.prop(mgtools_props_scene, "p_io_export_combine_meshes_filter", text="")
+        row.label(text="Clone Filter:")
+        row.prop(mgtools_props_scene, "p_io_export_clone_meshes_filter", text="")
         mesh_options_box2.prop(mgtools_props_scene, "p_io_export_combine_meshes", text="Combine Cloned Meshes")
+        if True == mgtools_props_scene.p_io_export_combine_meshes:
+            row = mesh_options_box2.row()
+            row.label(text="Combine Filter:")
+            row.prop(mgtools_props_scene, "p_io_export_combine_meshes_filter", text="")
         row = mesh_options_box2.row()
         row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
         row.prop(mgtools_props_scene, "p_io_export_objectname_postfix", text="Pos")
@@ -593,9 +619,9 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.22") # check also version in __init__
+        box.label(text="MGTO tools v0.6.24") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
-        box.label(text="(C) 2022")
+        box.label(text="(C) 2023")
 
         python_version_info = sys.version_info
         box = l.column()

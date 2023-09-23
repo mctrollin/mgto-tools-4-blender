@@ -517,6 +517,18 @@ class MGTOOLS_functions_macros():
             if [True for g in mesh.vertices[idx].groups if g.group == vg_from.index]:
                 vg_to.add([idx], vg_from.weight(idx), 'ADD')
 
+    # transfere weights of selected vertices from one vertex group to another of the same mesh
+    @classmethod
+    def transfer_weights_from_selection(self, vg_from, vg_to, meshobj, vindices, normalize:bool=False):
+        for idx in vindices:
+            # atm we can't simply check if a certain index is defined in the vertex group. 
+            # So we have to awkwardly ask the mesh vertex if it is part of the group. 
+            # I hope this will be improved in the future
+            if [True for g in meshobj.data.vertices[idx].groups if g.group == vg_from.index]:
+                vg_to.add([idx], vg_from.weight(idx), 'ADD')
+        # normalize weights --------------
+        if True == normalize:
+            self.renormalize_weights()
 
     # Animations #######################################################
 

@@ -1,4 +1,5 @@
 import bpy
+import bl_math
 import colorsys
 from mathutils import Matrix # Vector, Euler, 
 
@@ -227,6 +228,19 @@ class MGTOOLS_functions_helper():
     @classmethod
     def set_weights(self, vgroup, vindices, weight:float, mode):
         vgroup.add(vindices, weight, mode)
+
+    # mode can be 'REPLACE', 'ADD' or 'SUBTRACT'
+    @classmethod
+    def lerp_weights(self, vgroup, vindices, weight:float, factor:float, mode):
+        for idx in vindices:
+            # this 'try' is stupid but I don't want to make a mesh input a requirement here
+            weight_from = 0
+            try:
+                weight_from = vgroup.weight(idx)
+            except:
+                pass
+            weight_lerped = bl_math.lerp(weight_from, weight, factor)
+            vgroup.add([idx], weight_lerped, mode)
 
     # returns (for a given mesh and a given vertex group) a list with the weight of every vertice
     # Note: it will return a weight of 0 even if the vertex is not part of the vertex group
