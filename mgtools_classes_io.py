@@ -548,7 +548,7 @@ class MGTOOLS_io_exporter():
                 if 1 > last_dot_idx : continue
                 stripped_name = helper.name[:last_dot_idx]
                 # first we have to free our current name for blender by using a temporary name
-                helper.name += ".to_be_renamed"
+                helper.name = stripped_name + ".to_be_renamed"
                 # then we rename to the actual name
                 helper.name = stripped_name
                 if stripped_name != helper.name:
