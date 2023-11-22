@@ -547,10 +547,12 @@ class MGTOOLS_io_exporter():
                 last_dot_idx = helper.name.rfind('.')
                 if 1 > last_dot_idx : continue
                 stripped_name = helper.name[:last_dot_idx]
+                # first we have to free our current name for blender by using a temporary name
+                helper.name += ".to_be_renamed"
+                # then we rename to the actual name
                 helper.name = stripped_name
-                # sometime blender requires to retry renaming the object a 2nd time (not sure why)
                 if stripped_name != helper.name:
-                    helper.name = stripped_name
+                    print (" >> unable to rename {} to {}".format(helper.name, stripped_name))
 
 
         # for mesh in to_export_meshes:
@@ -722,6 +724,8 @@ class MGTOOLS_io_exporter():
 
             bpy.context.scene.frame_start = self.export_frame
             bpy.context.scene.frame_end = self.export_frame
+
+            self.bake_anim_simplify_factor = 1.0 # default - avoids having single keyframe for unanimated objects
 
             self.call_fbx_export() # < ============== EXPORT
 

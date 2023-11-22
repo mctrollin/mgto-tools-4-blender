@@ -442,6 +442,8 @@ class MGTOOLS_PT_io(Panel):
         animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_mode", text="Mode")
         if 'OFF' == mgtools_props_scene.p_io_export_animation_mode:
             animation_options_box.prop(mgtools_props_scene, "p_io_export_frame",)
+        else:
+            animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_bake_anim_simplify_factor",)
         if 'STRIPS' == mgtools_props_scene.p_io_export_animation_mode:
             animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
         if 'MARKERS' == mgtools_props_scene.p_io_export_animation_mode:
@@ -486,7 +488,7 @@ class MGTOOLS_PT_io(Panel):
         # > path options
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_folder_collections", text="")
-        row.operator("mgtools.io_open_collections_export_folder", text="", icon='VIEWZOOM')
+        row.operator("mgtools.io_open_collections_export_folder", text="", icon='WINDOW')
         # > export
         box.operator('mgtools.io_export_collections', text="Export Collections")
 
@@ -498,7 +500,7 @@ class MGTOOLS_PT_io(Panel):
         # > path options
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_filepath", text="")
-        row.operator("mgtools.io_open_selection_export_folder", text="", icon='VIEWZOOM')
+        row.operator("mgtools.io_open_selection_export_folder", text="", icon='WINDOW')
         # > export
         box.operator('mgtools.io_export_selection', text="Export Selection")
 
@@ -619,7 +621,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.24") # check also version in __init__
+        box.label(text="MGTO tools v0.6.25") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2023")
 

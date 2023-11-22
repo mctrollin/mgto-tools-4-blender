@@ -172,7 +172,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_animation_use_relative_frameranges: BoolProperty(name="Use relative frame ranges", default=True, description="Exported frame numbers will be relative to the exported action and not absolute to scene.",)
     p_io_export_animation_marker_start: StringProperty(name='Filter: Marker Start', default="x_", description="Filter string for to-export frame range start marker.",)
     p_io_export_animation_marker_end: StringProperty(name='Filter: Marker End', default="_END", description="Filter string for to-export frame range end marker.",)
-
+    p_io_export_animation_bake_anim_simplify_factor: FloatProperty(name="Anim Simplify", default=0.0, description="How much to simplify baked values (0.0 to disable, the higher the more simplified).",)
 
     # selection export ---------------------
     p_io_export_filepath: StringProperty(name='Export file', default="", description="Export file for selection export.", subtype='FILE_PATH',)

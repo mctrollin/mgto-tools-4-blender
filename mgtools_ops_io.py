@@ -49,6 +49,9 @@ class MGTOOLS_OT_export_collections(Operator):
             if True == layercollection.hide_viewport:
                 print (" > Skipping: collection is hidden in ViewLayer viewport")
                 continue
+            if True == layercollection.collection.hide_select:
+                print (" > Skipping: collection is not selectable")
+                continue
             
             # prepare -----------------------------------
 
@@ -113,6 +116,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
             exporter.animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
             exporter.animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
+            exporter.bake_anim_simplify_factor = mgtools_props_scene.p_io_export_animation_bake_anim_simplify_factor
             
             # start the export -----------------------------------
             exporter.to_export_collection = collection
@@ -191,6 +195,7 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.animation_use_relative_frameranges = mgtools_props_scene.p_io_export_animation_use_relative_frameranges
         exporter.animation_marker_start = mgtools_props_scene.p_io_export_animation_marker_start
         exporter.animation_marker_end = mgtools_props_scene.p_io_export_animation_marker_end
+        exporter.bake_anim_simplify_factor = mgtools_props_scene.p_io_export_animation_bake_anim_simplify_factor
 
         # start the export -----------------------------------
         exporter.to_export_selection = objects
