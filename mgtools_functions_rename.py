@@ -110,6 +110,40 @@ class MGTOOLS_functions_rename():
         #         else:
         #             vg.name = name_new
 
+    @classmethod
+    def rename_fcurves(self, object, mapping_file_path, mapping_invert):
+
+        if not object:
+            print("No object")
+            return
+
+        mapping_list = self.prepare_mapping_list(mapping_file_path)
+        if None == mapping_list:
+            print("No mapping file")
+            return
+        if False == isinstance(mapping_list, list):
+            print("Invalid mapping file")
+            return
+        if 0 >= len(mapping_list):
+            print("No mapping entries")
+            return
+
+        action = object.animation_data.action
+        if action:
+            for fc in action.fcurves:
+                name = self.get_bonename_from_fcurve_datapath(fc.data_path)
+                if name:
+                    new_name = self.get_mapped_name(name, mapping_list, mapping_invert)
+                    if new_name:
+                        fc.data_path = fc.data_path.replace(name, new_name)
+                        if fc.group:
+                            fc.group.name = new_name
+                        else:
+                            fc.group = (
+                                    action.groups.get(new_name) 
+                                    or
+                                    action.groups.new(new_name)
+                                    )
 
     # Rename.Helper #######################################################
 
@@ -148,13 +182,17 @@ class MGTOOLS_functions_rename():
         mapping_file.close() 
 
         # pre-split
-        mapping_list_pre =  re.split('[;]', mapping_file_string)
-
         mapping_list = []
-        for tmp_str in mapping_list_pre:
-            if '#' in tmp_str: continue
-            if ':' not in tmp_str: continue
-            mapping_list.extend(tmp_str.split(':'))
+
+        mapping_file_string_lines = mapping_file_string.splitlines()
+        for mapping_file_string_line in mapping_file_string_lines:
+            mapping_list_pre =  re.split('[;]', mapping_file_string_line)
+
+            for tmp_str in mapping_list_pre:
+                if not tmp_str: continue
+                if '//' in tmp_str: continue
+                if ':' not in tmp_str: continue
+                mapping_list.extend(tmp_str.split(':'))
 
 
         # split file string
@@ -165,3 +203,11 @@ class MGTOOLS_functions_rename():
             mapping_list[idx] = mapping_list[idx].strip()
         
         return mapping_list
+
+    @classmethod
+    def get_bonename_from_fcurve_datapath(self, data_path):
+        if not data_path.startswith("pose.bones"):
+            return None
+        start = data_path.find('["') + 2
+        end = data_path.find('"]') 
+        return data_path[start : end]

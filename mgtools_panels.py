@@ -54,7 +54,6 @@ class MGTOOLS_PT_rigging(Panel):
         box.prop(mgtools_props_scene, 'p_rigging_bone_constraints_retarget_target', text = "Target",)
         box.operator('mgtools.rigging_bone_constraints_retarget', text="Retarget Constraints")
 
-
 class MGTOOLS_PT_weighting(Panel):
     bl_idname = "MGTOOLS_PT_weighting"
     bl_label = "Weighting"
@@ -127,6 +126,7 @@ class MGTOOLS_PT_weighting(Panel):
 
         row = box_set_weights.row()
         row.prop(bpy.context.scene.tool_settings, 'use_auto_normalize', text="Auto Normalize")
+        row.operator('mgtools.weighting_normalize_weights_groups', text="Normalize")
 
         # set weight shortcuts
         
@@ -149,8 +149,25 @@ class MGTOOLS_PT_weighting(Panel):
         # add / subtract weight
         row = box_set_weights.row()
         row.prop(mgtools_props_obj, 'p_weightedit_add_amount', text="")
-        row.operator('mgtools.weighting_add_weights', text="+")
-        row.operator('mgtools.weighting_subtract_weights', text="-")
+        op = row.operator('mgtools.weighting_offset_weights', text="+")
+        op.amount = mgtools_props_obj.p_weightedit_add_amount
+        op = row.operator('mgtools.weighting_offset_weights', text="-")
+        op.amount = -1 * mgtools_props_obj.p_weightedit_add_amount
+
+        row = box_set_weights.row()
+        op = row.operator('mgtools.weighting_offset_weights', text="+.01")
+        op.amount = 0.01
+        op = row.operator('mgtools.weighting_offset_weights', text="+.05")
+        op.amount = 0.05
+        op = row.operator('mgtools.weighting_offset_weights', text="+.1")
+        op.amount = 0.1
+        row = box_set_weights.row()
+        op = row.operator('mgtools.weighting_offset_weights', text="-.01")
+        op.amount = -0.01
+        op = row.operator('mgtools.weighting_offset_weights', text="-.05")
+        op.amount = -0.05
+        op = row.operator('mgtools.weighting_offset_weights', text="-.1")
+        op.amount = -0.1
 
         row = box_set_weights.row()
         row.operator('mgtools.weighting_copy_weights', text="copy")
@@ -162,7 +179,8 @@ class MGTOOLS_PT_weighting(Panel):
         row.operator('mgtools.weighting_average_weights', text="Average")
 
         row = box_set_weights.row()
-        row.operator('mgtools.weighting_smooth_weights', text="Smooth (All Groups)")
+        row.operator('mgtools.weighting_smooth_weights_group', text="Smooth (Active Group)")
+        row.operator('mgtools.weighting_smooth_weights_groups', text="Smooth (All Groups)")
        
         # l.separator()
 
@@ -203,9 +221,6 @@ class MGTOOLS_PT_weighting(Panel):
         row.prop(mgtools_props_obj, 'p_weightedit_remove_empty', text="Only Empty")
         row.prop(mgtools_props_obj, 'p_weightedit_remove_locked', text="+ Locked")
         box_remove.operator('mgtools.weighting_remove_vertex_groups_unused', text="Remove VGs")
-
-        
-
 
 class MGTOOLS_PT_animation(Panel):
     bl_idname = "MGTOOLS_PT_animation"
@@ -317,6 +332,7 @@ class MGTOOLS_PT_renaming(Panel):
 
         mapping_box.operator('mgtools.rename_bones', text="Rename Bones")
         mapping_box.operator('mgtools.rename_vertexgroups', text="Rename Vertex Groups")
+        mapping_box.operator('mgtools.rename_fcurves', text="Rename FCurves")
 
         tools_box = col.box()
         tools_box.label(text="Tools")
@@ -328,9 +344,6 @@ class MGTOOLS_PT_renaming(Panel):
         #     col.label(text="Object properties not yet initialized", icon='ERROR', )
         #     return
         # mgtools_props_obj = bpy.context.object.mgtools
-        
-
-       
 
 class MGTOOLS_PT_io(Panel):
     bl_idname = "MGTOOLS_PT_io"
@@ -418,7 +431,9 @@ class MGTOOLS_PT_io(Panel):
         row = mesh_options_box2.row()
         row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
         row.prop(mgtools_props_scene, "p_io_export_objectname_postfix", text="Pos")
+        mesh_options_box2.prop(mgtools_props_scene, "p_io_export_material_override",)
         mesh_options_box2.prop(mgtools_props_scene, "p_io_export_armature_replacement",)
+        mesh_options_box2.prop(mgtools_props_scene, "p_io_export_weights_limit",)
 
         mesh_options_box3 = mesh_options_box.box()
         mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename",)
@@ -535,7 +550,6 @@ class MGTOOLS_PT_io(Panel):
         # > export
         box.operator('mgtools.io_export_hitboxes', text="Export Hitboxes")
 
-
 class MGTOOLS_PT_misc(Panel):
     bl_idname = "MGTOOLS_PT_misc"
     bl_label = "Misc"
@@ -556,7 +570,8 @@ class MGTOOLS_PT_misc(Panel):
 
         col.label(text="Misc Stuff...")
 
-        ### particle hair
+
+        ### particle hair -----------------------------------
         particlehair_box = col.box()
         # label
         particlehair_box.label(text="Particle Hair")
@@ -570,7 +585,8 @@ class MGTOOLS_PT_misc(Panel):
         row.prop(mgtools_props_scene, "p_particle_hair_to_mesh_name", text="Name")
         particlehair_box.operator("mgtools.particle_hair_to_mesh", text="Particle Hair > Mesh",)
 
-        ### toggle modifier
+
+        ### toggle modifier -----------------------------------
         modifier_box = col.box()
         # label
         modifier_box.label(text="Modifier")
@@ -591,6 +607,22 @@ class MGTOOLS_PT_misc(Panel):
         op = row.operator("mgtools.modifier_toggle", text="", icon="RESTRICT_VIEW_ON")
         op.modifier_toggle_name = mgtools_props_scene.p_modifier_toggle_name_3
 
+
+        ### Custom attributes -----------------------------------
+        attributes_box = col.box()
+        # label
+        attributes_box.label(text="Custom Attributes")
+
+        # > to mesh
+        row = attributes_box.row()
+        row.prop(mgtools_props_scene, "p_attributes_vertex_positions_snapshot_name", text="Name")
+        row = attributes_box.row()
+        row.prop(mgtools_props_scene, "p_attributes_vertex_positions_snapshot_relative", text="Relative")
+        row = attributes_box.row()
+        op = row.operator("mgtools.vertices_to_attribute", text="Snapshot Vertex Positions")
+        op.attribute_name = mgtools_props_scene.p_attributes_vertex_positions_snapshot_name
+        op.relative = mgtools_props_scene.p_attributes_vertex_positions_snapshot_relative
+
 class MGTOOLS_PT_sandbox(Panel):
     bl_idname = "MGTOOLS_PT_sandbox"
     bl_label = "Sandbox"
@@ -607,7 +639,6 @@ class MGTOOLS_PT_sandbox(Panel):
 
         col.operator("mgtools.sandbox_debug1", text="Debug Test Slot 1",)
 
-        
 
 class MGTOOLS_PT_about(Panel):
     bl_idname = "MGTOOLS_PT_about"
@@ -621,9 +652,9 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.25") # check also version in __init__
+        box.label(text="MGTO tools v0.6.27") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
-        box.label(text="(C) 2023")
+        box.label(text="(C) 2024")
 
         python_version_info = sys.version_info
         box = l.column()
@@ -655,7 +686,7 @@ class MGTOOLS_UL_vgroups(bpy.types.UIList):
             if slot_vg:
                 row = layout.row()
                 row.prop(slot_vg, "name", text="", emboss=False, icon_value=icon)
-                row.label(text=str(round(weight_average,2)))
+                row.label(text=str(round(weight_average,3)))
                 if(0 >= weight_average):
                     row.enabled = False
             else:

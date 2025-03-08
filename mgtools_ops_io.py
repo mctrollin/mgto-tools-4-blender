@@ -108,6 +108,9 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.vgroups_rename_mapping_file_path = mgtools_props_scene.p_io_export_vgroups_rename_mapping_file_path
             exporter.vgroups_rename_invert_mapping = mgtools_props_scene.p_io_export_vgroups_rename_mapping_inverse
             exporter.armature_replacement = mgtools_props_scene.p_io_export_armature_replacement
+            exporter.weights_limit = mgtools_props_scene.p_io_export_weights_limit
+            #material
+            exporter.material_override = mgtools_props_scene.p_io_export_material_override
             # armature
             exporter.armature_primary_rename = mgtools_props_scene.p_io_export_armature_rename
             # anim
@@ -187,6 +190,9 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.vgroups_rename_mapping_file_path = mgtools_props_scene.p_io_export_vgroups_rename_mapping_file_path
         exporter.vgroups_rename_invert_mapping = mgtools_props_scene.p_io_export_vgroups_rename_mapping_inverse
         exporter.armature_replacement = mgtools_props_scene.p_io_export_armature_replacement
+        exporter.weights_limit = mgtools_props_scene.p_io_export_weights_limit
+        #material
+        exporter.material_override = mgtools_props_scene.p_io_export_material_override
         # armature
         exporter.armature_primary_rename = mgtools_props_scene.p_io_export_armature_rename
         # anim

@@ -90,7 +90,10 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
             return
 
         # switch to edit mode to be able to get edit-bones
-        bpy.ops.object.mode_set(mode='EDIT')
+        required_mode = 'EDIT'
+        incoming_mode = bpy.context.object.mode
+        if required_mode != incoming_mode:
+            bpy.ops.object.mode_set(mode=required_mode)
 
         # get source edit-bone ----------------------------
         source_ebone = None
@@ -112,26 +115,45 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
             print ("Error: Can't create this bone bone: {} @ {}".format(source_ebone, target_armature))
             self.report({'ERROR'}, "Error: Can't create this bone bone: {} @ {}".format(source_ebone, target_armature))
             return
-        print ("Created target bone (target_ebone): {} from: {} @ {}".format(target_ebone, source_ebone, target_armature))
+        # print ("Created target bone (target_ebone): {} from: {} @ {}".format(target_ebone, source_ebone, target_armature))
 
 
         # try to find and set correct parent ----------------------------
-        source_parent = self.get_deform_parent(source_ebone)
-        temp_parent = source_parent
-        if None != temp_parent:
-            while None != temp_parent:
-                temp_target_parent_name = target_bone_name_prefix + temp_parent.name
-                if temp_target_parent_name in target_armature_data.edit_bones:
-                    target_parent = target_armature_data.edit_bones[temp_target_parent_name]
-                    target_ebone.parent = target_parent
-                    temp_parent = None
-                else:
-                    print (" - This (sub)parent is not part of the target_armature data: {}. Continuing searching along hierarchy...".format(temp_parent.name))
-                    temp_parent = self.get_deform_parent(temp_parent)
-            if None == target_ebone.parent:
-                print (" - Source bone: {} has no deform parent in the hierarchy".format(source_ebone))
-        else:
-            print (" - Source bone: {} has no deform parent".format(source_ebone))
+        if None != source_ebone.parent:
+            source_parent = self.get_deform_parent(source_ebone)
+            temp_parent = source_parent
+            if None != temp_parent:
+                while None != temp_parent:
+                    temp_target_parent_name = target_bone_name_prefix + temp_parent.name
+                    if temp_target_parent_name in target_armature_data.edit_bones:
+                        target_parent = target_armature_data.edit_bones[temp_target_parent_name]
+                        target_ebone.parent = target_parent
+                        temp_parent = None # exit
+                    else:
+                        print (" - This (sub)parent is not part of the target_armature data: {}. Continuing searching along hierarchy...".format(temp_parent.name))
+                        temp_parent = self.get_deform_parent(temp_parent)
+                if None == target_ebone.parent:
+                    print (" - Source bone: {} has no deform parent in the hierarchy".format(source_ebone))
+
+            else:
+                source_ebone_name_pure = self.purify_bone_name(source_ebone_name)
+                parent_to_check = source_ebone.parent
+                while parent_to_check:
+                    source_ebone_parent_name_pure =  self.purify_bone_name(parent_to_check.name)
+                    parent_to_check = parent_to_check.parent
+
+                    # this hapens often for the very first parent(s) which can be ORG- and MCH- helper of the same pure-name
+                    if source_ebone_parent_name_pure == source_ebone_name_pure: continue
+                
+                    temp_target_parent_name = target_bone_name_prefix + "DEF-" + source_ebone_parent_name_pure
+                    if temp_target_parent_name in target_armature_data.edit_bones:
+                        target_parent = target_armature_data.edit_bones[temp_target_parent_name]
+                        target_ebone.parent = target_parent
+                        parent_to_check = None # exit
+                
+                if None == target_ebone.parent:
+                    print (" - Source bone: {} has no deform parent. But also not possible to find by name ({}) in target armature".format(source_ebone, temp_target_parent_name))
+
 
         # assign root bone
         # we have to get it everytime or the assignment may fail bc of the way the script changes modes
@@ -144,7 +166,8 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
         # switch to object mode to access (pose) bone objects ----------------------------
         # cache bone vars before switching to object mode or they'll be invalid
         target_ebone_name = target_ebone.name
-        bpy.ops.object.mode_set(mode='OBJECT')
+        if incoming_mode != required_mode:
+            bpy.ops.object.mode_set(mode=incoming_mode)
 
         # get target pose-bone by edit-bone name
         # print ("Trying to get pose bone by name '{}'".format(target_ebone_name))
@@ -193,6 +216,14 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
             if True == p.use_deform:
                 return p
         return None
+    
+    # remove bone prefix
+    def purify_bone_name(self, bone_name):
+        filter_names = "ORG-,MCH-,DEF-"
+        filter_names_list = filter_names.split(",")
+        for filter_names_list_element in filter_names_list:
+            bone_name = bone_name.replace(filter_names_list_element, "")
+        return bone_name
 
 # Change target armature of all bone constraints
 class MGTOOLS_OT_rigging_bone_constraints_retarget(Operator):

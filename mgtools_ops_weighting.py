@@ -1,4 +1,7 @@
+# pyright: reportInvalidTypeForm=false
+
 import bpy
+import math
 from bpy.types import Operator
 from . mgtools_manager_overlays import MGTOOLSOverlayManager
 from . mgtools_functions_helper import MGTOOLS_functions_helper
@@ -38,26 +41,22 @@ class MGTOOLS_OT_weighting_set_weights(Operator):
         MGTOOLS_functions_macros.renormalize_weights()
         return {'FINISHED'}
 # add weight
-class MGTOOLS_OT_weighting_add_weights(Operator):
-    bl_idname =  "mgtools.weighting_add_weights"
-    bl_label = "Add vertex weights"
-    bl_description = "Add a defined amount of weigh to the selected vertices"
+class MGTOOLS_OT_weighting_offset_weights(Operator):
+    bl_idname =  "mgtools.weighting_offset_weights"
+    bl_label = "Add or subtract vertex weights"
+    bl_description = "Add or subtract a defined amount of weigh to the selected vertices"
     bl_options = {'REGISTER'} 
+
+    amount: bpy.props.FloatProperty(
+        name = 'amount',
+        default = 0
+        )
 
     def execute(self, context):
         mgtools_props_obj = bpy.context.object.mgtools
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(mgtools_props_obj.p_weightedit_add_amount, 'ADD', bpy.context.scene.tool_settings.use_auto_normalize)
-        return {'FINISHED'}
-# substract weight
-class MGTOOLS_OT_weighting_subtract_weights(Operator):
-    bl_idname =  "mgtools.weighting_subtract_weights"
-    bl_label = "Substract vertex weights"
-    bl_description = "Substract a defined amount of weigh to the selected vertices"
-    bl_options = {'REGISTER'} 
-
-    def execute(self, context):
-        mgtools_props_obj = bpy.context.object.mgtools
-        MGTOOLS_functions_macros.set_weights_to_selected_mesh(mgtools_props_obj.p_weightedit_add_amount, 'SUBTRACT', bpy.context.scene.tool_settings.use_auto_normalize)
+        amount_abs = math.fabs(self.amount)
+        mode = 'ADD' if self.amount > 0 else 'SUBTRACT'
+        MGTOOLS_functions_macros.set_weights_to_selected_mesh(amount_abs, mode, bpy.context.scene.tool_settings.use_auto_normalize)
         return {'FINISHED'}
 
 # copy weights - set vertex group target
@@ -235,6 +234,16 @@ class MGTOOLS_OT_weighting_quick_mirror(Operator):
         return {'FINISHED'}
 
 
+# normalize weights of selected vertices
+class MGTOOLS_OT_weighting_normalize_weights_groups(Operator):
+    bl_idname =  "mgtools.weighting_normalize_weights_groups"
+    bl_label = "Normalize vertex weights (All Groups)"
+    bl_description = "Normalize weights of selected vertices over all affected vertex groups"
+    bl_options = {'REGISTER'} 
+
+    def execute(self, context):	
+        MGTOOLS_functions_macros.renormalize_weights()
+        return {'FINISHED'}
 
 # set weights of selected vertices to their mean
 class MGTOOLS_OT_weighting_average_weights(Operator):
@@ -273,14 +282,25 @@ class MGTOOLS_OT_weighting_average_weights(Operator):
         return {'FINISHED'}
 
 # smooth weights of selected vertices
-class MGTOOLS_OT_weighting_smooth_weights(Operator):
-    bl_idname =  "mgtools.weighting_smooth_weights"
-    bl_label = "Substract vertex weights"
-    bl_description = "Smooth weights of selected vertices"
+class MGTOOLS_OT_weighting_smooth_weights_groups(Operator):
+    bl_idname =  "mgtools.weighting_smooth_weights_groups"
+    bl_label = "Smooth vertex weights (All Groups)"
+    bl_description = "Smooth weights of selected vertices over all affected vertex groups"
     bl_options = {'REGISTER'} 
 
     def execute(self, context):	
         bpy.ops.object.vertex_group_smooth(group_select_mode='ALL', factor=0.5, repeat=1, expand=0.0)
+        return {'FINISHED'}
+
+# smooth weights of selected vertices
+class MGTOOLS_OT_weighting_smooth_weights_group(Operator):
+    bl_idname =  "mgtools.weighting_smooth_weights_group"
+    bl_label = "Substract vertex weights (Active Group)"
+    bl_description = "Smooth weights of selected vertices over active vertex group"
+    bl_options = {'REGISTER'} 
+
+    def execute(self, context):	
+        bpy.ops.object.vertex_group_smooth(group_select_mode='ACTIVE', factor=0.5, repeat=1, expand=0.0)
         return {'FINISHED'}
 
 class MGTOOLS_OT_weighting_create_vertex_groups_for_selected_bones(Operator):
@@ -358,6 +378,10 @@ class MGTOOLS_OT_weighting_set_max_influences(Operator):
         # process
         for armature in armatures:
             MGTOOLS_functions_helper.remove_lowest_weights(obj, armature, max_influences)
+        
+        # normalize weights --------------
+        if True == bpy.context.scene.tool_settings.use_auto_normalize:
+            MGTOOLS_functions_macros.renormalize_weights()
 
         return {'FINISHED'}
 
@@ -384,4 +408,9 @@ class MGTOOLS_OT_weighting_set_min_influence(Operator):
         # process
         for armature in armatures:
             MGTOOLS_functions_helper.remove_weights_below_threshold(obj, armature, weight_threshold)
+
+        # normalize weights --------------
+        if True == bpy.context.scene.tool_settings.use_auto_normalize:
+            MGTOOLS_functions_macros.renormalize_weights()
+
         return {'FINISHED'}

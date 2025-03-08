@@ -54,6 +54,26 @@ class MGTOOLS_OT_rename_vertexgroups(Operator):
 
         return{'FINISHED'}
 
+class MGTOOLS_OT_rename_fcurves(Operator):
+    bl_idname = "mgtools.rename_fcurves"
+    bl_label = "Rename animaton curve tracks"
+    bl_description = "Rename animaton curve tracks of an action clip"
+
+    def execute(self, context):
+        print ("MGTOOLS_OT_rename_fcurves")
+
+        mgtools_props_scene = bpy.context.scene.mgtools
+
+        # properties
+        bone_names_mapping_file_path = mgtools_props_scene.p_rename_mapping_file_path
+        invert_mapping = mgtools_props_scene.p_rename_mapping_inverse
+
+        # get mesh
+        for tmpObj in bpy.context.selected_objects:
+            MGTOOLS_functions_rename.rename_fcurves(tmpObj, bone_names_mapping_file_path, invert_mapping)
+
+        return{'FINISHED'}
+
 class MGTOOLS_OT_rename_print_bones(Operator):
     bl_idname = "mgtools.rename_print_bones"
     bl_label = "Print bone names"

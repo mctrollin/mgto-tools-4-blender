@@ -267,6 +267,7 @@ class MGTOOLS_functions_macros():
             if 'MESH' == source_object.type:
                 if True == merge:
                     # apply all modifiers
+                    MGTOOLS_functions_helper.apply_modifiers_smartly(clone)
                     bpy.ops.object.convert(target='MESH')
                 # add to mesh list
                 clones_meshes.append(clone)
@@ -507,7 +508,7 @@ class MGTOOLS_functions_macros():
         # normalize all - this will effectively only set vertices of the active bone which don't have any other bone influence to 1
         bpy.ops.object.vertex_group_normalize_all(lock_active=False)
 
-    # transfere weights from one vertex group to another of the same mesh
+    # transfer weights from one vertex group to another of the same mesh
     @classmethod
     def transfer_weights(self, vg_from, vg_to, mesh):
         for idx in range(len(mesh.vertices)):
@@ -517,7 +518,7 @@ class MGTOOLS_functions_macros():
             if [True for g in mesh.vertices[idx].groups if g.group == vg_from.index]:
                 vg_to.add([idx], vg_from.weight(idx), 'ADD')
 
-    # transfere weights of selected vertices from one vertex group to another of the same mesh
+    # transfer weights of selected vertices from one vertex group to another of the same mesh
     @classmethod
     def transfer_weights_from_selection(self, vg_from, vg_to, meshobj, vindices, normalize:bool=False):
         for idx in vindices:

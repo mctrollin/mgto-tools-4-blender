@@ -1,3 +1,5 @@
+# pyright: reportInvalidTypeForm=false
+
 from mathutils import Vector, Euler
 import bpy
 from bpy.types import PropertyGroup
@@ -142,7 +144,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_vgroups_rename: BoolProperty(name="Rename Vertex Groups", default=False, description="Rename vertex groups based on a mapping file.",)
     p_io_export_vgroups_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
     p_io_export_vgroups_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
-    p_io_export_armature_replacement: PointerProperty(name="Replacement Armature", type=bpy.types.Object, description="For clones it will replace any possible armature reference inside armature modifier.",)
+    p_io_export_armature_replacement: PointerProperty(name="Armature Replacement", type=bpy.types.Object, description="For clones it will replace any possible armature reference inside armature modifier.",)
+    p_io_export_weights_limit: IntProperty(name='Bone influence limit', default=4, description="Limits the number of weights per vertex. -1 means unlimited.",)
 
     # filename
     p_io_export_filename_prefix: StringProperty(name='Filename: Prefix', default="", description="Optional filename prefix.",)
@@ -174,6 +177,9 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_animation_marker_end: StringProperty(name='Filter: Marker End', default="_END", description="Filter string for to-export frame range end marker.",)
     p_io_export_animation_bake_anim_simplify_factor: FloatProperty(name="Anim Simplify", default=0.0, description="How much to simplify baked values (0.0 to disable, the higher the more simplified).",)
 
+    # material
+    p_io_export_material_override: PointerProperty(name="Mat Override", type=bpy.types.Material, description="Material override - will add new material slot or replace any existing slot with this material.",)
+
     # selection export ---------------------
     p_io_export_filepath: StringProperty(name='Export file', default="", description="Export file for selection export.", subtype='FILE_PATH',)
    
@@ -199,6 +205,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_modifier_toggle_name_2: StringProperty(name="Mod Name", default="Mirror", description="Modifier Name", )
     p_modifier_toggle_name_3: StringProperty(name="Mod Name", default="Mirror", description="Modifier Name", )
 
+    p_attributes_vertex_positions_snapshot_name: StringProperty(name="Vertex Positions Snapshot", default="vert_pos_snapshot", description="Attribute name for vertex position snapshot", )
+    p_attributes_vertex_positions_snapshot_relative: BoolProperty(name="Relative", default=True, description="Defines if the snapshotted values are absolute or offsets from the base vertex position.",)
 
     # Register ################################################################ 
 

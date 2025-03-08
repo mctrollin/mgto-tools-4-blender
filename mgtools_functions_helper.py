@@ -2,6 +2,7 @@ import bpy
 import bl_math
 import colorsys
 from mathutils import Matrix # Vector, Euler, 
+import bmesh
 
 class MGTOOLS_functions_helper():
 
@@ -49,13 +50,30 @@ class MGTOOLS_functions_helper():
     def set_parent_recursive(self, object, new_parent, keep_transforms):
         for child in object.children:
             self.deparent_recursive(child, new_parent)
-        set_parent(object, new_parent, keep_transforms)
+        self.set_parent(object, new_parent, keep_transforms)
 
     @classmethod
     def remove_recursive(self, object):       
         for child in object.children:
             self.remove_recursive(child)
         bpy.data.objects.remove(object)
+
+    # Mesh #######################################################
+
+    @classmethod
+    def get_evaluated_meshdata(self, meshobj):
+
+        # get evaluated data
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+
+        # create bmesh clone
+        bm = bmesh.new()
+        bm.from_object(meshobj, depsgraph)
+        meshdata_evaluated = bpy.data.meshes.new(meshobj.name + "get_evaluated_meshdata_bmesh")
+        bm.to_mesh(meshdata_evaluated)
+        bm.free() # free and prevent further access
+        return meshdata_evaluated
+
 
 
     # Modifier #######################################################
@@ -72,8 +90,8 @@ class MGTOOLS_functions_helper():
         return modifier
 
     @classmethod
-    def transfere_modifier_armature(self, source_objects, target_objects):
-        print ("transfere_modifier_armature()")
+    def transfer_modifier_armature(self, source_objects, target_objects):
+        print ("transfer_modifier_armature()")
         armature_modifier = []
         armatures = []
 
@@ -103,6 +121,21 @@ class MGTOOLS_functions_helper():
         for target_object in target_objects:
             target_object.modifiers.new(name="Armature", type='ARMATURE')
             target_object.modifiers["Armature"].object = armatures[0]
+
+    @classmethod
+    def apply_modifiers_smartly(self, obj):
+        # For each modifier
+        for modifier in obj.modifiers:
+            # -------------
+            # Custom behaviour for certain modifiers:
+            # DataTransfer ---
+            # Re-transfer data layers. Required if obj got instanced via geometry nodes (GN), there data layers can get lost when the GN modifier is applied.
+            if(modifier.type == 'DATA_TRANSFER'):
+                with bpy.context.temp_override(object=obj):
+                    bpy.ops.object.datalayout_transfer(modifier=modifier.name)
+            # -------------
+            # Apply the modifier
+            bpy.ops.object.modifier_apply(modifier=modifier.name)
 
 
     # View Layer / Collection #######################################################
@@ -134,8 +167,8 @@ class MGTOOLS_functions_helper():
     # Vertex Groups #######################################################
 
     @classmethod
-    def try_get_vgroup(self, vgroup_name):
-        return ob.data.vertices.groups[vgroup_name]
+    def try_get_vgroup(self, meshobj, vgroup_name):
+        return meshobj.data.vertices.groups[vgroup_name]
 
     # returns all vertex groups which belong to an armature bone
     @classmethod
@@ -171,6 +204,8 @@ class MGTOOLS_functions_helper():
             # check if there exists a bone with the same name in the supplied armature
             if True == any(bone.name == vg.name for bone in armature.data.bones): # vg.name in armature.bones:
                 vgroups_bones.append(vge)
+            # else:
+            #     print ("     vert {} with weight: {} from vg: {} which is not part of the used armature{}".format(vert_idx, vge.weight, vg.name, armature))
         return vgroups_bones
 
     @classmethod
@@ -308,13 +343,13 @@ class MGTOOLS_functions_helper():
 
     # for every vertex remove all weights except the highest ones up the supplied maximum count
     @classmethod
-    def remove_lowest_weights(self, meshobj, armature, max_influences):
+    def remove_lowest_weights(self, meshobj, armature, max_influences, normalize:bool=False):
         print("remove_lowest_weights()")
 
         # check if meshobj is really a mesh type
-        if 'MESH' != meshobj.type:
+        if not meshobj or 'MESH' != meshobj.type:
             return
-        if 'ARMATURE' != armature.type:
+        if not armature or 'ARMATURE' != armature.type:
             return
 
         # for every vertex
@@ -336,23 +371,28 @@ class MGTOOLS_functions_helper():
 
             # remove weights
             for vge in vert_vges:
+                if 0 > vge.group:
+                    continue
+                if vge.group >= len(meshobj.vertex_groups):
+                    print("Strange vertex group found - skipping: " + vge)
+                    continue
                 if vge in vgroups_keep:
                     continue
                 # get vertex group
                 vg = meshobj.vertex_groups[vge.group]
                 # remove vertex from group
                 vg.remove([i])
-                print ("    removing vert {} with weight: {} from vg: {}".format(i, vge.weight, vg.name))
+                # print ("    removing vert {} with weight: {} from vg: {}".format(i, vge.weight, vg.name))
 
     # for every vertex set all weights to zero which are below the threshold
     @classmethod
-    def remove_weights_below_threshold(self, meshobj, armature, threshold):
+    def remove_weights_below_threshold(self, meshobj, armature, threshold, normalize:bool=False):
         print("remove_weights_below_threshold()")
         
         # check if meshobj is really a mesh type
-        if 'MESH' != meshobj.type:
+        if not meshobj or 'MESH' != meshobj.type:
             return
-        if 'ARMATURE' != armature.type:
+        if not armature or 'ARMATURE' != armature.type:
             return
 
         #for every vertex
@@ -362,6 +402,7 @@ class MGTOOLS_functions_helper():
             vert_vges = self.get_bone_vgelements_from_vert(meshobj, i, armature)
             # for every bone...
             for vge in vert_vges:
+                # print ("    checking vg {} with weight: {}".format(vge.group, vge.weight))
                 # if below threshould set weight to 0
                 if threshold <= vge.weight:
                     continue
@@ -369,7 +410,7 @@ class MGTOOLS_functions_helper():
                 vg = meshobj.vertex_groups[vge.group]
                 # remove vertex from group
                 vg.remove([i])
-                print ("    removing vert {} with weight: {} from vg: {}".format(i, vge.weight, vg.name))
+                # print ("    removing vert {} with weight: {} from vg: {}".format(i, vge.weight, vg.name))
 
 
     # Animations #######################################################

@@ -57,6 +57,10 @@ class MGTOOLS_io_exporter():
     vgroups_rename_mapping_file_path = ""
     vgroups_rename_invert_mapping = False
     armature_replacement = None
+    weights_limit = 4
+
+    # material
+    material_override = None
 
     # armature
     armature_primary_rename = ''
@@ -464,7 +468,7 @@ class MGTOOLS_io_exporter():
             # transfer modifier
             if True == transfer_modifier:
                 print(" >> transfer (armature) modifier")
-                MGTOOLS_functions_helper.transfere_modifier_armature(input_meshes, input_meshes_clones)
+                MGTOOLS_functions_helper.transfer_modifier_armature(input_meshes, input_meshes_clones)
 
             # adopt pivot from pivot-dummy
             if True == self.set_pivots_to_dummy and None != to_export_pivot_dummy:
@@ -494,6 +498,27 @@ class MGTOOLS_io_exporter():
                         # replacement armatures
                         if None != self.armature_replacement:
                             mod.object = self.armature_replacement
+
+            # vertex groups post processing
+            print(" >> postprocess vertex groups")
+            for input_meshes_clone in input_meshes_clones:
+                for mod in input_meshes_clone.modifiers:
+                    # armatures
+                    if 'ARMATURE' == mod.type:
+                        MGTOOLS_functions_helper.remove_lowest_weights(input_meshes_clone, mod.object, self.weights_limit)
+
+            # materials
+            print (" >> apply material override")
+            if None != self.material_override:
+                for input_meshes_clone in input_meshes_clones:
+                    # Assign it to object
+                        if input_meshes_clone.data.materials:
+                            # assign to 1st material slot
+                            for mat_idx in range(len(input_meshes_clone.data.materials)):
+                                input_meshes_clone.data.materials[mat_idx] = self.material_override
+                        else:
+                            # no slots
+                            input_meshes_clone.data.materials.append(self.material_override)
 
             # misc
             # for clone in input_meshes_clones:
@@ -553,7 +578,6 @@ class MGTOOLS_io_exporter():
                 helper.name = stripped_name
                 if stripped_name != helper.name:
                     print (" >> unable to rename {} to {}".format(helper.name, stripped_name))
-
 
         # for mesh in to_export_meshes:
         #     MGTOOLS_functions_macros.select_objects(mesh, True)

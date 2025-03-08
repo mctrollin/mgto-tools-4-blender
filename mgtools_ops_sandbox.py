@@ -16,6 +16,16 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
 
 
         # ---------------------------------------------
+        # TEST: check collection in view layer
+        # for vl in bpy.context.scene.view_layers:
+        #     print("Checking view layer: ")
+        for l in bpy.context.window.view_layer.layer_collection.children:
+            print("Checking collection: {} {}".format(l, l.exclude))
+            for l2 in l.children:
+                print("Checking child collection: {} {}".format(l2, l2.exclude))
+            
+
+        # ---------------------------------------------
         # TEST: rotation
         # rot_degree = (90, 0, 0)
         # bpy.context.view_layer.objects.active.rotation_euler = tuple(radians(a) for a in rot_degree)
@@ -46,10 +56,10 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
 
         # ---------------------------------------------
         # TEST: mesh snapshot
-        meshobj = bpy.context.selected_objects
-        do_merge = True
-        MGTOOLS_functions_macros.make_snapshot_from(meshobj, do_merge, "a_", "_o", False, None)
-        MGTOOLS_functions_macros.select_only(meshobj)
+        # meshobj = bpy.context.selected_objects
+        # do_merge = True
+        # MGTOOLS_functions_macros.make_snapshot_from(meshobj, do_merge, "a_", "_o", False, None)
+        # MGTOOLS_functions_macros.select_only(meshobj)
 
 
         # ---------------------------------------------
@@ -108,6 +118,15 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
         #     print(i)
 
         # ---------------------------------------------
+
+        # ---------------------------------------------
+        # TEST: copy data block from main to selected
+        target_objects = bpy.context.selected_objects.copy()
+        target_object_active = bpy.context.view_layer.objects.active
+        target_objects.remove(target_object_active)
+        # [target_object.data = target_object_active.data for target_object in target_objects]
+        for target_object in target_objects:
+            target_object.data = target_object_active.data
         return{'FINISHED'}
 
         
