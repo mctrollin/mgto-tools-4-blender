@@ -17,7 +17,7 @@
 <table>
 <tr>
 <td valign="top" align="left">
-<img src="docs/readme_panel_rigging.png" alt="Rigging panel" width="235px" />
+<img src="docs/readme_panel_rigging.png" alt="Rigging panel" style="width:235px;" />
 </td>
 <td valign="top">
 
@@ -37,7 +37,7 @@
 <table>
 <tr>
 <td valign="top" align="left">
-<img src="docs/readme_panel_weighting.png" alt="Weighting panel" width="235px" />
+<img src="docs/readme_panel_weighting.png" alt="Weighting panel" style="width:235px;" />
 </td>
 <td valign="top">
 
@@ -60,7 +60,7 @@
 <table>
 <tr>
 <td valign="top" align="left">
-<img src="docs/readme_panel_animation.png" alt="Animation panel" width="235px" />
+<img src="docs/readme_panel_animation.png" alt="Animation panel" style="width:235px;" />
 </td>
 <td valign="top">
 
@@ -79,7 +79,7 @@
 <table>
 <tr>
 <td valign="top" align="left">
-<img src="docs/readme_panel_object.png" alt="Object panel" width="235px" />
+<img src="docs/readme_panel_object.png" alt="Object panel" style="width:235px;" />
 </td>
 <td valign="top">
 
@@ -100,7 +100,7 @@
 <table>
 <tr>
 <td valign="top" align="left">
-<img src="docs/readme_panel_mesh.png" alt="Mesh panel" width="235px" />
+<img src="docs/readme_panel_mesh.png" alt="Mesh panel" style="width:235px;" />
 </td>
 <td valign="top">
 
@@ -118,7 +118,7 @@
 <table>
 <tr>
 <td valign="top" align="left">
-<img src="docs/readme_panel_rigging.png" alt="Renaming panel" width="235px" />
+<img src="docs/readme_panel_rigging.png" alt="Renaming panel" style="width:235px;" />
 </td>
 <td valign="top">
 
@@ -138,7 +138,7 @@
 <table>
 <tr>
 <td valign="top" align="left">
-<img src="docs/readme_panel_io.png" alt="I/O Export panel" width="235px" />
+<img src="docs/readme_panel_io.png" alt="I/O Export panel" style="width:235px;" />
 </td>
 <td valign="top">
 
@@ -165,7 +165,7 @@
 <table>
 <tr>
 <td valign="top" align="left">
-<img src="docs/readme_panel_misc.png" alt="Misc panel" width="235px" />
+<img src="docs/readme_panel_misc.png" alt="Misc panel" style="width:235px;" />
 </td>
 <td valign="top">
 
