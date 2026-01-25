@@ -92,7 +92,7 @@ class MGTOOLS_functions_macros():
         self.select_objects(source_objects, True)
         
         if 0 >= len(bpy.context.selected_objects):
-            print("Problem selecting object for duplication: {}".format(source_object))
+            print("Problem selecting object for duplication: {}".format(source_objects))
             return
 
         # --------------------------------------------
@@ -118,7 +118,8 @@ class MGTOOLS_functions_macros():
             self.select_objects(cached_selection, False)
             bpy.context.view_layer.objects.active = cached_active
         else:
-            self.select_objects(clones_meshes, True)
+            # select the newly created clones (they are in the tmp collection)
+            self.select_objects(list(tmp_export_collection.objects), True)
 
         return tmp_export_collection
 
@@ -266,6 +267,9 @@ class MGTOOLS_functions_macros():
             # mesh specific processing
             if 'MESH' == source_object.type:
                 if True == merge:
+                    # bake shape keys first (deform verts and remove shape keys)
+                    MGTOOLS_functions_helper.bake_shape_keys(clone)
+
                     # apply all modifiers
                     MGTOOLS_functions_helper.apply_modifiers_smartly(clone)
                     bpy.ops.object.convert(target='MESH')
@@ -503,10 +507,17 @@ class MGTOOLS_functions_macros():
     # renormalize all weights with emphasis on selected vertex group (=bone influence)
     @classmethod
     def renormalize_weights(self):
-        # normalize all weights from other bones without changing the weights of the active bone
-        bpy.ops.object.vertex_group_normalize_all(lock_active=True)
-        # normalize all - this will effectively only set vertices of the active bone which don't have any other bone influence to 1
-        bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+        obj = bpy.context.view_layer.objects.active
+        if None == obj or 'MESH' != obj.type or len(obj.vertex_groups) <= 1:
+            return
+        
+        try:
+            # normalize all weights from other bones without changing the weights of the active bone
+            bpy.ops.object.vertex_group_normalize_all(lock_active=True)
+            # normalize all - this will effectively only set vertices of the active bone which don't have any other bone influence to 1
+            bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+        except Exception:
+            pass
 
     # transfer weights from one vertex group to another of the same mesh
     @classmethod

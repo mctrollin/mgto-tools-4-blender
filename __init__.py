@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Till 'rollin' Maginot",
     "description" : "Various tools and macros for modelling, skinning, rigging, animation and export",
     "blender" : (2, 80, 0),
-    "version" : (0, 6, 27), # check also version in 'About' panel
+    "version" : (0, 6, 28), # check also version in 'About' panel
     "location" : "View3D Panel",
     "warning" : "Might be unstable",
     "category" : "Generic"
@@ -25,54 +25,15 @@ bl_info = {
 
 # Import or reload submodules #########################################################
 
-# if "bpy" in locals():
-#     import importlib
-#     importlib.reload(props)
-#     importlib.reload(overlays_manager)
-#     importlib.reload(panels)
-#     importlib.reload(skin_op_weights)
-#     importlib.reload(test_op)
-#     importlib.reload(update_addon)
-# else:
-#     from . import props
-#     from . import overlays_manager
-#     from . import panels
-#     from . import skin_op_weights
-#     from . import test_op
-#     from . import update_addon
-
 from . mgtools_manager_overlays import MGTOOLSOverlayManager
 
 # Import #########################################################
 
 import bpy
+import traceback
 
 
 # Register #########################################################
-
-# we use auto_load now -----------------------------------------------
-# from . props import MGTOOLS_properties
-# from . overlays_manager import MGTOOLSOverlayManager
-# from . panels import MGTOOLS_PT_weighting, MGTOOLS_PT_sandbox, MGTOOLS_PT_about
-# from . skin_op_weights import MGTOOLS_OT_weighting_show_weights, MGTOOLS_OT_weighting_hide_weights, MGTOOLS_OT_weighting_set_weights, MGTOOLS_OT_weighting_add_weights
-# from . test_op import MGTOOLS_OT_sandbox_debug1
-# classes = (
-#     MGTOOLS_properties,
-#     MGTOOLS_PT_weighting,
-#     MGTOOLS_PT_sandbox,
-#     MGTOOLS_PT_about,
-#     MGTOOLS_OT_sandbox_debug1, 
-#     MGTOOLS_OT_weighting_show_weights, MGTOOLS_OT_weighting_hide_weights,
-#     MGTOOLS_OT_weighting_set_weights, MGTOOLS_OT_weighting_add_weights
-#     )
-# def register():
-#     for cls in classes:
-#         bpy.utils.register_class(cls)
-# def unregister():
-#     MGTOOLSOverlayManager.deinit()
-#     for cls in reversed(classes):
-#         bpy.utils.unregister_class(cls)
-# ------------------------------------------------------------------ 
 
 from . import auto_load
 auto_load.init()

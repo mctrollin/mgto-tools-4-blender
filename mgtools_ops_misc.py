@@ -4,6 +4,7 @@ import bpy
 from bpy.types import Operator
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . mgtools_functions_macros import MGTOOLS_functions_macros
+from . mgtools_props import MGTOOLS_properties_curve_workaround
 
 class MGTOOLS_OT_particle_hair_to_mesh(Operator):
     bl_idname = "mgtools.particle_hair_to_mesh"
@@ -54,12 +55,22 @@ class MGTOOLS_OT_particle_hair_to_mesh(Operator):
             print(created_objs)
 
             # setup created curves
-            for mesh in created_objs:
-                mesh.data.bevel_mode = 'ROUND'
-                mesh.data.bevel_depth = hair_to_mesh_thickness
-                mesh.data.bevel_resolution = hair_to_mesh_resolution
-                mesh.data.use_fill_caps = True
-                mesh.name = hair_to_mesh_name
+            for curve in created_objs:
+                curve.data.bevel_mode = 'ROUND'
+                curve.data.bevel_depth = hair_to_mesh_thickness
+                curve.data.bevel_resolution = hair_to_mesh_resolution
+                curve.data.use_fill_caps = True
+                curve.name = hair_to_mesh_name
+
+                # setup radius
+                for spline in curve.data.splines:
+                    for i, pt in enumerate(spline.points):
+                        points_count = len(spline.points)
+                        point_position_normalized = i / (points_count - 1)
+                        curve_y = MGTOOLS_properties_curve_workaround.evaluate_curve('HairShapeCurve', point_position_normalized)
+                        radius = curve_y * 1
+                        # print(f"Setting spline point radius to {radius} for point {i} of {points_count} normalized position {point_position_normalized}")
+                        pt.radius = radius
 
             # convert curves to meshes
             MGTOOLS_functions_macros.select_objects(created_objs)

@@ -5,6 +5,7 @@ import bpy
 from bpy.types import PropertyGroup
 from bpy.props import PointerProperty, StringProperty, IntProperty, BoolProperty, FloatProperty, EnumProperty, FloatVectorProperty
 from . mgtools_functions_helper import MGTOOLS_functions_helper
+from . import mgtools_compat as compat
 
 class MGTOOLS_properties_scene(PropertyGroup):
 
@@ -13,6 +14,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
 
     p_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
     p_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
+    p_rename_remove_prefix: StringProperty(name='Remove prefix', default="", description="Prefix to remove from mapped names if present at the start (case-sensitive).",)
+    p_rename_add_prefix: StringProperty(name='Add prefix', default="", description="Prefix to add to mapped names after removal (not added if already present).",)
 
 
     # Properties.Rigging ################################################################ 
@@ -144,6 +147,8 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_vgroups_rename: BoolProperty(name="Rename Vertex Groups", default=False, description="Rename vertex groups based on a mapping file.",)
     p_io_export_vgroups_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
     p_io_export_vgroups_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
+    p_io_export_vgroups_rename_remove_prefix: StringProperty(name='Remove prefix', default="", description="Prefix to remove from mapped vgroup names if present at the start (case-sensitive).",)
+    p_io_export_vgroups_rename_add_prefix: StringProperty(name='Add prefix', default="", description="Prefix to add to mapped vgroup names after removal (not added if already present).",)
     p_io_export_armature_replacement: PointerProperty(name="Armature Replacement", type=bpy.types.Object, description="For clones it will replace any possible armature reference inside armature modifier.",)
     p_io_export_weights_limit: IntProperty(name='Bone influence limit', default=4, description="Limits the number of weights per vertex. -1 means unlimited.",)
 
@@ -181,7 +186,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_material_override: PointerProperty(name="Mat Override", type=bpy.types.Material, description="Material override - will add new material slot or replace any existing slot with this material.",)
 
     # selection export ---------------------
-    p_io_export_filepath: StringProperty(name='Export file', default="", description="Export file for selection export.", subtype='FILE_PATH',)
+    p_io_export_filepath: compat.StringProperty(name='Export file', default="", description="Export file for selection export.", subtype='FILE_PATH', options={'PATH_SUPPORTS_BLEND_RELATIVE'},)
    
     # collection export ---------------------
     p_io_export_folder_collections: StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export.", subtype='DIR_PATH',)
@@ -193,6 +198,13 @@ class MGTOOLS_properties_scene(PropertyGroup):
 
     # hitboxes export ---------------------
     p_io_export_prefix_filter_collection_hitboxes: StringProperty(name='Filter: Collections', default="h_", description="Filter prefix for collections containing hitboxes data.",)
+
+
+    # Properties.Mesh ################################################################ 
+
+    p_mesh_keep_target_unique_vgs: BoolProperty(name="Keep Unique VGs", default=True, description="If enabled, vertex groups that exist only on the target objects will be kept instead of being removed. Applies only to VGs matched by the filter (if set).", )
+    p_mesh_copy_vg_flags: BoolProperty(name="Copy VG Flags", default=True, description="Copy simple vertex group flags (e.g. lock_weight) when matching groups.", )
+    p_mesh_vg_name_filter: StringProperty(name="VG Filter", default="", description="Comma-separated shell-style globs (case-sensitive). Only VGs matching any pattern are processed. Empty = all (no filter). Examples: DEF-*,spine*")
 
 
     # Properties.Misc ################################################################ 
@@ -333,3 +345,37 @@ class MGTOOLS_properties_object(PropertyGroup):
     @classmethod
     def unregister(self):
         del bpy.types.Object.mgtools
+
+
+
+class MGTOOLS_properties_curve_workaround:
+
+    node_tree_name = 'MGTOOLS_NodeTree'
+    curve_node_mapping = {}
+
+    @classmethod
+    def get_or_create_node_tree(self):
+        # Prepare node group if it does not yet exist
+        if self.node_tree_name not in bpy.data.node_groups:
+            node_tree = bpy.data.node_groups.new(name=self.node_tree_name, type='ShaderNodeTree')
+            # node_group.fake_user = True # can not be done from a draw() function
+        # Return node group
+        return bpy.data.node_groups[self.node_tree_name]
+
+    @classmethod
+    def get_or_create_curve_node(self, curve_name):
+        node_tree = self.get_or_create_node_tree()
+        # Prepare curve if it does not yet exist
+        if curve_name not in self.curve_node_mapping or self.curve_node_mapping[curve_name] not in node_tree.nodes:
+            rgb_curve_node = node_tree.nodes.new('ShaderNodeRGBCurve')
+            self.curve_node_mapping[curve_name] = rgb_curve_node.name
+        # Return curve
+        return node_tree.nodes[self.curve_node_mapping[curve_name]]
+    
+    @classmethod
+    def evaluate_curve(self, curve_name, position_normalized):
+        node_tree = bpy.data.node_groups[self.node_tree_name]
+        node_tree.use_fake_user = True # here, as it can not be done from a draw() function 
+        curve_mapping = node_tree.nodes['RGB Curves'].mapping
+        curve = curve_mapping.curves[3] # index 3 is the 'good' curve
+        return curve_mapping.evaluate(curve, position_normalized)

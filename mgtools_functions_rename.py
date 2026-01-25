@@ -13,7 +13,7 @@ class MGTOOLS_functions_rename():
     # Rename.Bones #######################################################
 
     @classmethod
-    def rename_bones(self, armature_object, mapping_file_path, mapping_invert):
+    def rename_bones(self, armature_object, mapping_file_path, mapping_invert, add_prefix="", remove_prefix=""):
         
         if 'ARMATURE' != armature_object.type:
             print("No armature")
@@ -36,13 +36,14 @@ class MGTOOLS_functions_rename():
 
             # try get new name
             name_new = self.get_mapped_name(bone.name, mapping_list, mapping_invert)
+            name_new = self.postprocess_prefixes(name_new, add_prefix, remove_prefix)
 
             # apply new name 
             if "" != name_new:
                 bone.name = name_new
 
     @classmethod
-    def rename_vertexgroups(self, mesh_object, mapping_file_path, mapping_invert):
+    def rename_vertexgroups(self, mesh_object, mapping_file_path, mapping_invert, add_prefix="", remove_prefix=""):
         
         if 'MESH' != mesh_object.type:
             print("No mesh")
@@ -73,6 +74,8 @@ class MGTOOLS_functions_rename():
                 name_from = mapping_list[idx+1]
                 name_to = mapping_list[idx]
 
+            # post-process prefixes
+            name_to = self.postprocess_prefixes(name_to, add_prefix, remove_prefix)
             
             # apply new name 
             if 0 <= mesh_object.vertex_groups.find(name_from):
@@ -111,7 +114,7 @@ class MGTOOLS_functions_rename():
         #             vg.name = name_new
 
     @classmethod
-    def rename_fcurves(self, object, mapping_file_path, mapping_invert):
+    def rename_fcurves(self, object, mapping_file_path, mapping_invert, add_prefix="", remove_prefix=""):
 
         if not object:
             print("No object")
@@ -134,6 +137,7 @@ class MGTOOLS_functions_rename():
                 name = self.get_bonename_from_fcurve_datapath(fc.data_path)
                 if name:
                     new_name = self.get_mapped_name(name, mapping_list, mapping_invert)
+                    new_name = self.postprocess_prefixes(new_name, add_prefix, remove_prefix)
                     if new_name:
                         fc.data_path = fc.data_path.replace(name, new_name)
                         if fc.group:
@@ -166,6 +170,23 @@ class MGTOOLS_functions_rename():
                 if name_input == mapping_list[idx+1]:
                     return mapping_list[idx]
         return ""
+
+    @classmethod
+    def postprocess_prefixes(self, name, add_prefix, remove_prefix):
+        # Post-process a mapped name: remove leading remove_prefix (once) then add add_prefix
+        if None == name or "" == name:
+            return name
+        ap = "" if add_prefix is None else add_prefix.strip()
+        rp = "" if remove_prefix is None else remove_prefix.strip()
+        # remove leading prefix if present (case-sensitive)
+        if rp:
+            if name.startswith(rp):
+                name = name[len(rp):].lstrip()
+        # add prefix if provided and not already present
+        if ap:
+            if not name.startswith(ap):
+                name = ap + name
+        return name
 
     @classmethod
     def prepare_mapping_list(self, mapping_file_path):

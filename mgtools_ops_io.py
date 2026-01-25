@@ -107,6 +107,8 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.vgroups_rename = mgtools_props_scene.p_io_export_vgroups_rename
             exporter.vgroups_rename_mapping_file_path = mgtools_props_scene.p_io_export_vgroups_rename_mapping_file_path
             exporter.vgroups_rename_invert_mapping = mgtools_props_scene.p_io_export_vgroups_rename_mapping_inverse
+            exporter.vgroups_rename_add_prefix = mgtools_props_scene.p_io_export_vgroups_rename_add_prefix
+            exporter.vgroups_rename_remove_prefix = mgtools_props_scene.p_io_export_vgroups_rename_remove_prefix
             exporter.armature_replacement = mgtools_props_scene.p_io_export_armature_replacement
             exporter.weights_limit = mgtools_props_scene.p_io_export_weights_limit
             #material
@@ -189,6 +191,8 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.vgroups_rename = mgtools_props_scene.p_io_export_vgroups_rename
         exporter.vgroups_rename_mapping_file_path = mgtools_props_scene.p_io_export_vgroups_rename_mapping_file_path
         exporter.vgroups_rename_invert_mapping = mgtools_props_scene.p_io_export_vgroups_rename_mapping_inverse
+        exporter.vgroups_rename_add_prefix = mgtools_props_scene.p_io_export_vgroups_rename_add_prefix
+        exporter.vgroups_rename_remove_prefix = mgtools_props_scene.p_io_export_vgroups_rename_remove_prefix
         exporter.armature_replacement = mgtools_props_scene.p_io_export_armature_replacement
         exporter.weights_limit = mgtools_props_scene.p_io_export_weights_limit
         #material

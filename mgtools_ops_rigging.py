@@ -4,6 +4,43 @@ from bpy.types import Operator
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . mgtools_functions_macros import MGTOOLS_functions_macros
 
+class MGTOOLS_OT_select_bones(Operator):
+    bl_idname = "mgtools.rigging_select_bones"
+    bl_label = ""
+    bl_description = ""
+
+    def execute(self, context):
+
+         # get source armature
+        source_armature = MGTOOLS_functions_macros.get_first_selected_armature()
+
+        if None == source_armature:
+            print ("Can't find source armature")
+            return {'CANCELLED'}
+        
+        # Copy from clipboard
+        bone_names_string = bpy.context.window_manager.clipboard
+        bone_names = bone_names_string.split("\n")
+
+        found_bones = []
+
+        # Select bones
+        for bone in source_armature.data.edit_bones: #source_armature.data.bones:
+            # Clear any previous selection
+            # Select if bone is part of the list
+            to_be_selected = bone.name in bone_names
+            bone.select = to_be_selected
+            bone.select_head = to_be_selected
+            bone.select_tail = to_be_selected
+            if to_be_selected: 
+                found_bones.append(bone.name)
+        
+        missing_bones = [i for i in bone_names if i not in found_bones]
+        for missing_bone in missing_bones:
+            print ("Can't find bone: " + missing_bone)
+
+        return{'FINISHED'}
+
 # Create new armature using selected bones as reference and respecting the original hierarchy
 class MGTOOLS_OT_extract_clone_bones(Operator):
     bl_idname = "mgtools.rigging_extract_clone_bones"

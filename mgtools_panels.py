@@ -6,6 +6,8 @@ from bpy.types import Panel
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . mgtools_functions_macros import MGTOOLS_functions_macros
 from . mgtools_manager_overlays import MGTOOLSOverlayManager
+from . import mgtools_compat as compat
+from. mgtools_props import MGTOOLS_properties_curve_workaround
 
 class MGTOOLS_PT_rigging(Panel):
     bl_idname = "MGTOOLS_PT_rigging"
@@ -26,13 +28,14 @@ class MGTOOLS_PT_rigging(Panel):
         mgtools_props_scene = bpy.context.scene.mgtools
 
         box = col.box()
-        box.label(text="Bone Snapshot Tool")
+        
         if 'EDIT_ARMATURE' != bpy.context.mode:
             box.label(text="EDIT_ARMATURE mode required", icon='ERROR', )
         else:
             if 0 >= len(bpy.context.selected_objects):
                 box.label(text="Nothing actively selected", icon='ERROR', )
             else:
+                box.label(text="Bone Snapshot Tool")
                 row = box.row()
                 row.label(text="Bones prefix")
                 row.prop(mgtools_props_scene, 'p_rigging_bone_name_prefix', text="")
@@ -42,6 +45,8 @@ class MGTOOLS_PT_rigging(Panel):
                 box.prop(mgtools_props_scene, 'p_rigging_add_scale_constraints_to_cloned_bones')
                 box.operator('mgtools.rigging_extract_clone_bones', text="Make Bones Snapshot")
 
+                box.label(text="Bone Select Tool")
+                box.operator('mgtools.rigging_select_bones', text="Select Bones")
                 
         
         box = col.box()
@@ -143,7 +148,11 @@ class MGTOOLS_PT_weighting(Panel):
 
         # set weight to
         row = box_set_weights.row()
-        row.prop(bpy.context.scene.tool_settings.unified_paint_settings, 'weight', text="")
+        ups = compat.get_unified_paint_settings(context, mode='WEIGHT_PAINT')
+        if ups is not None:
+            row.prop(ups, 'weight', text="")
+        else:
+            row.label(text="Weight: N/A")
         row.operator('mgtools.weighting_set_weights', text="Set")
 
         # add / subtract weight
@@ -190,10 +199,10 @@ class MGTOOLS_PT_weighting(Panel):
         if mgtools_props_obj.p_weightedit_list_enabled:
         
             # default default
-            box_weight_lists.template_list("UI_UL_list", "testlist_id_default", meshobj, "vertex_groups", meshobj.vertex_groups, "active_index", item_dyntip_propname="", rows=5, maxrows=5, type='COMPACT', columns=9, sort_reverse=False, sort_lock=False)
+            compat.template_list(box_weight_lists, "UI_UL_list", "testlist_id_default", meshobj, "vertex_groups", meshobj.vertex_groups, "active_index", item_dyntip_propname="", rows=5, maxrows=5, type='COMPACT', columns=9)
             
             # custom basic
-            box_weight_lists.template_list("MGTOOLS_UL_vgroups", "testlist_id_custom_basic", meshobj, "vertex_groups", meshobj.vertex_groups, "active_index", item_dyntip_propname="", rows=5, maxrows=5, type='DEFAULT', columns=9, sort_reverse=False, sort_lock=False)
+            compat.template_list(box_weight_lists, "MGTOOLS_UL_vgroups", "testlist_id_custom_basic", meshobj, "vertex_groups", meshobj.vertex_groups, "active_index", item_dyntip_propname="", rows=5, maxrows=5, type='DEFAULT', columns=9)
 
         # l.separator()
 
@@ -241,13 +250,11 @@ class MGTOOLS_PT_animation(Panel):
 
         mgtools_props_scene = bpy.context.scene.mgtools
 
-        flow = l.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=True, align=False)
-
         # auto update motion paths
-        row = flow.row(align=True)
-        row.operator('mgtools.animation_auto_update_motion_paths', icon='TIME', text='Auto Update Motion Paths')
+        anim_mp_box = col.box()
+        anim_mp_box.operator('mgtools.animation_auto_update_motion_paths', icon='TIME', text='Auto Update Motion Paths')
         if mgtools_props_scene.p_motionpaths_is_auto_update_active :
-            row.prop(mgtools_props_scene, 'p_motionpaths_is_auto_update_active', text = "", icon='CANCEL')
+            anim_mp_box.prop(mgtools_props_scene, 'p_motionpaths_is_auto_update_active', text = "", icon='CANCEL')
 
         # copy animation data
         anim_copy_box = col.box()
@@ -255,6 +262,7 @@ class MGTOOLS_PT_animation(Panel):
         anim_copy_box.prop(mgtools_props_scene, 'p_animation_copy_data_source', text = "Source",)
         anim_copy_box.prop(mgtools_props_scene, 'p_animation_copy_data_target', text = "Target",)
         anim_copy_box.operator('mgtools.animation_copy_animation_data', text='Copy animation data')
+        anim_copy_box.label(text="This also copies NLA tracks.", icon='INFO')
 
 class MGTOOLS_PT_object(Panel):
     bl_idname = "MGTOOLS_PT_object"
@@ -305,6 +313,42 @@ class MGTOOLS_PT_object(Panel):
 
         snap_box.operator('mgtools.object_snapshot', text="Make Range Snapshots")
 
+class MGTOOLS_PT_mesh(Panel):
+    bl_idname = "MGTOOLS_PT_mesh"
+    bl_label = "Mesh"
+    bl_category = "mgtools"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        l = self.layout
+        col = l.column()
+
+        if None == bpy.context.object:
+            col.label(text="Object properties not yet initialized", icon='ERROR', )
+            return
+
+        active = context.view_layer.objects.active
+        if None == active:
+            col.label(text="No active object", icon='ERROR', )
+            return
+
+        mgtools_props_scene = context.scene.mgtools
+
+        box_vgs = col.box()
+        box_vgs.label(text="Vertex Groups")
+
+        vg_count = len(active.vertex_groups) if hasattr(active, 'vertex_groups') else 0
+        if 0 >= vg_count:
+            box_vgs.label(text="Active has no vertex groups", icon='INFO')
+        else:
+            col = box_vgs.column()
+            col.prop(mgtools_props_scene, 'p_mesh_keep_target_unique_vgs', text="Keep unique target VGs")
+            col.prop(mgtools_props_scene, 'p_mesh_copy_vg_flags', text="Copy VG Flags")
+            col.prop(mgtools_props_scene, 'p_mesh_vg_name_filter', text="Filter")
+            col.operator('mgtools.match_vertex_groups', text="Match Vertex Groups to Selection")
+
 class MGTOOLS_PT_renaming(Panel):
     bl_idname = "MGTOOLS_PT_renaming"
     bl_label = "Renaming"
@@ -329,6 +373,9 @@ class MGTOOLS_PT_renaming(Panel):
 
         mapping_box.prop(mgtools_props_scene, 'p_rename_mapping_file_path')
         mapping_box.prop(mgtools_props_scene, 'p_rename_mapping_inverse')
+        row = mapping_box.row(align=True)
+        row.prop(mgtools_props_scene, 'p_rename_remove_prefix', text='Remove prefix')
+        row.prop(mgtools_props_scene, 'p_rename_add_prefix', text='Add prefix')
 
         mapping_box.operator('mgtools.rename_bones', text="Rename Bones")
         mapping_box.operator('mgtools.rename_vertexgroups', text="Rename Vertex Groups")
@@ -337,6 +384,7 @@ class MGTOOLS_PT_renaming(Panel):
         tools_box = col.box()
         tools_box.label(text="Tools")
         tools_box.operator('mgtools.rename_print_bones', text="Output bone names")
+        tools_box.operator('mgtools.rename_print_vertexgroups', text="Output vertex group names")
         tools_box.operator('mgtools.rename_mesh_from_object', text="Set Mesh name from Object")
 
         # get object props
@@ -440,6 +488,9 @@ class MGTOOLS_PT_io(Panel):
         if True == mgtools_props_scene.p_io_export_vgroups_rename:
             mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename_mapping_file_path",)
             mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename_mapping_inverse",)
+            row = mesh_options_box3.row(align=True)
+            row.prop(mgtools_props_scene, 'p_io_export_vgroups_rename_remove_prefix', text='Remove prefix')
+            row.prop(mgtools_props_scene, 'p_io_export_vgroups_rename_add_prefix', text='Add prefix')
 
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
@@ -568,9 +619,6 @@ class MGTOOLS_PT_misc(Panel):
             return
         mgtools_props_scene = bpy.context.scene.mgtools
 
-        col.label(text="Misc Stuff...")
-
-
         ### particle hair -----------------------------------
         particlehair_box = col.box()
         # label
@@ -582,6 +630,12 @@ class MGTOOLS_PT_misc(Panel):
         row = particlehair_box.row()
         row.prop(mgtools_props_scene, "p_particle_hair_to_mesh_resolution", text="Resolution")
         row = particlehair_box.row()
+
+        particlehair_curvebox = row.box()
+        particlehair_curvebox.label(text="Hair Shape")
+        particlehair_curvebox.template_curve_mapping(MGTOOLS_properties_curve_workaround.get_or_create_curve_node('HairShapeCurve'), "mapping")
+        row = particlehair_box.row()
+        
         row.prop(mgtools_props_scene, "p_particle_hair_to_mesh_name", text="Name")
         particlehair_box.operator("mgtools.particle_hair_to_mesh", text="Particle Hair > Mesh",)
 
@@ -623,21 +677,21 @@ class MGTOOLS_PT_misc(Panel):
         op.attribute_name = mgtools_props_scene.p_attributes_vertex_positions_snapshot_name
         op.relative = mgtools_props_scene.p_attributes_vertex_positions_snapshot_relative
 
-class MGTOOLS_PT_sandbox(Panel):
-    bl_idname = "MGTOOLS_PT_sandbox"
-    bl_label = "Sandbox"
-    bl_category = "mgtools"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_options = {'DEFAULT_CLOSED'}
+# class MGTOOLS_PT_sandbox(Panel):
+#     bl_idname = "MGTOOLS_PT_sandbox"
+#     bl_label = "Sandbox"
+#     bl_category = "mgtools"
+#     bl_space_type = "VIEW_3D"
+#     bl_region_type = "UI"
+#     bl_options = {'DEFAULT_CLOSED'}
 
-    def draw(self, context):
-        l = self.layout
+#     def draw(self, context):
+#         l = self.layout
 
-        col = l.column()
-        col.label(text="Only debug and test stuff!", icon='ERROR', )
+#         col = l.column()
+#         col.label(text="Only debug and test stuff!", icon='ERROR', )
 
-        col.operator("mgtools.sandbox_debug1", text="Debug Test Slot 1",)
+#         col.operator("mgtools.sandbox_debug1", text="Debug Test Slot 1",)
 
 
 class MGTOOLS_PT_about(Panel):
@@ -652,9 +706,9 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.27") # check also version in __init__
+        box.label(text="MGTO tools v0.6.28") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
-        box.label(text="(C) 2024")
+        box.label(text="(C) 2025")
 
         python_version_info = sys.version_info
         box = l.column()
@@ -663,16 +717,16 @@ class MGTOOLS_PT_about(Panel):
 
 # Layout extensions #############################################################################################
 
-weights_list_refresh_timer = datetime.now()
+# Vertex groups list filtering state: intelligent call gating
 weights_list_filter_flags = []
 weights_list_filter_sorting = []
+weights_list_last_data_id = None  # cache key to detect if object changed
+weights_list_selected_verts_indices_cached = []
 
 # vertex groups list for weights
 class MGTOOLS_UL_vgroups(bpy.types.UIList):
     # required for filtering
     VGROUP_EMPTY = 1 << 0
-
-    
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         ob = data
@@ -692,47 +746,59 @@ class MGTOOLS_UL_vgroups(bpy.types.UIList):
             else:
                 layout.label(text="", translate=False, icon_value=icon)
         # 'GRID'
-        elif self.layout_type in {'GRID'}:
+        elif compat.ui_list_supports_grid() and self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label(text="", icon_value=icon)
 
-    # this is not necessary. The default filtering works and is a lot faster then the code below but does not sort and filter the way we want
     def filter_items(self, context, data, propname):
         vgroups = getattr(data, propname)
-        helper_funcs = bpy.types.UI_UL_list
+        helper_funcs = getattr(bpy.types, 'UI_UL_list', None)
 
-        # reduce update rate to improve performance
-        global weights_list_refresh_timer
         global weights_list_filter_flags
         global weights_list_filter_sorting
+        global weights_list_last_data_id
+        global weights_list_selected_verts_indices_cached
 
-        deltatime = (datetime.now() - weights_list_refresh_timer).total_seconds()
-        if 2 > deltatime:
-            return weights_list_filter_flags, weights_list_filter_sorting
-        weights_list_refresh_timer = datetime.now()
+        # detect if the data object changed
+        data_id = id(data) 
+        data_changed = data_id != weights_list_last_data_id
+        if data_changed : weights_list_last_data_id = data_id
 
-        # Filtering ------------------------------
-        weights_list_filter_flags = [self.bitflag_filter_item] * len(vgroups)
-        weights_list_filter_sorting = [] * len(vgroups)
-
-        # Prepare average-weight-per-vertex-group list
-        weight_averages = []
+        # Pre-compute selected vertex indices once (avoids repeated calls)
         selected_verts_indices = MGTOOLS_functions_helper.get_selected_vert_indicies(data)
-        for idx, vg in enumerate(vgroups):
+        selection_changed = selected_verts_indices != weights_list_selected_verts_indices_cached
+        if selection_changed : weights_list_selected_verts_indices_cached = selected_verts_indices
+
+        # Decide whether to actually update: threshold reached OR timeout expired
+        should_update = data_changed or selection_changed
+       
+        if not should_update:
+            # Return cached results without recomputing
+            return weights_list_filter_flags, weights_list_filter_sorting
+
+        # Filtering & sorting logic (optimized) -----
+        vg_count = len(vgroups)
+        weights_list_filter_flags = [self.bitflag_filter_item] * vg_count
+        weights_list_filter_sorting = []
+
+        # Compute weight averages and apply zero-weight filter in one pass
+        weight_averages = []
+        for idx in range(vg_count):
             weight_average = MGTOOLS_functions_helper.get_weight_average(data, idx, selected_verts_indices)
             weight_averages.append((idx, weight_average))
             # Filter by zero average weight
-            if 0 < weight_average:
-                weights_list_filter_flags[idx] |= self.VGROUP_EMPTY
-            else:
-                weights_list_filter_flags[idx]  &= ~self.bitflag_filter_item
+            if weight_average <= 0:
+                weights_list_filter_flags[idx] &= ~self.bitflag_filter_item
 
-        # Filter by name
-        if self.filter_name:
-            weights_list_filter_flags = helper_funcs.filter_items_by_name(self.filter_name, self.bitflag_filter_item, vgroups, "name", reverse=False)
+        # Apply name-based filter (use Blender's built-in if available)
+        if self.filter_name and helper_funcs is not None and hasattr(helper_funcs, 'filter_items_by_name'):
+            weights_list_filter_flags = helper_funcs.filter_items_by_name(
+                self.filter_name, self.bitflag_filter_item, vgroups, "name", reverse=False
+            )
 
-        # Sorting ------------------------------
-        weights_list_filter_sorting = helper_funcs.sort_items_helper(weight_averages, lambda e: e[1], True)
+        # Sort by weight average (descending: highest weight first)
+        if helper_funcs is not None and hasattr(helper_funcs, 'sort_items_helper'):
+            weights_list_filter_sorting = helper_funcs.sort_items_helper(weight_averages, lambda e: e[1], True)
         
         return weights_list_filter_flags, weights_list_filter_sorting
     

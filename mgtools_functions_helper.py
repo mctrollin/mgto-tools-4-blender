@@ -4,9 +4,8 @@ import colorsys
 from mathutils import Matrix # Vector, Euler, 
 import bmesh
 
-class MGTOOLS_functions_helper():
 
-   
+class MGTOOLS_functions_helper():
 
     # Selection.Mesh #######################################################
     
@@ -123,19 +122,118 @@ class MGTOOLS_functions_helper():
             target_object.modifiers["Armature"].object = armatures[0]
 
     @classmethod
+    def bake_shape_keys(self, obj):
+        """Bake current shape-key deformation into vertex coordinates and remove shape-keys.
+
+        Assumes `obj` is already selected (and active) and does not modify global selection or mode.
+        Uses a context override when calling operators so it doesn't need to change selection.
+        """
+        try:
+            if None == obj or 'MESH' != obj.type:
+                return
+
+            # quick exit when no shape keys
+            if None == obj.data.shape_keys or 0 >= len(obj.data.shape_keys.key_blocks):
+                return
+
+            # Prefer operator that applies the mixed shape-key deformation if supported
+            try:
+                with bpy.context.temp_override(object=obj):
+                    bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
+            except TypeError:
+                # older Blender versions might not support apply_mix; fall back to manual baking
+
+                basis = obj.data.shape_keys.key_blocks[0]
+                final_coords = [basis.data[i].co.copy() for i in range(len(obj.data.vertices))]
+                for kb in obj.data.shape_keys.key_blocks[1:]:
+                    val = kb.value
+                    if 0.0 == val:
+                        continue
+                    for i, kv in enumerate(kb.data):
+                        final_coords[i] += (kv.co - basis.data[i].co) * val
+
+                # assign baked coords to the mesh vertices
+                for i, v in enumerate(obj.data.vertices):
+                    v.co = final_coords[i]
+
+                # remove all shape keys (try all=True first, fall back to iterative removal)
+                try:
+                    with bpy.context.temp_override(object=obj):
+                        bpy.ops.object.shape_key_remove(all=True)
+                except Exception:
+                    while obj.data.shape_keys and len(obj.data.shape_keys.key_blocks) > 0:
+                        try:
+                            with bpy.context.temp_override(object=obj):
+                                bpy.ops.object.shape_key_remove()
+                        except Exception:
+                            break
+            except Exception as e:
+                # some other error occurred when trying apply_mix; try conservative manual bake as fallback
+                try:
+                    basis = obj.data.shape_keys.key_blocks[0]
+                    final_coords = [basis.data[i].co.copy() for i in range(len(obj.data.vertices))]
+                    for kb in obj.data.shape_keys.key_blocks[1:]:
+                        val = kb.value
+                        if 0.0 == val:
+                            continue
+                        for i, kv in enumerate(kb.data):
+                            final_coords[i] += (kv.co - basis.data[i].co) * val
+                    for i, v in enumerate(obj.data.vertices):
+                        v.co = final_coords[i]
+                except Exception:
+                    print("Warning: failed to bake shape keys for {}: {}".format(obj, e))
+                # try to remove shape keys anyway
+                try:
+                    with bpy.context.temp_override(object=obj):
+                        bpy.ops.object.shape_key_remove(all=True)
+                except Exception:
+                    while obj.data.shape_keys and len(obj.data.shape_keys.key_blocks) > 0:
+                        try:
+                            with bpy.context.temp_override(object=obj):
+                                bpy.ops.object.shape_key_remove()
+                        except Exception:
+                            break
+
+        except Exception as e:
+            print("Warning: failed to bake shape keys for {}: {}".format(obj, e))
+
+    @classmethod
     def apply_modifiers_smartly(self, obj):
         # For each modifier
-        for modifier in obj.modifiers:
+        # Removes obviously broken modifiers (e.g. missing target object) and
+        # tries to apply modifiers; if applying fails the modifier is removed.
+        #
+        # Assumes `obj` is already selected (and active). Uses context overrides
+        # for operator calls so it does not modify selection or active object.
+
+        if None == obj:
+            return
+
+        # iterate over a copy because we may remove modifiers during iteration
+        for modifier in list(obj.modifiers):
             # -------------
             # Custom behaviour for certain modifiers:
-            # DataTransfer ---
-            # Re-transfer data layers. Required if obj got instanced via geometry nodes (GN), there data layers can get lost when the GN modifier is applied.
-            if(modifier.type == 'DATA_TRANSFER'):
-                with bpy.context.temp_override(object=obj):
-                    bpy.ops.object.datalayout_transfer(modifier=modifier.name)
-            # -------------
-            # Apply the modifier
-            bpy.ops.object.modifier_apply(modifier=modifier.name)
+            if modifier.type == 'DATA_TRANSFER':
+                try:
+                    with bpy.context.temp_override(object=obj):
+                        bpy.ops.object.datalayout_transfer(modifier=modifier.name)
+                except Exception as e:
+                    print(f"Warning: data transfer failed for modifier '{modifier.name}' on '{obj.name}': {e}")
+
+            # Try to apply the modifier if it is enabled for viewport
+            if modifier.show_viewport:
+                try:
+                    with bpy.context.temp_override(object=obj):
+                        bpy.ops.object.modifier_apply(modifier=modifier.name)
+                except Exception as e:
+                    # applying failed -> try to remove the modifier to avoid future issues
+                    print(f"Warning: applying modifier '{modifier.name}' on '{obj.name}' failed: {e}. Removing modifier.")
+                    try:
+                        # modifier object may have been invalidated, remove by name if present
+                        if modifier.name in obj.modifiers:
+                            obj.modifiers.remove(obj.modifiers[modifier.name])
+                    except Exception as e2:
+                        print(f"Warning: failed to remove broken modifier '{modifier.name}' on '{obj.name}': {e2}")
 
 
     # View Layer / Collection #######################################################
@@ -200,12 +298,13 @@ class MGTOOLS_functions_helper():
         # for every vertex group element connected to this vertex
         for vge in vert.groups:
             # get connected vertex group
-            vg = meshobj.vertex_groups[vge.group]
-            # check if there exists a bone with the same name in the supplied armature
-            if True == any(bone.name == vg.name for bone in armature.data.bones): # vg.name in armature.bones:
-                vgroups_bones.append(vge)
-            # else:
-            #     print ("     vert {} with weight: {} from vg: {} which is not part of the used armature{}".format(vert_idx, vge.weight, vg.name, armature))
+            if 0 <= vge.group < len(meshobj.vertex_groups):
+                vg = meshobj.vertex_groups[vge.group]
+                # check if there exists a bone with the same name in the supplied armature
+                if True == any(bone.name == vg.name for bone in armature.data.bones): # vg.name in armature.bones:
+                    vgroups_bones.append(vge)
+                # else:
+                #     print ("     vert {} with weight: {} from vg: {} which is not part of the used armature{}".format(vert_idx, vge.weight, vg.name, armature))
         return vgroups_bones
 
     @classmethod
@@ -473,8 +572,10 @@ class MGTOOLS_functions_helper():
             target_nla_track.name = source_nla_track.name
             for source_strip in source_nla_track.strips:
                 #create strips
-                target_strip = target_nla_track.strips.new(source_strip.name, source_strip.frame_start, source_strip.action)
-                target_strip.name = source_strip.name # necessary as new() is not using the supplied name I guess
+                # NOTE: Blender's NlaStrips.new expects an integer start frame in some versions
+                target_strip = target_nla_track.strips.new(source_strip.name, int(source_strip.frame_start), source_strip.action)
+                # new() sometimes ignores the supplied name, so set it explicitly
+                target_strip.name = source_strip.name
                 target_strip.blend_in = source_strip.blend_in
                 target_strip.blend_out = source_strip.blend_out
                 target_strip.blend_type = source_strip.blend_type

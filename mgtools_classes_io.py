@@ -3,6 +3,7 @@ from math import radians
 import bpy
 from mathutils import Matrix # Vector, Euler, 
 from . mgtools_functions_helper import MGTOOLS_functions_helper
+from . import mgtools_functions_log as mgtools_functions_log
 from . mgtools_functions_macros import MGTOOLS_functions_macros
 from . mgtools_functions_io import MGTOOLS_functions_io
 from . mgtools_functions_rename import MGTOOLS_functions_rename
@@ -56,6 +57,8 @@ class MGTOOLS_io_exporter():
     vgroups_rename = False
     vgroups_rename_mapping_file_path = ""
     vgroups_rename_invert_mapping = False
+    vgroups_rename_remove_prefix = ""
+    vgroups_rename_add_prefix = ""
     armature_replacement = None
     weights_limit = 4
 
@@ -487,7 +490,9 @@ class MGTOOLS_io_exporter():
                     MGTOOLS_functions_rename.rename_vertexgroups(
                         mesh_object=input_meshes_clone, 
                         mapping_file_path=self.vgroups_rename_mapping_file_path, 
-                        mapping_invert=self.vgroups_rename_invert_mapping)
+                        mapping_invert=self.vgroups_rename_invert_mapping,
+                        add_prefix=self.vgroups_rename_add_prefix,
+                        remove_prefix=self.vgroups_rename_remove_prefix)
 
             # change modifier
             print(" >> preprocess modifier")
@@ -610,8 +615,12 @@ class MGTOOLS_io_exporter():
             armature_primary = to_export_armatures[0]
             # rename armatures
             armature_primary_name_cached = armature_primary.name
-            if '' != self.armature_primary_rename:
-                armature_primary.name = self.armature_primary_rename
+            if '' != self.armature_primary_rename and armature_primary.name != self.armature_primary_rename:
+                try:
+                    armature_primary.name = self.armature_primary_rename
+                except AttributeError as e:
+                    mgtools_functions_log.show_exception(e, message=f"Could not rename primary armature to '{self.armature_primary_rename}' (likely a linked/library read-only object)", popup=True, report=False) 
+                    # proceed without renaming
 
         # prepare anim related vars
         animation_strips_source = None
@@ -759,8 +768,13 @@ class MGTOOLS_io_exporter():
         # cleanup ------------------------------------
 
         # revert armature name
-        if None != armature_primary:
-            armature_primary.name = armature_primary_name_cached
+        if None != armature_primary and armature_primary.name != armature_primary_name_cached :
+            try:
+                print(f" > reverting primary armature's name {armature_primary.name} to {armature_primary_name_cached}")
+                armature_primary.name = armature_primary_name_cached
+            except AttributeError as e:
+                mgtools_functions_log.show_exception(e, message=f"Could not revert primary armature name to '{armature_primary_name_cached}' (likely a linked/library read-only object)", popup=True, report=False)
+                # skip reverting name
 
         # revert active action
         if None != animation_strips_source:

@@ -17,6 +17,8 @@ class MGTOOLS_OT_rename_bones(Operator):
         # properties
         bone_names_mapping_file_path = mgtools_props_scene.p_rename_mapping_file_path
         invert_mapping = mgtools_props_scene.p_rename_mapping_inverse
+        add_prefix = mgtools_props_scene.p_rename_add_prefix
+        remove_prefix = mgtools_props_scene.p_rename_remove_prefix
         
         # get armature
         armature_object = MGTOOLS_functions_macros.get_first_selected_armature()
@@ -26,7 +28,7 @@ class MGTOOLS_OT_rename_bones(Operator):
 
         if None != armature_object:
             # rename bones
-            MGTOOLS_functions_rename.rename_bones(armature_object, bone_names_mapping_file_path, invert_mapping)
+            MGTOOLS_functions_rename.rename_bones(armature_object, bone_names_mapping_file_path, invert_mapping, add_prefix, remove_prefix)
         else:
             print("No armature")
        
@@ -45,12 +47,14 @@ class MGTOOLS_OT_rename_vertexgroups(Operator):
         # properties
         bone_names_mapping_file_path = mgtools_props_scene.p_rename_mapping_file_path
         invert_mapping = mgtools_props_scene.p_rename_mapping_inverse
+        add_prefix = mgtools_props_scene.p_rename_add_prefix
+        remove_prefix = mgtools_props_scene.p_rename_remove_prefix
 
         # get mesh
         for tmpObj in bpy.context.selected_objects:
             if 'MESH' == tmpObj.type:
                 # rename vertex groups
-                MGTOOLS_functions_rename.rename_vertexgroups(tmpObj, bone_names_mapping_file_path, invert_mapping)
+                MGTOOLS_functions_rename.rename_vertexgroups(tmpObj, bone_names_mapping_file_path, invert_mapping, add_prefix, remove_prefix)
 
         return{'FINISHED'}
 
@@ -67,10 +71,12 @@ class MGTOOLS_OT_rename_fcurves(Operator):
         # properties
         bone_names_mapping_file_path = mgtools_props_scene.p_rename_mapping_file_path
         invert_mapping = mgtools_props_scene.p_rename_mapping_inverse
+        add_prefix = mgtools_props_scene.p_rename_add_prefix
+        remove_prefix = mgtools_props_scene.p_rename_remove_prefix
 
         # get mesh
         for tmpObj in bpy.context.selected_objects:
-            MGTOOLS_functions_rename.rename_fcurves(tmpObj, bone_names_mapping_file_path, invert_mapping)
+            MGTOOLS_functions_rename.rename_fcurves(tmpObj, bone_names_mapping_file_path, invert_mapping, add_prefix, remove_prefix)
 
         return{'FINISHED'}
 
@@ -89,6 +95,33 @@ class MGTOOLS_OT_rename_print_bones(Operator):
             out_string = ""
             for bone in armature_object.data.bones:
                 out_string += bone.name + "\n"
+            print(out_string)
+
+            # copy to clipboard
+            bpy.context.window_manager.clipboard = out_string
+
+        return{'FINISHED'}
+    
+class MGTOOLS_OT_rename_print_vertexgroups(Operator):
+    bl_idname = "mgtools.rename_print_vertexgroups"
+    bl_label = "Print vertex groups names"
+    bl_description = "Outputs vertex groups names as string in the console and to the clipboard"
+
+    def execute(self, context):
+        print ("MGTOOLS_OT_rename_print_vertexgroups")
+
+        # get mesh
+        mesh_object = None
+        for tmpObj in bpy.context.selected_objects:
+            if 'MESH' == tmpObj.type:
+                # rename vertex groups
+                mesh_object = tmpObj
+                break # first mesh wins
+       
+        if None != mesh_object:
+            out_string = ""
+            for vg in mesh_object.vertex_groups:
+                out_string += vg.name + "\n"
             print(out_string)
 
             # copy to clipboard

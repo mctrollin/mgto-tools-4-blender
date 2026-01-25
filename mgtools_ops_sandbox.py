@@ -19,10 +19,10 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
         # TEST: check collection in view layer
         # for vl in bpy.context.scene.view_layers:
         #     print("Checking view layer: ")
-        for l in bpy.context.window.view_layer.layer_collection.children:
-            print("Checking collection: {} {}".format(l, l.exclude))
-            for l2 in l.children:
-                print("Checking child collection: {} {}".format(l2, l2.exclude))
+        # for l in bpy.context.window.view_layer.layer_collection.children:
+        #     print("Checking collection: {} {}".format(l, l.exclude))
+        #     for l2 in l.children:
+        #         print("Checking child collection: {} {}".format(l2, l2.exclude))
             
 
         # ---------------------------------------------
@@ -121,12 +121,15 @@ class MGTOOLS_OT_sandbox_debug1(Operator):
 
         # ---------------------------------------------
         # TEST: copy data block from main to selected
-        target_objects = bpy.context.selected_objects.copy()
-        target_object_active = bpy.context.view_layer.objects.active
-        target_objects.remove(target_object_active)
-        # [target_object.data = target_object_active.data for target_object in target_objects]
-        for target_object in target_objects:
-            target_object.data = target_object_active.data
+        # target_objects = bpy.context.selected_objects.copy()
+        # target_object_active = bpy.context.view_layer.objects.active
+        # target_objects.remove(target_object_active)
+        # # [target_object.data = target_object_active.data for target_object in target_objects]
+        # for target_object in target_objects:
+        #     target_object.data = target_object_active.data
+
+
+        
         return{'FINISHED'}
 
         
