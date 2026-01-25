@@ -108,7 +108,7 @@ Mesh-focused utilities, mostly vertex group management.
 <table>
 <tr>
 <td valign="top" align="left" width="240">
-<img src="docs/readme_panel_rigging.png" alt="Renaming panel" style="width:235px; max-width:100%; height:auto; display:block;" />
+<img src="docs/readme_panel_renaming.png" alt="Renaming panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
 Rename bones, vertex groups and animation curve groups using mapping files and quick tools.
