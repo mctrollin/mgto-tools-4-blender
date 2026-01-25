@@ -14,13 +14,13 @@
 
 ---
 
+## Rigging
 <table>
 <tr>
 <td valign="top" align="left" width="240">
 <img src="docs/readme_panel_rigging.png" alt="Rigging panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-## Rigging
 Snapshot, selection, and constraint retarget tools for armatures.
 
 - **Bone Snapshot Tool**: clone bones with a configurable prefix, add a root bone, and optionally add location/rotation/scale constraints to cloned bones.
@@ -32,13 +32,13 @@ Snapshot, selection, and constraint retarget tools for armatures.
 
 ---
 
+## Weighting
 <table>
 <tr>
 <td valign="top" align="left" width="240">
 <img src="docs/readme_panel_weighting.png" alt="Weighting panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-## Weighting
 Display and edit vertex group weights, shortcuts, and utilities to manage weights.
 
 - Show and customize weights display color on vertices (3ds max style).
@@ -52,13 +52,13 @@ Display and edit vertex group weights, shortcuts, and utilities to manage weight
 
 ---
 
+## Animation
 <table>
 <tr>
 <td valign="top" align="left" width="240">
 <img src="docs/readme_panel_animation.png" alt="Animation panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-## Animation
 Motion path automation and copying animation data (including NLA tracks).
 
 - **Auto Update Motion Paths**: toggle automatic motion path updates.
@@ -69,13 +69,13 @@ Motion path automation and copying animation data (including NLA tracks).
 
 ---
 
+## Object
 <table>
 <tr>
 <td valign="top" align="left" width="240">
 <img src="docs/readme_panel_object.png" alt="Object panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-## Object
 Convenience tools for object-level transforms, parenting, pivot handling and snapshots.
 
 - **Pivot**: copy active pivot to selected objects.
@@ -88,13 +88,13 @@ Convenience tools for object-level transforms, parenting, pivot handling and sna
 
 ---
 
+## Mesh
 <table>
 <tr>
 <td valign="top" align="left" width="240">
 <img src="docs/readme_panel_mesh.png" alt="Mesh panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-## Mesh
 Mesh-focused utilities, mostly vertex group management.
 
 - **Vertex Groups**: options to keep unique target VGs, copy vertex-group flags, a name filter, and an operator to match vertex groups to the selection.
@@ -104,13 +104,13 @@ Mesh-focused utilities, mostly vertex group management.
 
 ---
 
+## Renaming
 <table>
 <tr>
 <td valign="top" align="left" width="240">
 <img src="docs/readme_panel_rigging.png" alt="Renaming panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-## Renaming
 Rename bones, vertex groups and animation curve groups using mapping files and quick tools.
 
 - **Rename with mapping**: provide a mapping file (text file in `old:new;` format) and optionally invert the mapping direction.
@@ -123,13 +123,13 @@ Rename bones, vertex groups and animation curve groups using mapping files and q
 
 ---
 
+## I/O (Export)
 <table>
 <tr>
 <td valign="top" align="left" width="240">
 <img src="docs/readme_panel_io.png" alt="I/O Export panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-## I/O (Export)
 Export configuration and batch export operations.
 
 - **Axis**: set forward / up axes and bone axes.
@@ -154,13 +154,13 @@ Export configuration and batch export operations.
 
 ---
 
+## Misc
 <table>
 <tr>
 <td valign="top" align="left" width="240">
 <img src="docs/readme_panel_misc.png" alt="Misc panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-## Misc
 Assorted tools that don't fit other sections.
 
 - **Particle Hair → Mesh**: convert particle hair to mesh with thickness, resolution, and hair-shape curve mapping.
