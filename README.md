@@ -21,7 +21,8 @@
 <img src="docs/readme_panel_rigging.png" alt="Rigging panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-Snapshot, selection, and constraint retarget tools for armatures.
+
+### Snapshot, selection, and constraint retarget tools for armatures.
 
 - **Bone Snapshot Tool**: clone bones with a configurable prefix, add a root bone, and optionally add location/rotation/scale constraints to cloned bones.
 - **Bone Select Tool**: helpers to select bones quickly.
@@ -39,7 +40,8 @@ Snapshot, selection, and constraint retarget tools for armatures.
 <img src="docs/readme_panel_weighting.png" alt="Weighting panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-Display and edit vertex group weights, shortcuts, and utilities to manage weights.
+
+### Display and edit vertex group weights, shortcuts, and utilities to manage weights.
 
 - Show and customize weights display color on vertices (3ds max style).
 - Weight tools: create missing vertex groups, normalize weights, set quick weight values (0, .1, .25, .5, .75, .9, 1), add/subtract weight offsets, copy/paste weights, average and smooth operations.
@@ -59,7 +61,8 @@ Display and edit vertex group weights, shortcuts, and utilities to manage weight
 <img src="docs/readme_panel_animation.png" alt="Animation panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-Motion path automation and copying animation data (including NLA tracks).
+
+### Motion path automation and copying animation data (including NLA tracks).
 
 - **Auto Update Motion Paths**: toggle automatic motion path updates.
 - **Copy Animation Data**: select a Source and Target object and copy animation data (actions and NLA tracks).
@@ -76,7 +79,8 @@ Motion path automation and copying animation data (including NLA tracks).
 <img src="docs/readme_panel_object.png" alt="Object panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-Convenience tools for object-level transforms, parenting, pivot handling and snapshots.
+
+### Convenience tools for object-level transforms, parenting, pivot handling and snapshots.
 
 - **Pivot**: copy active pivot to selected objects.
 - **Parent**: parent objects to the active or clear parent.
@@ -95,7 +99,8 @@ Convenience tools for object-level transforms, parenting, pivot handling and sna
 <img src="docs/readme_panel_mesh.png" alt="Mesh panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-Mesh-focused utilities, mostly vertex group management.
+
+### Mesh-focused utilities, mostly vertex group management.
 
 - **Vertex Groups**: options to keep unique target VGs, copy vertex-group flags, a name filter, and an operator to match vertex groups to the selection.
 </td>
@@ -111,7 +116,8 @@ Mesh-focused utilities, mostly vertex group management.
 <img src="docs/readme_panel_renaming.png" alt="Renaming panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-Rename bones, vertex groups and animation curve groups using mapping files and quick tools.
+
+### Rename bones, vertex groups and animation curve groups using mapping files and quick tools.
 
 - **Rename with mapping**: provide a mapping file (text file in `old:new;` format) and optionally invert the mapping direction.
 - **Prefixes**: `Remove prefix` and `Add prefix` fields (applied after mapping — removal of a leading prefix is case-sensitive and removes only the first leading occurrence; adding avoids duplication).
@@ -130,7 +136,8 @@ Rename bones, vertex groups and animation curve groups using mapping files and q
 <img src="docs/readme_panel_io.png" alt="I/O Export panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-Export configuration and batch export operations.
+
+### Export configuration and batch export operations.
 
 - **Axis**: set forward / up axes and bone axes.
 - **Scale**: export scale and scaling behavior.
@@ -161,7 +168,8 @@ Export configuration and batch export operations.
 <img src="docs/readme_panel_misc.png" alt="Misc panel" style="width:235px; max-width:100%; height:auto; display:block;" />
 </td>
 <td valign="top">
-Assorted tools that don't fit other sections.
+
+### Assorted tools that don't fit other sections.
 
 - **Particle Hair → Mesh**: convert particle hair to mesh with thickness, resolution, and hair-shape curve mapping.
 - **Modifier Toggle**: quick UI to toggle named modifiers on the active object.
