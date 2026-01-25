@@ -3,19 +3,22 @@
 ---
 
 ## Table of contents
-- [Rigging](#rigging-)
-- [Weighting](#weighting-)
-- [Animation](#animation-)
-- [Object](#object-)
-- [Mesh](#mesh-)
-- [Renaming](#renaming-)
-- [I/O (Export)](#io-export-)
-- [Misc](#misc-)
+- [Rigging](#rigging)
+- [Weighting](#weighting)
+- [Animation](#animation)
+- [Object](#object)
+- [Mesh](#mesh)
+- [Renaming](#renaming)
+- [I/O (Export)](#io-export)
+- [Misc](#misc)
 
 ---
 
 <table>
 <tr>
+<td valign="top" align="left">
+<img src="docs/readme_panel_rigging.png" alt="Rigging panel" width="235" />
+</td>
 <td valign="top">
 
 ## Rigging
@@ -26,9 +29,6 @@
   - **Retarget Constraints**: retarget object-level and bone-level constraints to another target object.
 
 </td>
-<td valign="top" align="right">
-<img src="docs/readme_panel_rigging.png" alt="Rigging panel" />
-</td>
 </tr>
 </table>
 
@@ -36,6 +36,9 @@
 
 <table>
 <tr>
+<td valign="top" align="left">
+<img src="docs/readme_panel_weighting.png" alt="Weighting panel" width="235" />
+</td>
 <td valign="top">
 
 ## Weighting
@@ -49,9 +52,6 @@
   - Vertex group list view with advanced filtering and sorting (average-weight based filtering).
 
 </td>
-<td valign="top" align="right">
-<img src="docs/readme_panel_weighting.png" alt="Weighting panel" />
-</td>
 </tr>
 </table>
 
@@ -59,6 +59,9 @@
 
 <table>
 <tr>
+<td valign="top" align="left">
+<img src="docs/readme_panel_animation.png" alt="Animation panel" width="235" />
+</td>
 <td valign="top">
 
 ## Animation
@@ -68,9 +71,6 @@
   - **Copy Animation Data**: select a Source and Target object and copy animation data (actions and NLA tracks).
 
 </td>
-<td valign="top" align="right">
-<img src="docs/readme_panel_animation.png" alt="Animation panel" />
-</td>
 </tr>
 </table>
 
@@ -78,6 +78,9 @@
 
 <table>
 <tr>
+<td valign="top" align="left">
+<img src="docs/readme_panel_object.png" alt="Object panel" width="235" />
+</td>
 <td valign="top">
 
 ## Object
@@ -89,9 +92,6 @@
   - **Snapshots**: create snapshots of objects over a frame range; options for prefixing and merging.
 
 </td>
-<td valign="top" align="right">
-<img src="docs/readme_panel_object.png" alt="Object panel" />
-</td>
 </tr>
 </table>
 
@@ -99,6 +99,9 @@
 
 <table>
 <tr>
+<td valign="top" align="left">
+<img src="docs/readme_panel_mesh.png" alt="Mesh panel" width="235" />
+</td>
 <td valign="top">
 
 ## Mesh
@@ -107,9 +110,6 @@
   - **Vertex Groups**: options to keep unique target VGs, copy vertex-group flags, a name filter, and an operator to match vertex groups to the selection.
 
 </td>
-<td valign="top" align="right">
-<img src="docs/readme_panel_mesh.png" alt="Mesh panel" />
-</td>
 </tr>
 </table>
 
@@ -117,6 +117,9 @@
 
 <table>
 <tr>
+<td valign="top" align="left">
+<img src="docs/readme_panel_rigging.png" alt="Renaming panel" width="235" />
+</td>
 <td valign="top">
 
 ## Renaming
@@ -127,9 +130,6 @@
   - Operators (buttons in the UI): Rename Bones, Rename Vertex Groups, Rename FCurves. Convenience tools are also available to print names and set mesh data names from object names.
 
 </td>
-<td valign="top" align="right">
-<img src="docs/readme_panel_rigging.png" alt="Renaming panel" />
-</td>
 </tr>
 </table>
 
@@ -137,6 +137,9 @@
 
 <table>
 <tr>
+<td valign="top" align="left">
+<img src="docs/readme_panel_io.png" alt="I/O Export panel" width="235" />
+</td>
 <td valign="top">
 
 ## I/O (Export)
@@ -154,9 +157,6 @@
   - **Hitboxes**: batch export hitbox collections with filter.
 
 </td>
-<td valign="top" align="right">
-<img src="docs/readme_panel_io.png" alt="I/O Export panel" />
-</td>
 </tr>
 </table>
 
@@ -164,6 +164,9 @@
 
 <table>
 <tr>
+<td valign="top" align="left">
+<img src="docs/readme_panel_misc.png" alt="Misc panel" width="235" />
+</td>
 <td valign="top">
 
 ## Misc
@@ -173,9 +176,6 @@
   - **Modifier Toggle**: quick UI to toggle named modifiers on the active object.
   - **Custom Attributes**: snapshot vertex positions to an attribute (name + relative option).
 
-</td>
-<td valign="top" align="right">
-<img src="docs/readme_panel_misc.png" alt="Misc panel" />
 </td>
 </tr>
 </table>
