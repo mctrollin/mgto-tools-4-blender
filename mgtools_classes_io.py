@@ -32,6 +32,9 @@ class MGTOOLS_io_exporter():
     scale = 1
     apply_unit_scale = True
 
+    # glTF options
+    axis_up_force_y = True
+
     # pivot
     pivot_dummy_prefix = ""
     include_pivot_dummy = True
@@ -47,6 +50,9 @@ class MGTOOLS_io_exporter():
     helper_strip_dotnumbers = False
 
     # mesh
+    export_helper_strip_dotnumbers = False
+    use_mesh_modifiers_armature = False
+    mesh_smooth_type = 'OFF'
     use_mesh_modifiers = False # used by fbx exporter
     use_mesh_modifier_armature = False # usually we don't want to apply the armature
     combine_meshes = False
@@ -74,7 +80,10 @@ class MGTOOLS_io_exporter():
     animation_use_relative_frameranges = False
     animation_marker_start = ''
     animation_marker_end = ''
-    bake_anim_simplify_factor=0.0
+    bake_anim_simplify_factor = 0.0
+
+    # format selection: either FBX, GLTF (.glb), or GLTF_SEPARATE (.gltf + files)
+    export_format = 'FBX'
 
     # selection based options
     to_export_selection = []
@@ -140,13 +149,205 @@ class MGTOOLS_io_exporter():
         print(" > Export (collection) finished.")
 
     def build_filepath(self, path, filename):
-        return path + '\\' + filename + '.fbx'
+        if self.export_format == 'GLTF':
+            extension = '.glb'
+        elif self.export_format == 'GLTF_SEPARATE':
+            extension = '.gltf'
+        else:
+            extension = '.fbx'
+        return path + '\\' + filename + extension
 
     def prepare_export(self, path):
         # prepare path
         print ("Check and prepare directory: " + path)
         if not os.path.exists(path):
             os.mkdir(path)
+
+    def call_export(self):
+        """Route export call based on selected format."""
+        if self.export_format in ('GLTF', 'GLTF_SEPARATE'):
+            self.call_gltf_export()
+        else:
+            self.call_fbx_export()
+
+    def call_gltf_export(self):
+        """Export via Blender's glTF exporter."""
+        print(" > exporting glTF: filepath={}".format(self.filepath))
+
+        if False == MGTOOLS_functions_io.check_permissions(self.filepath):
+            print(" > Permission denied! Sorry, I'm not able to write to this file. :(")
+            return
+
+        # NOTE: The FBX-specific options axis_forward/axis_up/primary_bone_axis/secondary_bone_axis
+        # are not directly mappable to glTF options. glTF uses y-up post-conversion.
+        # If we need exact axis settings, they must be implemented via object transform steps here.
+
+        bpy.ops.export_scene.gltf(
+            
+            gltf_export_id='mgtools',
+            export_loglevel=-1,
+            filepath=self.filepath,
+            check_existing=False,
+            # filter_glob='*.glb',          # ?
+            # ui_tab='GENERAL',             # ?
+
+            # Base
+            export_format='GLB' if self.export_format == 'GLTF' else 'GLTF_SEPARATE',
+            export_keep_originals=False,
+            export_texture_dir='',
+            export_copyright='',
+            will_save_settings=False,
+
+            # Include ---------
+            # Limit to
+            use_selection=True,
+            use_visible=False,
+            use_renderable=False,
+            use_active_collection=False,
+            use_active_collection_with_nested=True,
+            use_active_scene=False,
+
+            # Data
+            export_extras=False,
+            export_cameras=False,
+            export_lights=False,
+            
+            # Transform ---------
+            export_yup=self.axis_up_force_y,
+
+            # Data ---------
+            # Scene Grapth
+            export_gn_mesh=False,
+            export_gpu_instances=False,
+            export_hierarchy_flatten_objs=False,
+            export_hierarchy_full_collections=False,
+            collection='',                                  # ?
+            at_collection_center=False,                     # ?
+
+            # Mesh
+            export_apply=False,
+            export_texcoords=True,
+            export_normals=True,
+            export_tangents=True, # changed from default
+            export_attributes=True, # changed from default
+            use_mesh_edges=False,
+            use_mesh_vertices=False,
+            export_shared_accessors=False,
+
+            # - Vertex Colors
+            export_vertex_color='MATERIAL',
+            export_vertex_color_name='Color',
+            export_all_vertex_colors=True,
+            export_active_vertex_color_when_no_material=True,
+
+            # Material
+            export_materials='EXPORT',
+            export_image_format='AUTO',
+            export_image_quality=75,
+            export_jpeg_quality=75,                         # ?
+            export_image_add_webp=False,
+            export_image_webp_fallback=False,
+            export_original_specular=False,                 # ?
+
+            # - Unused Textures & Images
+            export_unused_images=False,
+            export_unused_textures=False,
+
+            # Shape Keys
+            export_morph=True,
+            export_morph_normal=True,
+            export_morph_tangent=False,
+            # - Optimize Shape Keys
+            export_try_sparse_sk=True,
+            export_try_omit_sparse_sk=False,
+
+            # Armature
+            export_rest_position_armature=True,
+            export_def_bones=False,
+            export_armature_object_remove=False,
+            export_hierarchy_flatten_bones=False,
+            export_leaf_bone=False,
+
+            # Skinning
+            export_skins=True,
+            export_influence_nb=4,
+            export_all_influences=False,
+
+            # Lighting
+            export_import_convert_lighting_mode='SPEC',
+
+            # Compression
+            export_draco_mesh_compression_enable=False,
+            export_draco_mesh_compression_level=6,
+            export_draco_position_quantization=14,
+            export_draco_normal_quantization=10,
+            export_draco_texcoord_quantization=12,
+            export_draco_color_quantization=10,
+            export_draco_generic_quantization=12,
+
+            # Animation ---------
+            export_animations=True,
+            export_animation_mode='ACTIONS',
+            export_nla_strips=True,                                     # ?
+            export_nla_strips_merged_animation_name='Animation',        # ?
+
+            # Bake & Merge
+            export_bake_animation=True,
+            export_anim_scene_split_object=True,
+            export_merge_animation='ACTION',
+
+            # Rest & Ranges
+            export_current_frame=False,
+            export_frame_range=False,
+            export_anim_slide_to_zero=False,
+            export_negative_frame='SLIDE',
+
+            # Armature
+            export_anim_single_armature=True,
+            export_reset_pose_bones=True,
+
+            # Shape Keys Animation
+            export_morph_animation=True,
+            export_morph_reset_sk_data=True,
+
+            # Sampling Animations
+            export_force_sampling=True,
+            export_frame_step=1,
+            export_sampling_interpolation_fallback='LINEAR',
+
+            # Animation Pointer
+            export_pointer_animation=False,
+            export_convert_animation_pointer=False,
+
+            # Optimize Animations
+            export_optimize_animation_size=True,
+            export_optimize_animation_keep_anim_armature=True,
+            export_optimize_animation_keep_anim_object=False,
+            export_optimize_disable_viewport=False,
+
+            # Extra Animations
+            export_extra_animations=False,
+
+            # Action Filter
+            export_action_filter=False,
+
+            # Pack ---------
+            export_use_gltfpack=False,
+            export_gltfpack_tc=True,
+            export_gltfpack_tq=8,
+            export_gltfpack_si=1.0,
+            export_gltfpack_sa=False,
+            export_gltfpack_slb=False,
+            export_gltfpack_vp=14,
+            export_gltfpack_vt=12,
+            export_gltfpack_vn=8,
+            export_gltfpack_vc=8,
+            export_gltfpack_vpi='Integer',
+            export_gltfpack_noq=True,
+            export_gltfpack_kn=False,
+        )
+
+        print(" > exporting glTF done")
 
     def call_fbx_export(self):
         
@@ -633,7 +834,7 @@ class MGTOOLS_io_exporter():
         if 'RANGE' == self.animation_export_mode:
             
             # this is kind of blenders default so we can just call export
-            self.call_fbx_export() # < ============== EXPORT
+            self.call_export() # < ============== EXPORT
 
         elif 'STRIPS' == self.animation_export_mode:
             # get object which holds animation strips information
@@ -676,7 +877,7 @@ class MGTOOLS_io_exporter():
                 # update filename for animation export
                 self.filepath = self.build_filepath(self.path, self.filename_prefix + self.filename_prefix_animation + self.filename + strip.action.name + self.filename_postfix)
 
-                self.call_fbx_export() # < ============== EXPORT
+                self.call_export() # < ============== EXPORT
 
         elif 'MARKERS' == self.animation_export_mode:
             
@@ -739,7 +940,7 @@ class MGTOOLS_io_exporter():
                     # update filename for animation export
                     self.filepath = self.build_filepath(self.path, self.filename_prefix + self.filename_prefix_animation + self.filename + current_start_marker_name + self.filename_postfix)
 
-                    self.call_fbx_export() # < ============== EXPORT
+                    self.call_export() # < ============== EXPORT
 
                     # important: reset name
                     current_start_marker_active = False
@@ -760,7 +961,7 @@ class MGTOOLS_io_exporter():
 
             self.bake_anim_simplify_factor = 1.0 # default - avoids having single keyframe for unanimated objects
 
-            self.call_fbx_export() # < ============== EXPORT
+            self.call_export() # < ============== EXPORT
 
         else:
             print('Unhandled animation export mode: {}.'.format(self.animation_export_mode))

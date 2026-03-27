@@ -264,6 +264,14 @@ class MGTOOLS_PT_animation(Panel):
         anim_copy_box.operator('mgtools.animation_copy_animation_data', text='Copy animation data')
         anim_copy_box.label(text="This also copies NLA tracks.", icon='INFO')
 
+        # copy/paste markers via clipboard
+        anim_markers_box = col.box()
+        anim_markers_box.label(text="Marker Clipboard",)
+        row = anim_markers_box.row(align=True)
+        row.operator('mgtools.animation_copy_markers_to_clipboard', text='Copy')
+        row.operator('mgtools.animation_paste_markers_from_clipboard', text='Paste')
+        row.prop(mgtools_props_scene, 'p_animation_marker_clipboard_merge_mode', text="",)
+
 class MGTOOLS_PT_object(Panel):
     bl_idname = "MGTOOLS_PT_object"
     bl_label = "Object"
@@ -411,28 +419,41 @@ class MGTOOLS_PT_io(Panel):
 
         mgtools_props_scene = bpy.context.scene.mgtools
 
+        # format options -------------------------------------------
+        format_options_box = col.box()
+        row = format_options_box.row()
+        row.prop(mgtools_props_scene, "p_io_export_format", text="")
+
         # axis options -------------------------------------------
         axis_options_box = col.box()
-        row = axis_options_box.row()
-        row.label(text="Forward")
-        row.prop(mgtools_props_scene, "p_io_export_axis_forward", text="",)
-        row.label(text="Up")
-        row.prop(mgtools_props_scene, "p_io_export_axis_up", text="")
-        row = axis_options_box.row()
-        row.label(text="P Bone Axis")
-        row.prop(mgtools_props_scene, "p_io_export_primary_bone_axis", text="",)
-        row.label(text="S Bone Axis")
-        row.prop(mgtools_props_scene, "p_io_export_secondary_bone_axis", text="")
+
+        is_fbx = (mgtools_props_scene.p_io_export_format == 'FBX')
+
+        if is_fbx:
+            row = axis_options_box.row()
+            row.label(text="Forward")
+            row.prop(mgtools_props_scene, "p_io_export_axis_forward", text="",)
+            row.label(text="Up")
+            row.prop(mgtools_props_scene, "p_io_export_axis_up", text="")
+            row = axis_options_box.row()
+            row.label(text="P Bone Axis")
+            row.prop(mgtools_props_scene, "p_io_export_primary_bone_axis", text="",)
+            row.label(text="S Bone Axis")
+            row.prop(mgtools_props_scene, "p_io_export_secondary_bone_axis", text="")
+        else:
+            row = axis_options_box.row()
+            row.prop(mgtools_props_scene, "p_io_export_axis_up_force_y", text="Y-up")
 
         # scale options -------------------------------------------
-        scale_options_box = col.box()
-        row = scale_options_box.row()
-        row.prop(mgtools_props_scene, "p_io_export_scale", text="")
-        row.prop(mgtools_props_scene, "p_io_export_scale_apply_options", text="")
-        row.prop(mgtools_props_scene, "p_io_export_apply_unit_scale",)
+        if is_fbx:
+            scale_options_box = col.box()
+            row = scale_options_box.row()
+            row.prop(mgtools_props_scene, "p_io_export_scale", text="")
+            row.prop(mgtools_props_scene, "p_io_export_scale_apply_options", text="")
+            row.prop(mgtools_props_scene, "p_io_export_apply_unit_scale",)
 
-        row = scale_options_box.row()
-        row.prop(mgtools_props_scene, "p_io_export_use_space_transform",)
+            row = scale_options_box.row()
+            row.prop(mgtools_props_scene, "p_io_export_use_space_transform",)
 
         # pivot options -------------------------------------------
         pivot_options_box = col.box()
@@ -706,9 +727,9 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.28") # check also version in __init__
+        box.label(text="MGTO tools v0.6.29") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
-        box.label(text="(C) 2025")
+        box.label(text="(C) 2026")
 
         python_version_info = sys.version_info
         box = l.column()

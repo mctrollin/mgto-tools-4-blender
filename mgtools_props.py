@@ -36,8 +36,18 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_motionpaths_is_auto_update_active: BoolProperty(name="Auto update", default=False, description="Automatically and periodically update motion paths",)
     p_motionpaths_auto_update_delay: FloatProperty(name="Delay", default=2, min=0.1, max=10.0, precision=1, subtype='FACTOR', description="Auto update delay", )
 
-    p_animation_copy_data_source: PointerProperty(name="Source", type=bpy.types.Object, description="Animation data source object",)
-    p_animation_copy_data_target: PointerProperty(name="Target", type=bpy.types.Object, description="Animation data target object",)
+    p_animation_copy_data_source: PointerProperty(name="Source", type=bpy.types.Object, description="Animation data source (from) object.",)
+    p_animation_copy_data_target: PointerProperty(name="Target", type=bpy.types.Object, description="Animation data target (to) object",)
+
+    p_animation_marker_clipboard_merge_mode: EnumProperty(
+        name="Marker Paste Mode",
+        items=(
+            ('REPLACE', "Replace", "Replace all existing markers with clipboard markers"),
+            ('APPEND', "Append", "Add markers from clipboard; update existing markers with the same name"),
+        ),
+        default='REPLACE',
+        description="How to merge clipboard marker data when pasting",
+    )
 
 
     # Properties.IO ################################################################ 
@@ -69,6 +79,21 @@ class MGTOOLS_properties_scene(PropertyGroup):
         default='Y',
         description="Up axis definition when exporting",
         )
+    p_io_export_axis_up_force_y: BoolProperty(
+        name="Force Y-up for glTF",
+        default=True,
+        description="When using glTF export, force Y-up in the exported file.",
+        )
+    p_io_export_format: EnumProperty(
+        name="Export format",
+        items=(
+            ('FBX', "FBX", "Export as FBX (existing behavior)"),
+            ('GLTF', "glTF Binary (.glb)", "Export as glTF binary format"),
+            ('GLTF_SEPARATE', "glTF (.gltf)", "Export as glTF separate files"),
+        ),
+        default='FBX',
+        description="Format used by the exporter",
+    )
     p_io_export_primary_bone_axis: EnumProperty(
         name="Primary bone axis",
         items=(

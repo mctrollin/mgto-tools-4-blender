@@ -67,6 +67,8 @@ class MGTOOLS_OT_export_collections(Operator):
 
             # create new exporter instance and set it up -----------------------------------
             exporter = MGTOOLS_io_exporter(export_folder, filename)
+            # format
+            exporter.export_format = mgtools_props_scene.p_io_export_format
             # filename
             exporter.filename_prefix = mgtools_props_scene.p_io_export_filename_prefix
             exporter.filename_prefix_static = mgtools_props_scene.p_io_export_filename_prefix_static
@@ -78,6 +80,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.axis_up = mgtools_props_scene.p_io_export_axis_up
             exporter.primary_bone_axis = mgtools_props_scene.p_io_export_primary_bone_axis
             exporter.secondary_bone_axis = mgtools_props_scene.p_io_export_secondary_bone_axis
+            exporter.axis_up_force_y = mgtools_props_scene.p_io_export_axis_up_force_y
             # scale
             exporter.scale_apply_options = mgtools_props_scene.p_io_export_scale_apply_options
             exporter.use_space_transform = mgtools_props_scene.p_io_export_use_space_transform
