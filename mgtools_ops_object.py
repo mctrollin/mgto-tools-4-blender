@@ -37,7 +37,12 @@ class MGTOOLS_OT_object_snapshot(Operator):
             bpy.context.scene.frame_set(i)
 
             # make snapshot
-            MGTOOLS_functions_macros.make_snapshot_from(source_objects, merge_objects, prefix, True)
+            MGTOOLS_functions_macros.make_snapshot_from(
+                source_objects_raw=source_objects,
+                merge_clones=merge_objects,
+                prefix=prefix,
+                select_clones=True
+            )
 
         
         # print("Test properties: {}".format(bpy.types.Scene.mgtools.p_weightdisplay_point_size))

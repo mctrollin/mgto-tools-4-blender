@@ -151,6 +151,10 @@ class MGTOOLS_properties_scene(PropertyGroup):
     #helper
     p_io_export_helper_strip_dotnumbers: BoolProperty(name="Strip dot-numbers", default=False, description="Try to remove blenders .000 numbering on helper objects.",)
 
+    # rotation offset
+    p_io_export_rotation_offset_filter: StringProperty(name='Rotation Offset Filter', default="", description="Comma-separated list of substrings. Objects whose name contains any of these will have the rotation offset applied during export (case-sensitive). Leave empty to disable.",)
+    p_io_export_rotation_offset: FloatVectorProperty(name="Rotation Offset", default=(0.0, 0.0, 0.0), subtype='EULER', unit='ROTATION', description="Rotation offset (in radians) added to matching objects during export and reverted afterwards.",)
+
     # mesh
     p_io_export_use_mesh_modifiers: BoolProperty(name="Apply modifiers", default=True, description="Apply mesh modifiers during export (excluding armature modifier, non-destructive).",)
     p_io_export_use_mesh_modifiers_armature: BoolProperty(name="Apply armature", default=False, description="Apply armature modifiers during export (non-destructive).",)

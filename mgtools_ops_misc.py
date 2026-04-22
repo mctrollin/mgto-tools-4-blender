@@ -153,7 +153,7 @@ class MGTOOLS_OT_vertices_to_attribute(Operator):
         # create a clone to read evaluated data from
         out_list = MGTOOLS_functions_macros.make_snapshot_from(
                 source_objects_raw=[meshobj],
-                merge=False, 
+                merge_clones=False, 
                 prefix="", 
                 postfix="_snapshot", 
                 select_clones=False, 

@@ -457,7 +457,7 @@ class MGTOOLS_PT_io(Panel):
 
         # pivot options -------------------------------------------
         pivot_options_box = col.box()
-        pivot_options_box.label(text="Pivot")
+        pivot_options_box.label(text="Pivot", icon='EMPTY_ARROWS')
         row = pivot_options_box.row()
         row.label(text="Filter:")
         row.prop(mgtools_props_scene, "p_io_export_prefix_filter_pivot", text="")
@@ -476,19 +476,28 @@ class MGTOOLS_PT_io(Panel):
 
         # helper options -------------------------------------------
         helper_options_box = col.box()
-        helper_options_box.label(text="Helper")
+        helper_options_box.label(text="Helper", icon='EMPTY_DATA')
         helper_options_box.prop(mgtools_props_scene, "p_io_export_helper_strip_dotnumbers",)
+
+        # rotation offset options -------------------------------------------
+        rotation_offset_box = col.box()
+        rotation_offset_box.label(text="Rotation Offset", icon='RESTRICT_COLOR_OFF')
+        row = rotation_offset_box.row()
+        row.label(text="Filter:")
+        row.prop(mgtools_props_scene, "p_io_export_rotation_offset_filter", text="")
+        if mgtools_props_scene.p_io_export_rotation_offset_filter != "":
+            rotation_offset_box.prop(mgtools_props_scene, "p_io_export_rotation_offset", text="")
 
         # mesh options -------------------------------------------
         mesh_options_box = col.box()
-        mesh_options_box.label(text="Mesh")
+        mesh_options_box.label(text="Mesh", icon='MESH_CUBE')
         # currently modifiers are always applied for multiple export features requiring it
-        # mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
+        mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
         mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers_armature",)
         mesh_options_box.prop(mgtools_props_scene, "p_io_export_mesh_smooth_type",)
 
         mesh_options_box2 = mesh_options_box.box()
-        mesh_options_box2.label(text="Clones")
+        mesh_options_box2.label(text="Clones", icon='DUPLICATE')
         row = mesh_options_box2.row()
         row.label(text="Clone Filter:")
         row.prop(mgtools_props_scene, "p_io_export_clone_meshes_filter", text="")
@@ -518,14 +527,14 @@ class MGTOOLS_PT_io(Panel):
 
         # armature options -------------------------------------------
         armature_options_box = col.box()
-        armature_options_box.label(text="Armature")
+        armature_options_box.label(text="Armature", icon='ARMATURE_DATA')
         row = armature_options_box.row()
         row.label(text="Rename:")
         row.prop(mgtools_props_scene, "p_io_export_armature_rename", text="")
 
         # animation options -------------------------------------------
         animation_options_box = col.box()
-        animation_options_box.label(text="Animation")
+        animation_options_box.label(text="Animation", icon='ACTION')
         animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_mode", text="Mode")
         if 'OFF' == mgtools_props_scene.p_io_export_animation_mode:
             animation_options_box.prop(mgtools_props_scene, "p_io_export_frame",)
@@ -539,7 +548,7 @@ class MGTOOLS_PT_io(Panel):
 
         # filename options -------------------------------------------
         box = col.box()
-        box.label(text="File name")
+        box.label(text="File name", icon='FILE')
         row = box.row()
         row.label(text="Prefix:")
         row.prop(mgtools_props_scene, "p_io_export_filename_prefix", text="")
@@ -565,7 +574,7 @@ class MGTOOLS_PT_io(Panel):
         # filter options
         box = col.box()
         # label
-        box.label(text="Collections batch export")
+        box.label(text="Collections batch export", icon='GROUP')
         # > filter
         row = box.row()
         row.label(text="Filter:")
@@ -583,7 +592,7 @@ class MGTOOLS_PT_io(Panel):
         # > path options
         box = col.box()
         # label
-        box.label(text="Selection export")
+        box.label(text="Selection export", icon='EXPORT')
         # > path options
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_filepath", text="")
@@ -611,7 +620,7 @@ class MGTOOLS_PT_io(Panel):
         # hitboxes (batch-) export -------------------------------------------
         box = col.box()
         # label
-        box.label(text="Hitboxes batch export")
+        box.label(text="Hitboxes batch export", icon='MESH_CUBE')
         # > filter
         row = box.row()
         row.label(text="Filter: Collections")

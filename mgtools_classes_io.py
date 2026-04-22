@@ -49,6 +49,10 @@ class MGTOOLS_io_exporter():
     # helper
     helper_strip_dotnumbers = False
 
+    # rotation offset
+    rotation_offset_filter = ""
+    rotation_offset = (0.0, 0.0, 0.0)
+
     # mesh
     export_helper_strip_dotnumbers = False
     use_mesh_modifiers_armature = False
@@ -286,7 +290,7 @@ class MGTOOLS_io_exporter():
             export_draco_generic_quantization=12,
 
             # Animation ---------
-            export_animations=True,
+            export_animations=(self.animation_export_mode != 'OFF'),
             export_animation_mode='ACTIONS',
             export_nla_strips=True,                                     # ?
             export_nla_strips_merged_animation_name='Animation',        # ?
@@ -636,7 +640,7 @@ class MGTOOLS_io_exporter():
             # with merge
             input_mesh_snapshot = MGTOOLS_functions_macros.make_snapshot_from(
                 source_objects_raw=input_meshes_to_snapshot_and_merge,
-                merge=self.combine_meshes, 
+                merge_clones=self.combine_meshes, 
                 prefix=self.objectname_prefix, 
                 postfix=self.objectname_postfix, 
                 select_clones=False, 
@@ -647,7 +651,7 @@ class MGTOOLS_io_exporter():
             for input_mesh_to_snapshot in input_meshes_to_snapshot_without_merge:
                 input_mesh_snapshot = MGTOOLS_functions_macros.make_snapshot_from(
                     source_objects_raw=[input_mesh_to_snapshot], 
-                    merge=True, 
+                    merge_clones=True, 
                     prefix=self.objectname_prefix, 
                     postfix=self.objectname_postfix, 
                     select_clones=False, 
@@ -803,6 +807,40 @@ class MGTOOLS_io_exporter():
             if True == include_pivot_dummy_final:
                 to_export_list.append(to_export_pivot_dummy)
         MGTOOLS_functions_macros.select_objects(to_export_list, True)
+
+        # rotation offset ------------------------------------
+        rotation_offset_cached = {}  # obj -> (original_mode, original_rotation_euler or quat/axis_angle)
+        if 0 < len(self.rotation_offset_filter.strip()):
+            tokens = [t.strip() for t in self.rotation_offset_filter.split(',') if t.strip()]
+            from mathutils import Euler
+            offset_euler = Euler(self.rotation_offset, 'XYZ')
+            for obj in to_export_list:
+                if not any(token in obj.name for token in tokens):
+                    continue
+                original_mode = obj.rotation_mode
+                if original_mode == 'XYZ':
+                    original_rot = obj.rotation_euler.copy()
+                    rotation_offset_cached[obj] = (original_mode, original_rot)
+                    obj.rotation_euler = Euler(
+                        (original_rot.x + offset_euler.x,
+                         original_rot.y + offset_euler.y,
+                         original_rot.z + offset_euler.z), 'XYZ')
+                else:
+                    # cache original mode and rotation, temporarily switch to XYZ euler
+                    if original_mode == 'QUATERNION':
+                        original_rot = obj.rotation_quaternion.copy()
+                    elif original_mode == 'AXIS_ANGLE':
+                        original_rot = obj.rotation_axis_angle[:]
+                    else:
+                        original_rot = obj.rotation_euler.copy()
+                    rotation_offset_cached[obj] = (original_mode, original_rot)
+                    obj.rotation_mode = 'XYZ'
+                    obj.rotation_euler = Euler(
+                        (obj.rotation_euler.x + offset_euler.x,
+                         obj.rotation_euler.y + offset_euler.y,
+                         obj.rotation_euler.z + offset_euler.z), 'XYZ')
+            print(" > rotation offset applied to {} object(s): {}".format(
+                len(rotation_offset_cached), [o.name for o in rotation_offset_cached]))
 
         # update filepath
         used_filename_prefix = self.filename_prefix_static if 0 >= len(to_export_armatures) else self.filename_prefix_skeletal 
@@ -984,6 +1022,23 @@ class MGTOOLS_io_exporter():
         # revert scene frame range
         bpy.context.scene.frame_start = cached_frame_start
         bpy.context.scene.frame_end = cached_frame_end
+
+        # revert rotation offsets
+        if 0 < len(rotation_offset_cached):
+            print(" > reverting rotation offsets")
+            for obj, (original_mode, original_rot) in rotation_offset_cached.items():
+                obj.rotation_mode = 'XYZ'  # ensure we are in euler mode before restoring
+                if original_mode == 'XYZ':
+                    obj.rotation_euler = original_rot
+                elif original_mode == 'QUATERNION':
+                    obj.rotation_mode = original_mode
+                    obj.rotation_quaternion = original_rot
+                elif original_mode == 'AXIS_ANGLE':
+                    obj.rotation_mode = original_mode
+                    obj.rotation_axis_angle = original_rot
+                else:
+                    obj.rotation_euler = original_rot
+                    obj.rotation_mode = original_mode
 
         # revert pivot transforms
         if None != to_export_pivot_dummy:

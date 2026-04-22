@@ -183,7 +183,7 @@ class MGTOOLS_functions_macros():
     # Object.Manipulation #######################################################
 
     @classmethod
-    def make_snapshot_from(self, source_objects_raw, merge, prefix, postfix, select_clones, type_filter):
+    def make_snapshot_from(self, source_objects_raw, merge_clones, prefix, postfix, select_clones, type_filter):
         
         clones = []
 
@@ -234,6 +234,14 @@ class MGTOOLS_functions_macros():
 
         clones = bpy.context.selected_objects.copy()
 
+        num_meshes = 0
+        for idx, clone in enumerate(clones):
+            if 'MESH' == clone.type:
+                num_meshes += 1
+        
+        # Check if we have to process a mesh-merge operation
+        merge = merge_clones and num_meshes > 1
+
         print(" > processing duplicates: {}".format(clones))
         for idx, clone in enumerate(clones):
             
@@ -265,7 +273,7 @@ class MGTOOLS_functions_macros():
                 )
 
             # mesh specific processing
-            if 'MESH' == source_object.type:
+            if 'MESH' == clone.type:
                 if True == merge:
                     # bake shape keys first (deform verts and remove shape keys)
                     MGTOOLS_functions_helper.bake_shape_keys(clone)

@@ -98,6 +98,9 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.export_pivot_dummy_disable_constraints = mgtools_props_scene.p_io_export_pivot_dummy_disable_constraints
             # helper
             exporter.export_helper_strip_dotnumbers = mgtools_props_scene.p_io_export_helper_strip_dotnumbers
+            # rotation offset
+            exporter.rotation_offset_filter = mgtools_props_scene.p_io_export_rotation_offset_filter
+            exporter.rotation_offset = mgtools_props_scene.p_io_export_rotation_offset
             # mesh
             #exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers # the exporter process currently requires to always apply them
             exporter.use_mesh_modifiers_armature = mgtools_props_scene.p_io_export_use_mesh_modifiers_armature
@@ -182,6 +185,9 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.export_pivot_dummy_disable_constraints = mgtools_props_scene.p_io_export_pivot_dummy_disable_constraints
         # helper
         exporter.export_helper_strip_dotnumbers = mgtools_props_scene.p_io_export_helper_strip_dotnumbers
+        # rotation offset
+        exporter.rotation_offset_filter = mgtools_props_scene.p_io_export_rotation_offset_filter
+        exporter.rotation_offset = mgtools_props_scene.p_io_export_rotation_offset
         # mesh
         #exporter.use_mesh_modifiers = mgtools_props_scene.p_io_export_use_mesh_modifiers # the exporter process currently requires to always apply them
         exporter.use_mesh_modifiers_armature = mgtools_props_scene.p_io_export_use_mesh_modifiers_armature
