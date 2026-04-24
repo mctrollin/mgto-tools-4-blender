@@ -101,11 +101,14 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
         root_ebone_name = None
         if True == mgtools_props_scene.p_rigging_add_root_bone:
             # switch to edit mode to be able to add edit-bones
+            mode_cached = bpy.context.object.mode
             bpy.ops.object.mode_set(mode='EDIT')
             #create root bone
             root_ebone = self.create_root_ebone(target_armature.data)
             root_ebone.name = new_bones_prefix + root_ebone.name
             root_ebone_name = root_ebone.name
+            # revert mode
+            bpy.ops.object.mode_set(mode=mode_cached)
 
 
         # create target bones ---------------------------
@@ -209,8 +212,8 @@ class MGTOOLS_OT_extract_clone_bones(Operator):
         # get target pose-bone by edit-bone name
         # print ("Trying to get pose bone by name '{}'".format(target_ebone_name))
         if False == (target_ebone_name in target_armature.pose.bones):
-            print (" - Error: Can't find this pose bone: {} @ {}".format(target_ebone_name, target_armature))
-            self.report({'ERROR'}, "Error: Can't find this pose bone: {} @ {}".format(target_ebone_name, target_armature))
+            print (" - Error: Can't find this pose bone by its edit bone name: {} @ {}".format(target_ebone_name, target_armature.name))
+            self.report({'ERROR'}, "Error: Can't find this pose bone by its edit bone name: {} @ {}".format(target_ebone_name, target_armature.name))
             return
         target_pbone = target_armature.pose.bones[target_ebone_name]
 
