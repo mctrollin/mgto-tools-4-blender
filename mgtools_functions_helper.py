@@ -118,8 +118,22 @@ class MGTOOLS_functions_helper():
 
         # target objects shouldn't have an armature modifier applied 
         for target_object in target_objects:
-            target_object.modifiers.new(name="Armature", type='ARMATURE')
-            target_object.modifiers["Armature"].object = armatures[0]
+            armature_mod = None
+
+            # Check for existing modifier
+            for mod in target_object.modifiers:
+                if 'ARMATURE' == mod.type:
+                    print (" > Target has already an armature modifier")
+                    armature_mod = mod
+                    break
+
+            # Add new modifier
+            if not armature_mod:
+                target_object.modifiers.new(name="Armature", type='ARMATURE')
+                armature_mod = target_object.modifiers["Armature"]
+
+            # Set target armature
+            armature_mod.object = armatures[0]
 
     @classmethod
     def bake_shape_keys(self, obj):

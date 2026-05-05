@@ -275,12 +275,19 @@ class MGTOOLS_functions_macros():
             # mesh specific processing
             if 'MESH' == clone.type:
                 if True == merge:
+                    # For now we can't merge shape keys so we always apply them. 
+                    # TODO: add option to merge or apply shape keys
                     # bake shape keys first (deform verts and remove shape keys)
                     MGTOOLS_functions_helper.bake_shape_keys(clone)
 
-                    # apply all modifiers
-                    MGTOOLS_functions_helper.apply_modifiers_smartly(clone)
+                # Apply all modifiers always 
+                # If some modifiers are required (e.g. Armature) they need to be re-applied afterwards
+                MGTOOLS_functions_helper.apply_modifiers_smartly(clone)
+
+                # Double check that the merged object is a mesh
+                if True == merge:
                     bpy.ops.object.convert(target='MESH')
+
                 # add to mesh list
                 clones_meshes.append(clone)
             else:

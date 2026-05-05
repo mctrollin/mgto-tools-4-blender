@@ -657,6 +657,7 @@ class MGTOOLS_io_exporter():
                     select_clones=False, 
                     type_filter=None)
                 input_meshes_clones += input_mesh_snapshot
+
             transfer_modifier = True # necessary as the merge command applies them all
             
             # set clone names (if merged it should be only one object)
