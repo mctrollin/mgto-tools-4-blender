@@ -7,7 +7,7 @@ from . mgtools_functions_macros import MGTOOLS_functions_macros
 class MGTOOLS_OT_select_bones(Operator):
     bl_idname = "mgtools.rigging_select_bones"
     bl_label = ""
-    bl_description = ""
+    bl_description = "Select armature bones whose names are listed in the clipboard"
 
     def execute(self, context):
 
@@ -45,7 +45,7 @@ class MGTOOLS_OT_select_bones(Operator):
 class MGTOOLS_OT_extract_clone_bones(Operator):
     bl_idname = "mgtools.rigging_extract_clone_bones"
     bl_label = ""
-    bl_description = ""
+    bl_description = "Create a new armature containing clones of the selected bones"
 
     def execute(self, context):
 

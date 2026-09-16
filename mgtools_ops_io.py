@@ -12,7 +12,7 @@ from . mgtools_classes_io import MGTOOLS_io_exporter
 class MGTOOLS_OT_export_collections(Operator):
     bl_idname = "mgtools.io_export_collections"
     bl_label = "Export Collections"
-    bl_description = ""
+    bl_description = "Export collections matching the configured collection prefix"
 
     def execute(self, context):
         # read properties -----------------------------------
@@ -117,6 +117,7 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.vgroups_rename_remove_prefix = mgtools_props_scene.p_io_export_vgroups_rename_remove_prefix
             exporter.armature_replacement = mgtools_props_scene.p_io_export_armature_replacement
             exporter.weights_limit = mgtools_props_scene.p_io_export_weights_limit
+            exporter.modifier_to_shapekey_prefix = mgtools_props_scene.p_io_export_shapekey_modifier_prefix
             #material
             exporter.material_override = mgtools_props_scene.p_io_export_material_override
             # armature
@@ -138,7 +139,7 @@ class MGTOOLS_OT_export_collections(Operator):
 class MGTOOLS_OT_export_selection(Operator):
     bl_idname = "mgtools.io_export_selection"
     bl_label = "Export Selection"
-    bl_description = ""
+    bl_description = "Export the currently selected objects to the configured file"
 
     def execute(self, context):
         # read properties -----------------------------------
@@ -204,6 +205,7 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.vgroups_rename_remove_prefix = mgtools_props_scene.p_io_export_vgroups_rename_remove_prefix
         exporter.armature_replacement = mgtools_props_scene.p_io_export_armature_replacement
         exporter.weights_limit = mgtools_props_scene.p_io_export_weights_limit
+        exporter.modifier_to_shapekey_prefix = mgtools_props_scene.p_io_export_shapekey_modifier_prefix
         #material
         exporter.material_override = mgtools_props_scene.p_io_export_material_override
         # armature
@@ -226,7 +228,7 @@ class MGTOOLS_OT_export_selection(Operator):
 class MGTOOLS_OT_export_animations(Operator):
     bl_idname = "mgtools.io_export_animations"
     bl_label = "Export Animations"
-    bl_description = ""
+    bl_description = "Export animation strips from the active object"
 
     def execute(self, context):
         # read properties
@@ -284,7 +286,7 @@ class MGTOOLS_OT_export_animations(Operator):
 class MGTOOLS_OT_export_hitboxes(Operator):
     bl_idname = "mgtools.io_export_hitboxes"
     bl_label = "Export Hitboxes"
-    bl_description = ""
+    bl_description = "Export hitboxes from collections matching the configured prefix"
 
     def execute(self, context):
         # read properties
@@ -328,7 +330,7 @@ class MGTOOLS_OT_export_hitboxes(Operator):
 class MGTOOLS_OT_open_collections_export_folder(Operator):
     bl_idname = "mgtools.io_open_collections_export_folder"
     bl_label = "Open Export Folder"
-    bl_description = ""
+    bl_description = "Open the configured collections export folder in Windows Explorer"
 
     def execute(self, context):
         mgtools_props_scene = bpy.context.scene.mgtools
@@ -340,7 +342,7 @@ class MGTOOLS_OT_open_collections_export_folder(Operator):
 class MGTOOLS_OT_open_selection_export_folder(Operator):
     bl_idname = "mgtools.io_open_selection_export_folder"
     bl_label = "Open Export Folder"
-    bl_description = ""
+    bl_description = "Open the selection export folder in Windows Explorer"
 
     def execute(self, context):
         mgtools_props_scene = bpy.context.scene.mgtools
@@ -352,7 +354,7 @@ class MGTOOLS_OT_open_selection_export_folder(Operator):
 class MGTOOLS_OT_open_animations_export_folder(Operator):
     bl_idname = "mgtools.io_open_animations_export_folder"
     bl_label = "Open Export Folder"
-    bl_description = ""
+    bl_description = "Open the configured animation export folder in Windows Explorer"
 
     def execute(self, context):
         mgtools_props_scene = bpy.context.scene.mgtools

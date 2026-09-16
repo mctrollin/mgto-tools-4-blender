@@ -12,15 +12,15 @@ class MGTOOLS_OT_object_snapshot(Operator):
     def execute(self, context):
         print ("MGTOOLS_OT_object_snapshot")
 
-        mgtools_props_obj = bpy.context.object.mgtools
+        mgtools_props_scene = bpy.context.scene.mgtools
 
         # properties
-        frame_start = mgtools_props_obj.p_snapshot_frame_start
-        frame_end = mgtools_props_obj.p_snapshot_frame_end
-        merge_objects = mgtools_props_obj.p_snapshot_merge_objects
+        frame_start = mgtools_props_scene.p_snapshot_frame_start
+        frame_end = mgtools_props_scene.p_snapshot_frame_end
+        merge_objects = mgtools_props_scene.p_snapshot_merge_objects
         prefix = ""
-        if True == mgtools_props_obj.p_snapshot_use_name_prefix:
-            prefix = mgtools_props_obj.p_snapshot_name_prefix
+        if True == mgtools_props_scene.p_snapshot_use_name_prefix:
+            prefix = mgtools_props_scene.p_snapshot_name_prefix
 
 
         if frame_end < frame_start:

@@ -3,7 +3,7 @@
 from mathutils import Vector, Euler
 import bpy
 from bpy.types import PropertyGroup
-from bpy.props import PointerProperty, StringProperty, IntProperty, BoolProperty, FloatProperty, EnumProperty, FloatVectorProperty
+from bpy.props import PointerProperty, StringProperty, IntProperty, BoolProperty, BoolVectorProperty, FloatProperty, EnumProperty, FloatVectorProperty
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . import mgtools_compat as compat
 
@@ -12,7 +12,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
 
     # Properties.Rename ################################################################ 
 
-    p_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
+    p_rename_mapping_file_path: compat.StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH', options={'PATH_SUPPORTS_BLEND_RELATIVE'},)
     p_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
     p_rename_remove_prefix: StringProperty(name='Remove prefix', default="", description="Prefix to remove from mapped names if present at the start (case-sensitive).",)
     p_rename_add_prefix: StringProperty(name='Add prefix', default="", description="Prefix to add to mapped names after removal (not added if already present).",)
@@ -174,12 +174,13 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all cloned meshes.",)
     p_io_export_objectname_postfix: StringProperty(name='Object name postfix', default="", description="Postfix added to all cloned meshes.",)
     p_io_export_vgroups_rename: BoolProperty(name="Rename Vertex Groups", default=False, description="Rename vertex groups based on a mapping file.",)
-    p_io_export_vgroups_rename_mapping_file_path: StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH',)
+    p_io_export_vgroups_rename_mapping_file_path: compat.StringProperty(name='Mapping file path', default="", description="Text file containing mapping in the format 'old_name:new_name;'", subtype='FILE_PATH', options={'PATH_SUPPORTS_BLEND_RELATIVE'},)
     p_io_export_vgroups_rename_mapping_inverse: BoolProperty(name="Inverse mapping", default=False, description="Will invert the mapping direction in the mapping file from 'from:to: to 'to:from'",)
     p_io_export_vgroups_rename_remove_prefix: StringProperty(name='Remove prefix', default="", description="Prefix to remove from mapped vgroup names if present at the start (case-sensitive).",)
     p_io_export_vgroups_rename_add_prefix: StringProperty(name='Add prefix', default="", description="Prefix to add to mapped vgroup names after removal (not added if already present).",)
     p_io_export_armature_replacement: PointerProperty(name="Armature Replacement", type=bpy.types.Object, description="For clones it will replace any possible armature reference inside armature modifier.",)
     p_io_export_weights_limit: IntProperty(name='Bone influence limit', default=4, description="Limits the number of weights per vertex. -1 means unlimited.",)
+    p_io_export_shapekey_modifier_prefix: StringProperty(name='Shape Key Modifier Prefix', default="SK_", description="Modifiers whose name starts with this prefix will be applied as shape keys on export clones (prefix stripped from shape key name). Leave empty to disable.",)
 
     # filename
     p_io_export_filename_prefix: StringProperty(name='Filename: Prefix', default="", description="Optional filename prefix.",)
@@ -218,11 +219,11 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_filepath: compat.StringProperty(name='Export file', default="", description="Export file for selection export.", subtype='FILE_PATH', options={'PATH_SUPPORTS_BLEND_RELATIVE'},)
    
     # collection export ---------------------
-    p_io_export_folder_collections: StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export.", subtype='DIR_PATH',)
+    p_io_export_folder_collections: compat.StringProperty(name='Collections export folder', default="", description="Export folder path for collection bath export.", subtype='DIR_PATH', options={'PATH_SUPPORTS_BLEND_RELATIVE'},)
     p_io_export_prefix_filter_collection: StringProperty(name='Filter: Collections', default="x_", description="Filter prefix for collections which should be exported.",)
 
     # animation export (legacy) ---------------------
-    p_io_export_animation_folder: StringProperty(name='Animations export folder', default="", description="Export folder path for animations bath export.", subtype='DIR_PATH',)
+    p_io_export_animation_folder: compat.StringProperty(name='Animations export folder', default="", description="Export folder path for animations bath export.", subtype='DIR_PATH', options={'PATH_SUPPORTS_BLEND_RELATIVE'},)
     p_io_export_animation_actions_reference_override: PointerProperty(name="Action reference override", type=bpy.types.Object, description="Used as reference for action meta data. If not set the active object will be used.",)
 
     # hitboxes export ---------------------
@@ -249,12 +250,73 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_attributes_vertex_positions_snapshot_name: StringProperty(name="Vertex Positions Snapshot", default="vert_pos_snapshot", description="Attribute name for vertex position snapshot", )
     p_attributes_vertex_positions_snapshot_relative: BoolProperty(name="Relative", default=True, description="Defines if the snapshotted values are absolute or offsets from the base vertex position.",)
 
-    # Register ################################################################ 
+    # Vertex color display and editing  ---------------------
+    def on_vertexcolordisplay_isenabled(self, context):
+        if self.p_vertexcolordisplay_isenabled:
+            bpy.ops.mgtools.vertex_color_show('INVOKE_DEFAULT')
+        elif not self.p_weightdisplay_isenabled:
+            bpy.ops.mgtools.vertex_color_hide('INVOKE_DEFAULT')
 
+    p_vertexcolordisplay_isenabled: BoolProperty(name="Show Vertex Colors", default=False, description="Draw active vertex colors as dots", update=on_vertexcolordisplay_isenabled, )
+    p_vertexcolordisplay_alpha: BoolProperty(name="Visualize Alpha", default=False, description="Draw alpha as black-to-white vertex colors", )
+    p_vertexcolordisplay_color: FloatVectorProperty(name="Color", subtype='COLOR', size=4, min=0.0, max=1.0, default=(1.0, 1.0, 1.0, 1.0), )
+    p_vertexcolor_selected: FloatVectorProperty(name="Selected Average", subtype='COLOR', size=4, min=0.0, max=1.0, default=(0.0, 0.0, 0.0, 1.0), )
+
+    def get_vertexcolor_paint(self):
+        vertex_paint = getattr(bpy.context.scene.tool_settings, 'vertex_paint', None)
+        brush = getattr(vertex_paint, 'brush', None)
+        color = getattr(brush, 'color', None)
+        if color is None:
+            return (1.0, 1.0, 1.0, 1.0)
+        return tuple(color[:]) + (1.0,)
+
+    def set_vertexcolor_paint(self, value):
+        vertex_paint = getattr(bpy.context.scene.tool_settings, 'vertex_paint', None)
+        brush = getattr(vertex_paint, 'brush', None)
+        color = getattr(brush, 'color', None)
+        if color is not None:
+            color[:] = value[:3]
+
+    p_vertexcolor_paint: FloatVectorProperty(name="Paint Color", subtype='COLOR', size=4, min=0.0, max=1.0, get=get_vertexcolor_paint, set=set_vertexcolor_paint, )
+    p_vertexcoloredit_channels: BoolVectorProperty(name="Channels", size=4, default=(True, False, False, False), description="Channels affected by color offsets: Red, Green, Blue, Alpha", )
+    p_vertexcoloredit_amount: FloatProperty(name="Amount", default=0.1, min=0.0, max=1.0, precision=3, subtype='FACTOR', description="Color channel offset", )
+
+    # Weight display and editing  ---------------------
+    def on_weightdisplay_isenabled(self, context):
+        if self.p_weightdisplay_isenabled:
+            bpy.ops.mgtools.weighting_show_weights('INVOKE_DEFAULT')
+        elif not self.p_vertexcolordisplay_isenabled:
+            bpy.ops.mgtools.weighting_hide_weights('INVOKE_DEFAULT')
+
+    p_weightdisplay_isenabled: BoolProperty(name="Show Colored Vertices", default=False, description="Draw vertices in weights colors", update=on_weightdisplay_isenabled, )
+    p_weightdisplay_point_size: IntProperty(name="Point Size", default=3, min=1, max=10, subtype='PIXEL', description="Point size", )
+    p_weightdisplay_point_radius: FloatProperty(name="Point Radius", default=1.0, min=0.001, max=2.0, precision=3, subtype='FACTOR', description="Adjust point circular discard radius", )
+    p_weightdisplay_global_alpha: FloatProperty(name="Point Alpha", default=1.0, min=0.0, max=1.0, precision=2, subtype='FACTOR', description="Adjust alpha of points displayed", )
+    p_weightedit_add_amount: FloatProperty(name="Add", default=0.1, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Weight add amount", )
+    p_weightedit_average_factor: FloatProperty(name="Factor", default=1.0, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Weight average factor", )
+    p_weightedit_remove_empty: BoolProperty(name="Remove only Empty", default=True, description="Will remove only empty vertex groups", )
+    p_weightedit_remove_locked: BoolProperty(name="Remove also Locked", default=False, description="Remove also locked vertex groups", )
+    p_weightedit_max_influences: IntProperty(name="Max Influences", default=3, min=1, max=100, description="Maximum amount of influences per vertex", )
+    p_weightedit_min_weight: FloatProperty(name="Add", default=0.01, min=0.001, max=1.0, description="Minimum influence strength per vertex", )
+    p_weightedit_mirror_all_groups: BoolProperty(name="All Groups", default=True, description="Mirror weights from all groups", )
+    p_weightedit_mirror_axis: EnumProperty(name="Mirror Axis", items=(('X', "X", "Mirror across the Y-Z plane"), ('Y', "Y", "Mirror across the X-Z plane"), ('Z', "Z", "Mirror across the X-Y plane")), default='X', description="Mirror axis", )
+    p_weightedit_mirror_direction: EnumProperty(name="Mirror Source Side", items=(('NEGATIVE_TO_POSITIVE', "-", "Copy weights from the negative side to the positive side"), ('POSITIVE_TO_NEGATIVE', "+", "Copy weights from the positive side to the negative side")), default='NEGATIVE_TO_POSITIVE', description="The mirror source defines the side we want to mirror to the other side.", )
+    p_weightedit_mirror_use_topology: BoolProperty(name="Use Topology", default=False, description="Use topology based mirroring", )
+    p_weightedit_list_enabled: BoolProperty(name="Show weights list", default=False, description="Show weights list UI widget", )
+    p_weightedit_copy_vg: StringProperty(name='', description="Name of the vertex group to copy weights from.")
+
+    # Snapshotting  ---------------------
+    p_snapshot_frame_start: IntProperty(name="From", default=0, subtype='FACTOR', description="Start frame", )
+    p_snapshot_frame_end: IntProperty(name="To", default=1, subtype='FACTOR', description="End frame", )
+    p_snapshot_use_name_prefix: BoolProperty(name="Use Name Prefix", default=False, description="Use a custom name as prefix for the snapshots", )
+    p_snapshot_merge_objects: BoolProperty(name="Merge", default=False, description="Merge all meshes of the snapshot", )
+    p_snapshot_name_prefix: StringProperty(name='', description="Custom name prefix for generated snapshots.")
+
+    # Register ################################################################ 
     @classmethod
     def register(self):
-        bpy.types.Scene.mgtools = PointerProperty(type=self)       
-    
+        bpy.types.Scene.mgtools = PointerProperty(type=self)
+
     @classmethod
     def unregister(self):
         del bpy.types.Scene.mgtools
@@ -282,7 +344,7 @@ class MGTOOLS_properties_object(PropertyGroup):
         ao_pos_i = ao.matrix_parent_inverse.inverted() @ ao_pos_l
         ao.location = ao_pos_i
 
-    p_transforms_world_location: FloatVectorProperty(name="Pos (World)", subtype='TRANSLATION', get=get_world_location, set=set_world_location)
+    p_transforms_world_location: FloatVectorProperty(name="Pos (World)", subtype='TRANSLATION', description="Object location in world space.", get=get_world_location, set=set_world_location)
 
     def get_local_location(self):
         # transform intrinsic- to local-space
@@ -299,7 +361,7 @@ class MGTOOLS_properties_object(PropertyGroup):
         ao_pos_i = ao.matrix_parent_inverse.inverted() @ ao_pos_l
         ao.location = ao_pos_i
 
-    p_transforms_local_location: FloatVectorProperty(name="Pos (Local)", subtype='TRANSLATION', get=get_local_location, set=set_local_location)
+    p_transforms_local_location: FloatVectorProperty(name="Pos (Local)", subtype='TRANSLATION', description="Object location relative to its parent.", get=get_local_location, set=set_local_location)
 
     def get_local_rotation(self):
         # transform intrinsic- to world-space
@@ -320,50 +382,13 @@ class MGTOOLS_properties_object(PropertyGroup):
         ao_rot_i.rotate(ao.matrix_parent_inverse.inverted())
         ao.rotation_euler = ao_rot_i
 
-    p_transforms_local_rotation: FloatVectorProperty(name="Rot (Local)", subtype='EULER', get=get_local_rotation, set=set_local_rotation)
+    p_transforms_local_rotation: FloatVectorProperty(name="Rot (Local)", subtype='EULER', description="Object rotation relative to its parent.", get=get_local_rotation, set=set_local_rotation)
 
 
-    # Properties.Weight ################################################################ 
 
-    # Weights display  --------------------- 
-    def on_weightdisplay_isenabled(self, context):
-        if True == self.p_weightdisplay_isenabled:
-            bpy.ops.mgtools.weighting_show_weights('INVOKE_DEFAULT')
-        else:
-            bpy.ops.mgtools.weighting_hide_weights('INVOKE_DEFAULT')
-
-    p_weightdisplay_isenabled: BoolProperty(name="Show Colored Vertices", default=False, description="Draw vertices in weights colors", update=on_weightdisplay_isenabled,)
-    p_weightdisplay_point_size: IntProperty(name="Point Size", default=3, min=1, max=10, subtype='PIXEL', description="Point size", )
-    p_weightdisplay_point_radius: FloatProperty(name="Point Radius", default=0.5, min=0.001, max=2.0, precision=3, subtype='FACTOR', description="Adjust point circular discard radius", )
-    p_weightdisplay_global_alpha: FloatProperty(name="Point Alpha", default=1.0, min=0.0, max=1.0, precision=2, subtype='FACTOR', description="Adjust alpha of points displayed", )
-
-
-    # Weights editing  ---------------------
-    p_weightedit_add_amount: FloatProperty(name="Add", default=0.1, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Weight add amount", )
-    p_weightedit_average_factor: FloatProperty(name="Factor", default=1.0, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Weight average factor, 0: no change, 0.5: 50% between current and average, 1: average", )
-
-    p_weightedit_remove_empty: BoolProperty(name="Remove only Empty", default=True, description="Will remove only empty vertex groups", )
-    p_weightedit_remove_locked: BoolProperty(name="Remove also Locked", default=False,  description="Remove also locked vertex groups", )
-
-    p_weightedit_max_influences: IntProperty(name="Max Influences", default=3, min=1, max=100, description="Maximum amount of influences per vertex", )
-    p_weightedit_min_weight: FloatProperty(name="Add", default=0.01, min=0.001, max=1.0, precision=3, subtype='FACTOR', description="Minimum influence strength per vertex", )
    
-    p_weightedit_mirror_all_groups: BoolProperty(name="All Groups", default=True, description="Mirror weights from all groups", )
-    p_weightedit_mirror_use_topology: BoolProperty(name="Use Topology", default=False, description="Use topology based mirroring (for when both sides of mesh have matching, unique topology)", )
 
-    p_weightedit_list_enabled: BoolProperty(name="Show weights list", default=False, description="Show weights list ui widget. Can be slow with many vertex groups.", update=on_weightdisplay_isenabled,)
     
-    p_weightedit_copy_vg: StringProperty(name='')
-
-    # Properties.Misc ################################################################ 
-
-    # Snapshotting  ---------------------
-    p_snapshot_frame_start: IntProperty(name="From", default=0, subtype='FACTOR', description="Start frame", )
-    p_snapshot_frame_end: IntProperty(name="To", default=1, subtype='FACTOR', description="End frame", )
-    p_snapshot_use_name_prefix: BoolProperty(name="Use Name Prefix", default=False, description="Use a custom name as prefix for the snapshots", )
-    p_snapshot_merge_objects: BoolProperty(name="Merge", default=False, description="Merge all meshes of the snapshot", )
-    p_snapshot_name_prefix: StringProperty(name='')
-
 
     # Register ################################################################ 
 

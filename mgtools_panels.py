@@ -4,10 +4,29 @@ from datetime import datetime
 import bpy
 from bpy.types import Panel
 from . mgtools_functions_helper import MGTOOLS_functions_helper
+from . mgtools_functions_io import MGTOOLS_functions_io
 from . mgtools_functions_macros import MGTOOLS_functions_macros
 from . mgtools_manager_overlays import MGTOOLSOverlayManager
 from . import mgtools_compat as compat
 from. mgtools_props import MGTOOLS_properties_curve_workaround
+
+
+def draw_overlay_display_controls(layout, props, draw_mode):
+    if draw_mode == 'WEIGHT':
+        row = layout.row(align=True)
+        row.prop(props, 'p_weightdisplay_isenabled', toggle=True, text="Colored Vertices")
+        row.prop(props, 'p_weightdisplay_point_size', text="Size")
+        row = layout.row(align=True)
+        row.prop(bpy.context.preferences.view, "use_weight_color_range", toggle=True, text="Custom Colors")
+        return
+
+    if draw_mode == 'VERTEX_COLOR':
+        row = layout.row(align=True)
+        row.prop(props, 'p_vertexcolordisplay_isenabled', toggle=True, text="Colored Vertices")
+        row.prop(props, 'p_weightdisplay_point_size', text="Size")
+        row = layout.row(align=True)
+        row.prop(props, 'p_vertexcolordisplay_alpha', toggle=True, text="Alpha as Grayscale")
+
 
 class MGTOOLS_PT_rigging(Panel):
     bl_idname = "MGTOOLS_PT_rigging"
@@ -84,60 +103,65 @@ class MGTOOLS_PT_weighting(Panel):
             col.label(text="Object has no 'mgtools' property", icon='ERROR', )
             return
 
-        mgtools_props_obj = bpy.context.object.mgtools
+        mgtools_props_obj = bpy.context.scene.mgtools
 
-        col.prop(mgtools_props_obj, 'p_weightdisplay_isenabled', toggle=True,)
-        col.prop(mgtools_props_obj, 'p_weightdisplay_point_radius')
-        # col.prop(mgtools_props_obj, 'p_weightdisplay_point_size')
-        # col.prop(mgtools_props_obj, 'p_weightdisplay_global_alpha')
-
-        col = l.column()
-        col.prop(bpy.context.preferences.view, "use_weight_color_range", toggle=True, text="Use custom weight colors")
-        # col.separator()
-        
-        
+        draw_overlay_display_controls(col, mgtools_props_obj, 'WEIGHT')
 
 
         # Infos --------------------------------------------------------
-        l.separator()
         col = l.column()
 
-        meshobj = MGTOOLS_functions_macros.get_first_selected_mesh()
+        meshobj = context.view_layer.objects.active
 
-        if None == meshobj:
+        if None == meshobj or meshobj.type != 'MESH':
             col.label(text="No active selected mesh!", icon='INFO', )
             return
         
-        box = l.box()
-        box.scale_y = 0.5
-        box.label(text="{} ({})".format(meshobj.name, meshobj.type), )
+        box_infos = l.box()
+        box_infos.scale_y = 0.5
+        box_infos.label(text="{} ({})".format(meshobj.name, meshobj.type), )
 
         verts_selected = MGTOOLS_functions_helper.get_selected_verts(meshobj)
-        box.label(text="v: {} / {} | vg: {}".format(len(verts_selected), len(meshobj.data.vertices), len(meshobj.vertex_groups) ))
+        box_infos.label(text="v: {} / {} | vg: {}".format(len(verts_selected), len(meshobj.data.vertices), len(meshobj.vertex_groups) ))
 
-        if 'WEIGHT_PAINT' != meshobj.mode:
-            col.label(text="Requires WeightPaintMode!", icon='INFO', )
-            return
+       
 
+        weighting_mode_supported = meshobj.mode in {'OBJECT', 'WEIGHT_PAINT'}
+        if not weighting_mode_supported:
+            col.label(text="Requires Object or Weight Paint mode!", icon='INFO', )
+
+        # Infos
+        has_valid_armature = any(
+            mod.type == 'ARMATURE' and mod.object is not None and mod.show_viewport
+            for mod in meshobj.modifiers
+        )
+        box_infos.alert = not has_valid_armature
+        box_infos.label(text=f"Armature modifier: [{"✓" if has_valid_armature else "✗"}] {"bone weights" if has_valid_armature else "all groups"}.")
+        mirror_enabled = MGTOOLS_functions_helper.has_mirror_enabled(meshobj)
+        box_infos.alert = False
+        box_infos.label(text=f"Mirror: [{"✓" if mirror_enabled else "✗"}] {"topology based" if meshobj.data.use_mirror_topology else ""}.")
 
         # Weight tools --------------------------------------------------------
+        l.active = weighting_mode_supported
 
         row = l.row()
         box_set_weights = row.box()
 
         # create vertex groups for selected bones
         row = box_set_weights.row()
-        row.operator('mgtools.weighting_create_vertex_groups_for_selected_bones', text="Create missing VGs for sel. bones")
+        row.operator('mgtools.weighting_create_vertex_groups_for_selected_bones', text="+ missing groups for selected bones")
 
-        row = box_set_weights.row()
-        row.prop(bpy.context.scene.tool_settings, 'use_auto_normalize', text="Auto Normalize")
+        # Normalize weights
+        box_normalize = box_set_weights.box()
+        row = box_normalize.row()
         row.operator('mgtools.weighting_normalize_weights_groups', text="Normalize")
+        row.prop(bpy.context.scene.tool_settings, 'use_auto_normalize', text="Auto Normalize")
 
         # set weight shortcuts
         
         # row.scale_x = 0.1
         # row.scale_y = 0.5
-        row = box_set_weights.row()
+        row = box_set_weights.row(align=True)
         row.operator('mgtools.weighting_set_weights_to_0', text="0")
         row.operator('mgtools.weighting_set_weights_to_01', text=".1")
         row.operator('mgtools.weighting_set_weights_to_025', text=".25")
@@ -147,7 +171,7 @@ class MGTOOLS_PT_weighting(Panel):
         row.operator('mgtools.weighting_set_weights_to_1', text="1")
 
         # set weight to
-        row = box_set_weights.row()
+        row = box_set_weights.row(align=True)
         ups = compat.get_unified_paint_settings(context, mode='WEIGHT_PAINT')
         if ups is not None:
             row.prop(ups, 'weight', text="")
@@ -156,40 +180,43 @@ class MGTOOLS_PT_weighting(Panel):
         row.operator('mgtools.weighting_set_weights', text="Set")
 
         # add / subtract weight
-        row = box_set_weights.row()
+        row = box_set_weights.row(align=True)
+        op = row.operator('mgtools.weighting_offset_weights', text="+ .01")
+        op.amount = 0.01
+        op = row.operator('mgtools.weighting_offset_weights', text="+ .05")
+        op.amount = 0.05
+        op = row.operator('mgtools.weighting_offset_weights', text="+ .1")
+        op.amount = 0.1
+        row = box_set_weights.row(align=True)
+        op = row.operator('mgtools.weighting_offset_weights', text="- .01")
+        op.amount = -0.01
+        op = row.operator('mgtools.weighting_offset_weights', text="- .05")
+        op.amount = -0.05
+        op = row.operator('mgtools.weighting_offset_weights', text="- .1")
+        op.amount = -0.1
+
+        row = box_set_weights.row(align=True)
         row.prop(mgtools_props_obj, 'p_weightedit_add_amount', text="")
         op = row.operator('mgtools.weighting_offset_weights', text="+")
         op.amount = mgtools_props_obj.p_weightedit_add_amount
         op = row.operator('mgtools.weighting_offset_weights', text="-")
         op.amount = -1 * mgtools_props_obj.p_weightedit_add_amount
 
-        row = box_set_weights.row()
-        op = row.operator('mgtools.weighting_offset_weights', text="+.01")
-        op.amount = 0.01
-        op = row.operator('mgtools.weighting_offset_weights', text="+.05")
-        op.amount = 0.05
-        op = row.operator('mgtools.weighting_offset_weights', text="+.1")
-        op.amount = 0.1
-        row = box_set_weights.row()
-        op = row.operator('mgtools.weighting_offset_weights', text="-.01")
-        op.amount = -0.01
-        op = row.operator('mgtools.weighting_offset_weights', text="-.05")
-        op.amount = -0.05
-        op = row.operator('mgtools.weighting_offset_weights', text="-.1")
-        op.amount = -0.1
+        row = box_set_weights.row(align=True)
+        row.operator('mgtools.weighting_copy_vertex_weights', text="Copy Vertex Weights")
 
-        row = box_set_weights.row()
-        row.operator('mgtools.weighting_copy_weights', text="copy")
+        row = box_set_weights.row(align=True)
+        row.operator('mgtools.weighting_copy_weights', text="Copy")
         row.prop(mgtools_props_obj, 'p_weightedit_copy_vg', text="")
-        row.operator('mgtools.weighting_paste_weights', text="paste")
+        row.operator('mgtools.weighting_paste_weights', text="Paste")
 
-        row = box_set_weights.row()
+        row = box_set_weights.row(align=True)
         row.prop(mgtools_props_obj, 'p_weightedit_average_factor', text="")
         row.operator('mgtools.weighting_average_weights', text="Average")
 
-        row = box_set_weights.row()
-        row.operator('mgtools.weighting_smooth_weights_group', text="Smooth (Active Group)")
-        row.operator('mgtools.weighting_smooth_weights_groups', text="Smooth (All Groups)")
+        row = box_set_weights.row(align=True)
+        row.operator('mgtools.weighting_smooth_weights_group', text="Smooth (Active)")
+        row.operator('mgtools.weighting_smooth_weights_groups', text="Smooth (All)")
        
         # l.separator()
 
@@ -206,30 +233,119 @@ class MGTOOLS_PT_weighting(Panel):
 
         # l.separator()
 
-        # remove weakest influences up to allowed maximum influences count
-        row = l.row()
-        row.prop(mgtools_props_obj, 'p_weightedit_max_influences', text="")
-        row.operator('mgtools.weighting_set_max_influences', text="Limit influence count")
-
-        # remove influences below threshold
-        row = l.row()
-        row.prop(mgtools_props_obj, 'p_weightedit_min_weight', text="")
-        row.operator('mgtools.weighting_set_min_influence', text="Clear influences below")
-
         # mirror weights
         box_mirror = l.box()
         # box_mirror.label(text="Mirror", )
         row = box_mirror.row()
         row.prop(mgtools_props_obj, 'p_weightedit_mirror_all_groups',)
         row.prop(mgtools_props_obj, 'p_weightedit_mirror_use_topology',)
-        box_mirror.operator('mgtools.weighting_quick_mirror', text="Mirror X")
+        row = box_mirror.row(align=True)
+        row.prop(mgtools_props_obj, 'p_weightedit_mirror_direction', text="")
+        row.prop(mgtools_props_obj, 'p_weightedit_mirror_axis', text="")
+        row.operator('mgtools.weighting_quick_mirror', text="Mirror")
+
+        box_vg_tools = l.box()
+        # remove weakest influences up to allowed maximum influences count
+        row = box_vg_tools.row(align=True)
+        row.prop(mgtools_props_obj, 'p_weightedit_max_influences', text="")
+        row.operator('mgtools.weighting_set_max_influences', text="Max influences")
+
+        # remove influences below threshold
+        row = box_vg_tools.row(align=True)
+        row.prop(mgtools_props_obj, 'p_weightedit_min_weight', text="")
+        row.operator('mgtools.weighting_set_min_influence', text="Min influence")
 
         # remove vertex groups
-        box_remove = l.box()
+        box_remove = box_vg_tools.box()
         row = box_remove.row()
         row.prop(mgtools_props_obj, 'p_weightedit_remove_empty', text="Only Empty")
         row.prop(mgtools_props_obj, 'p_weightedit_remove_locked', text="+ Locked")
         box_remove.operator('mgtools.weighting_remove_vertex_groups_unused', text="Remove VGs")
+
+        # Vertex group ordering does not require Weight Paint mode.
+        box_vertex_groups = box_vg_tools.box()
+        row = box_vertex_groups.row(align=True)
+        row.enabled = meshobj.vertex_groups.active is not None
+        op = row.operator('mgtools.weighting_rebuild_active_vertex_group', text="Active to Top")
+        op.direction = 'TOP'
+        op = row.operator('mgtools.weighting_rebuild_active_vertex_group', text="Active to Bottom")
+        op.direction = 'BOTTOM'
+
+class MGTOOLS_PT_vertex_color(Panel):
+    bl_idname = "MGTOOLS_PT_vertex_color"
+    bl_label = "Vertex Color"
+    bl_category = "mgtools"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        # Infos
+        layout = self.layout
+        obj = context.view_layer.objects.active
+        if obj is None or obj.type != 'MESH':
+            layout.label(text="No active mesh", icon='INFO')
+            return
+
+        props = context.scene.mgtools
+        draw_overlay_display_controls(layout, props, 'VERTEX_COLOR')
+
+        color_attributes = getattr(obj.data, 'color_attributes', None)
+        if color_attributes is None:
+            layout.label(text="Requires Blender color attributes", icon='INFO')
+            return
+
+        attribute = getattr(color_attributes, 'active_color', None)
+        if attribute is None:
+            layout.label(text="No active color attribute", icon='INFO')
+            return
+
+        info = layout.box()
+        info.label(text="{}".format(attribute.name))
+        info.label(text="{} / {}".format(attribute.domain, attribute.data_type))
+        info.label(text="Selected vertices: {}".format(len([v for v in obj.data.vertices if v.select])))
+
+        # Channels Mask
+        channel_box = layout.box()
+        row = channel_box.row(align=True)
+        row.prop(props, 'p_vertexcoloredit_channels', index=0, toggle=True, text="R")
+        row.prop(props, 'p_vertexcoloredit_channels', index=1, toggle=True, text="G")
+        row.prop(props, 'p_vertexcoloredit_channels', index=2, toggle=True, text="B")
+        row.prop(props, 'p_vertexcoloredit_channels', index=3, toggle=True, text="A")
+
+        # Sample 
+        selected_box = layout.box()
+        selected_box.label(text="Selected Average")
+        color_row = selected_box.row(align=True)
+        color_row.prop(props, 'p_vertexcolor_selected', text="")
+        color_row.operator('mgtools.vertex_color_sample', text="Sample")
+        op = color_row.operator('mgtools.vertex_color_set', text="Set")
+        op.color = props.p_vertexcolor_selected
+        op.channels = props.p_vertexcoloredit_channels
+
+        # Blender Paint color
+        paint_box = layout.box()
+        paint_box.label(text="Blender Paint Color")
+        row = paint_box.row(align=True)
+        row.prop(props, 'p_vertexcolor_paint', text="")
+        op = row.operator('mgtools.vertex_color_set', text="Set")
+        op.color = props.p_vertexcolor_paint
+        op.channels = props.p_vertexcoloredit_channels
+
+        # Adjust
+        edit_box = layout.box()
+        row = edit_box.row(align=True)
+        row.prop(props, 'p_vertexcoloredit_amount', text="Amount")
+        op = row.operator('mgtools.vertex_color_offset', text="+")
+        op.channels = props.p_vertexcoloredit_channels
+        op.amount = props.p_vertexcoloredit_amount
+        op = row.operator('mgtools.vertex_color_subtract', text="-")
+        op.channels = props.p_vertexcoloredit_channels
+        op.amount = props.p_vertexcoloredit_amount
+
+        smooth_row = edit_box.row()
+        smooth_row.enabled = context.mode == 'PAINT_VERTEX'
+        smooth_row.operator('mgtools.vertex_color_smooth', text="Smooth")
 
 class MGTOOLS_PT_animation(Panel):
     bl_idname = "MGTOOLS_PT_animation"
@@ -289,6 +405,7 @@ class MGTOOLS_PT_object(Panel):
             return
 
         mgtools_props_obj = bpy.context.object.mgtools
+        mgtools_props_scene = bpy.context.scene.mgtools
 
         # pivot tools
         pivot_box = col.box()
@@ -313,11 +430,11 @@ class MGTOOLS_PT_object(Panel):
         # snapshot tools
         snap_box = col.box()
         snap_box.label(text="Snapshots")
-        snap_box.prop(mgtools_props_obj, 'p_snapshot_use_name_prefix')
-        snap_box.prop(mgtools_props_obj, 'p_snapshot_name_prefix')
-        snap_box.prop(mgtools_props_obj, 'p_snapshot_merge_objects')
-        snap_box.prop(mgtools_props_obj, 'p_snapshot_frame_start')
-        snap_box.prop(mgtools_props_obj, 'p_snapshot_frame_end')
+        snap_box.prop(mgtools_props_scene, 'p_snapshot_use_name_prefix')
+        snap_box.prop(mgtools_props_scene, 'p_snapshot_name_prefix')
+        snap_box.prop(mgtools_props_scene, 'p_snapshot_merge_objects')
+        snap_box.prop(mgtools_props_scene, 'p_snapshot_frame_start')
+        snap_box.prop(mgtools_props_scene, 'p_snapshot_frame_end')
 
         snap_box.operator('mgtools.object_snapshot', text="Make Range Snapshots")
 
@@ -509,6 +626,9 @@ class MGTOOLS_PT_io(Panel):
         row = mesh_options_box2.row()
         row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
         row.prop(mgtools_props_scene, "p_io_export_objectname_postfix", text="Pos")
+        row = mesh_options_box2.row(align=True)
+        row.label(text="To Shape Key Filter:")
+        row.prop(mgtools_props_scene, "p_io_export_shapekey_modifier_prefix", text="")
         mesh_options_box2.prop(mgtools_props_scene, "p_io_export_material_override",)
         mesh_options_box2.prop(mgtools_props_scene, "p_io_export_armature_replacement",)
         mesh_options_box2.prop(mgtools_props_scene, "p_io_export_weights_limit",)
@@ -568,6 +688,38 @@ class MGTOOLS_PT_io(Panel):
         row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename")
         row = box.row()
         row.prop(mgtools_props_scene, "p_io_export_filename_ignore_collection_dot_prefix")
+
+        # export warnings -------------------------------------------
+        skipped_armatures = {}
+
+        def collect_skipped_armatures(objects, collection=None):
+            for armature, reasons in MGTOOLS_functions_io.get_skipped_armatures(objects, collection).items():
+                skipped_armatures.setdefault(armature, set()).update(reasons)
+
+        collect_skipped_armatures(bpy.context.selected_objects)
+        filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
+        for export_collection in bpy.data.collections:
+            if False == export_collection.name.startswith(filter_prefix_collection):
+                continue
+            layercollection = MGTOOLS_functions_helper.get_layercollection(export_collection)
+            if None == layercollection or layercollection.exclude or layercollection.hide_viewport:
+                continue
+            if export_collection.hide_select or export_collection.hide_viewport:
+                continue
+            collect_skipped_armatures(export_collection.all_objects, export_collection)
+
+        replacement_armature = mgtools_props_scene.p_io_export_armature_replacement
+        if None != replacement_armature:
+            replacement_reasons = MGTOOLS_functions_io.get_export_skip_reasons(replacement_armature)
+            if 0 < len(replacement_reasons):
+                skipped_armatures.setdefault(replacement_armature, set()).update(replacement_reasons)
+
+        if 0 < len(skipped_armatures):
+            warning_box = col.box()
+            warning_box.alert = True
+            warning_box.label(text="Armatures skipped from export:", icon='ERROR')
+            for armature, reasons in skipped_armatures.items():
+                warning_box.label(text="- {} [{}]".format(armature.name, ', '.join(sorted(reasons))))
 
 
         # collection (batch-) export -------------------------------------------
@@ -736,7 +888,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.6.29") # check also version in __init__
+        box.label(text="MGTO tools v0.7.00") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2026")
 

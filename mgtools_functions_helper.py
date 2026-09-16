@@ -11,19 +11,61 @@ class MGTOOLS_functions_helper():
     
     @classmethod
     def get_selected_verts(self, meshobj):
+        """Return the selected vertices from a mesh object."""
         return [v for v in meshobj.data.vertices if v.select]
 
     @classmethod
     def get_selected_vert_indicies(self, meshobj):
+        """Return the indices of the selected vertices in a mesh object."""
         selected_verts = self.get_selected_verts(meshobj)
         selected_vert_indices = [v.index for v in selected_verts]
         return selected_vert_indices
+
+    @classmethod
+    def get_mirror_axes(self, meshobj):
+        """Return the enabled mesh mirror axes as a set of axis names."""
+        return {
+            axis for axis, enabled in (
+                ('X', meshobj.use_mesh_mirror_x),
+                ('Y', meshobj.use_mesh_mirror_y),
+                ('Z', meshobj.use_mesh_mirror_z),
+            ) if enabled
+        }
+
+    @classmethod
+    def has_mirror_enabled(self, meshobj):
+        """Return whether any mesh mirror axis is enabled."""
+        return bool(self.get_mirror_axes(meshobj))
+
+    @classmethod
+    def get_color_attribute_colors(self, mesh, attribute):
+        """Return per-vertex colors from a point or corner color attribute."""
+        colors = [(0.0, 0.0, 0.0, 0.0) for _ in mesh.vertices]
+        counts = [0 for _ in mesh.vertices]
+        if attribute.domain == 'POINT':
+            for vertex in mesh.vertices:
+                colors[vertex.index] = tuple(attribute.data[vertex.index].color[:])
+                counts[vertex.index] = 1
+            return colors
+        if attribute.domain != 'CORNER':
+            return colors
+        for loop in mesh.loops:
+            vertex_index = loop.vertex_index
+            color = attribute.data[loop.index].color
+            previous = colors[vertex_index]
+            colors[vertex_index] = tuple(previous[channel] + color[channel] for channel in range(4))
+            counts[vertex_index] += 1
+        for vertex_index, count in enumerate(counts):
+            if count > 0:
+                colors[vertex_index] = tuple(value / count for value in colors[vertex_index])
+        return colors
 
 
     # Objects #######################################################
 
     @classmethod
     def get_children(self, obj, children_list, recursive):
+        """Append an object's children to a list, optionally recursively."""
         for child in obj.children:
             children_list.append(child)
             if True == recursive:
@@ -32,6 +74,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def set_parent(self, child, new_parent, keep_transforms):
+        """Set an object's parent while optionally preserving its transforms."""
         if True == keep_transforms:
             if None == new_parent:
                 target_matrix = child.matrix_world.copy()
@@ -47,12 +90,14 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def set_parent_recursive(self, object, new_parent, keep_transforms):
+        """Reparent an object and its descendants to a new parent."""
         for child in object.children:
             self.deparent_recursive(child, new_parent)
         self.set_parent(object, new_parent, keep_transforms)
 
     @classmethod
     def remove_recursive(self, object):       
+        """Remove an object and all of its child objects recursively."""
         for child in object.children:
             self.remove_recursive(child)
         bpy.data.objects.remove(object)
@@ -61,6 +106,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def get_evaluated_meshdata(self, meshobj):
+        """Create and return mesh data evaluated through the dependency graph."""
 
         # get evaluated data
         depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -79,6 +125,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def get_all_modifier(self, source_object, modifier_type):
+        """Return all modifiers of the requested type on an object."""
         modifier = []
         # print("  checking {}".format(source_object))
         for mod in source_object.modifiers:
@@ -90,6 +137,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def transfer_modifier_armature(self, source_objects, target_objects):
+        """Transfer the first discovered armature modifier target to objects."""
         print ("transfer_modifier_armature()")
         armature_modifier = []
         armatures = []
@@ -212,19 +260,26 @@ class MGTOOLS_functions_helper():
             print("Warning: failed to bake shape keys for {}: {}".format(obj, e))
 
     @classmethod
-    def apply_modifiers_smartly(self, obj):
+    def apply_modifiers_smartly(self, obj, ignore: str = ""):
+        """Apply viewport modifiers and remove modifiers that cannot be applied."""
         # For each modifier
         # Removes obviously broken modifiers (e.g. missing target object) and
         # tries to apply modifiers; if applying fails the modifier is removed.
         #
         # Assumes `obj` is already selected (and active). Uses context overrides
         # for operator calls so it does not modify selection or active object.
+        #
+        # ignore: optional name prefix (case-sensitive); modifiers whose name starts
+        #         with this prefix are skipped entirely (e.g. reserved for shape key baking).
 
         if None == obj:
             return
 
         # iterate over a copy because we may remove modifiers during iteration
         for modifier in list(obj.modifiers):
+            # skip modifiers reserved for shape key conversion
+            if ignore and modifier.name.startswith(ignore):
+                continue
             # -------------
             # Custom behaviour for certain modifiers:
             if modifier.type == 'DATA_TRANSFER':
@@ -255,6 +310,7 @@ class MGTOOLS_functions_helper():
     # check all of the top level LayerCollections and recursively all of their child LayerCollections
     @classmethod
     def get_layercollection(self, collection):
+        """Find the view-layer collection corresponding to a Blender collection."""
         lc_out = None
         for lc in bpy.context.view_layer.layer_collection.children:
             lc_out = self.get_layercollection_r(lc, collection)
@@ -264,6 +320,7 @@ class MGTOOLS_functions_helper():
     # try find the related LayerCollection to a supplied Collection (recursive)
     @classmethod
     def get_layercollection_r(self, layer_collection, collection):
+        """Recursively find a collection beneath a layer collection."""
         # check the supplied LayerCollection
         if layer_collection.collection == collection:
             return layer_collection
@@ -275,16 +332,30 @@ class MGTOOLS_functions_helper():
                 break
         return lc_out
 
+    @classmethod
+    def get_layercollection_path(self, collection, layer_collection=None):
+        """Return the LayerCollection path for a collection in the current view layer."""
+        if None == layer_collection:
+            layer_collection = bpy.context.view_layer.layer_collection
+        if layer_collection.collection == collection:
+            return [layer_collection]
+        for child in layer_collection.children:
+            path = self.get_layercollection_path(collection, child)
+            if None != path:
+                return [layer_collection] + path
+        return None
 
     # Vertex Groups #######################################################
 
     @classmethod
     def try_get_vgroup(self, meshobj, vgroup_name):
+        """Return a named vertex group from a mesh object."""
         return meshobj.data.vertices.groups[vgroup_name]
 
     # returns all vertex groups which belong to an armature bone
     @classmethod
     def get_bone_vgroups(self, obj, armature):
+        """Return vertex groups whose names match bones in an armature."""
         vgroups_bones = []
         if 'ARMATURE' != armature.type:
             return vgroups_bones
@@ -298,6 +369,7 @@ class MGTOOLS_functions_helper():
     # returns all vertex groups of a supplied vertex which belong to an armature bone
     @classmethod
     def get_bone_vgelements_from_vert(self, meshobj, vert_idx, armature):
+        """Return armature-bone group elements assigned to a mesh vertex."""
         vgroups_bones = []
         # check if meshobj is really a mesh type
         if 'MESH' != meshobj.type:
@@ -323,6 +395,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def get_bone_vgroups_from_vert(self, meshobj, vert_idx, armature):
+        """Return armature-bone vertex groups assigned to a mesh vertex."""
         vgelements = self.get_bone_vgelements_from_vert(meshobj, vert_idx, armature)
         vgroups = []
         for vge in vgelements:
@@ -331,6 +404,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def create_vgroups_from_names(self, meshobj, vg_names):
+        """Create any named vertex groups that are missing from a mesh object."""
         # check if meshobj is really a mesh type
         if 'MESH' != meshobj.type:
             return
@@ -345,10 +419,12 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def remove_vgroups(self, meshobj, only_unused, include_locked):
+        """Remove eligible vertex groups from a mesh object."""
         # check if meshobj is really a mesh type
         if 'MESH' != meshobj.type:
             return
 
+        groups_to_remove = []
         for vg in meshobj.vertex_groups:
             
             # filter locked groups
@@ -363,7 +439,10 @@ class MGTOOLS_functions_helper():
                 if True == has_weights:
                     continue
             
-            #remove
+            groups_to_remove.append(vg)
+
+        # Mutating a Blender collection during iteration can skip entries.
+        for vg in groups_to_remove:
             print (" > Removing vertex group ({})! ".format(vg.name))
             meshobj.vertex_groups.remove(vg)
 
@@ -375,11 +454,13 @@ class MGTOOLS_functions_helper():
     # mode can be 'REPLACE', 'ADD' or 'SUBTRACT'
     @classmethod
     def set_weights(self, vgroup, vindices, weight:float, mode):
+        """Assign a weight to vertex indices using the requested blend mode."""
         vgroup.add(vindices, weight, mode)
 
     # mode can be 'REPLACE', 'ADD' or 'SUBTRACT'
     @classmethod
     def lerp_weights(self, vgroup, vindices, weight:float, factor:float, mode):
+        """Interpolate existing weights toward a target weight."""
         for idx in vindices:
             # this 'try' is stupid but I don't want to make a mesh input a requirement here
             weight_from = 0
@@ -394,6 +475,7 @@ class MGTOOLS_functions_helper():
     # Note: it will return a weight of 0 even if the vertex is not part of the vertex group
     @classmethod
     def get_weights_from_selection(self, mesh, vgroup, vindices):
+        """Return vertex-group weights for the supplied vertex indices."""
         weights = [0] * len(mesh.vertices)
         group_index = vgroup.index
         for vidx in vindices:
@@ -407,6 +489,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def get_weights(self, mesh, vgroup):
+        """Return the weight of every mesh vertex in a vertex group."""
         weights = [0] * len(mesh.vertices)
         group_index = vgroup.index
         for v in mesh.vertices:
@@ -420,6 +503,7 @@ class MGTOOLS_functions_helper():
     # returns the average weight of all supplied vertices within the given vertex group
     @classmethod
     def get_weight_average(self, meshobj, vgroupidx, vindices):
+        """Return the average vertex-group weight across supplied indices."""
         weight_average = 0
         selected_vert_indices = vindices
         selected_verts_count = len(selected_vert_indices)
@@ -443,6 +527,7 @@ class MGTOOLS_functions_helper():
     # returns the number of vertices which are part of this vertex group
     @classmethod
     def get_weights_count(self, mesh, vgroup):
+        """Return the number of mesh vertices assigned to a vertex group."""
         weights = 0
         group_index = vgroup.index
         for vidx in range(len(mesh.vertices)):
@@ -454,9 +539,91 @@ class MGTOOLS_functions_helper():
                 break
         return weights
 
-    # for every vertex remove all weights except the highest ones up the supplied maximum count
     @classmethod
-    def remove_lowest_weights(self, meshobj, armature, max_influences, normalize:bool=False):
+    def apply_modifier_as_shape_key(self, obj, modifier_name):
+        """Apply a single modifier as a shape key using its current name.
+
+        The resulting shape key will inherit the modifier's current name.
+        Requires obj to be the active object in Object Mode.
+        Logs a warning and skips if the modifier cannot be applied as a shape key.
+
+        Args:
+            obj:           A Blender mesh object (must be active).
+            modifier_name: Current name of the modifier on obj.
+        """
+        if modifier_name not in obj.modifiers:
+            print(f"Warning: modifier '{modifier_name}' not found on '{obj.name}', skipping.")
+            return
+        try:
+            with bpy.context.temp_override(object=obj):
+                bpy.ops.object.modifier_apply_as_shapekey(keep_modifier=False, modifier=modifier_name)
+        except Exception as e:
+            print(f"Warning: modifier '{modifier_name}' on '{obj.name}' cannot be applied as shape key, skipping: {e}")
+
+    @classmethod
+    def apply_prefixed_modifier_as_shape_key(self, obj, modifier_name, prefix):
+        """Strip prefix from a modifier's name, rename it, then apply it as a shape key.
+
+        Renames the modifier to the stripped name before applying so the resulting shape key
+        gets the correct name. On failure the original name is restored.
+
+        Args:
+            obj:           A Blender mesh object (must be active).
+            modifier_name: Current name of the modifier on obj (must start with prefix).
+            prefix:        Prefix to strip from modifier_name to produce the shape key name.
+        """
+        if modifier_name not in obj.modifiers:
+            print(f"Warning: modifier '{modifier_name}' not found on '{obj.name}', skipping.")
+            return
+        stripped_name = modifier_name[len(prefix):]
+        mod = obj.modifiers[modifier_name]
+        mod.name = stripped_name
+        try:
+            self.apply_modifier_as_shape_key(obj, stripped_name)
+        except Exception as e:
+            print(f"Warning: prefix-apply failed for '{stripped_name}' on '{obj.name}': {e}")
+            # restore original name so apply_modifiers_smartly can handle it
+            if stripped_name in obj.modifiers:
+                obj.modifiers[stripped_name].name = modifier_name
+
+    @classmethod
+    def apply_prefixed_modifiers_as_shape_keys(self, obj, prefix):
+        """Apply all modifiers whose name starts with prefix as shape keys, stripping the prefix.
+
+        Iterates a snapshot of the modifier list so mutations during iteration are safe.
+        Skips the feature entirely when prefix is empty.
+
+        Args:
+            obj:    A Blender mesh object (must be active).
+            prefix: Case-sensitive name prefix to match and strip.
+        """
+        if not prefix or 'MESH' != obj.type:
+            return
+        prefix_lower = prefix.lower()
+        # snapshot names to avoid mutation issues during iteration
+        matching = [
+            mod.name for mod in obj.modifiers
+            if mod.name.lower().startswith(prefix_lower)
+        ]
+        for mod_name in matching:
+            stripped = mod_name[len(prefix):]
+            print(f" > applying modifier '{mod_name}' as shape key '{stripped}' on '{obj.name}'")
+            self.apply_prefixed_modifier_as_shape_key(obj, mod_name, prefix)
+
+    @classmethod
+    def remove_lowest_weights(self, meshobj, armature, max_influences):
+        """Remove bone influences exceeding max_influences per vertex, keeping the strongest ones.
+
+        Automatically scopes to selected vertices if any are selected in the mesh data;
+        otherwise processes all vertices. When exactly one vertex is selected, any vertex
+        groups that were filtered out by get_bone_vgelements_from_vert (i.e. not matching
+        a bone in the supplied armature) are logged to the console.
+
+        Args:
+            meshobj:        A Blender mesh object to process.
+            armature:       The armature object whose bones define valid vertex groups.
+            max_influences: Maximum number of bone influences allowed per vertex.
+        """
         print("remove_lowest_weights()")
 
         # check if meshobj is really a mesh type
@@ -465,16 +632,37 @@ class MGTOOLS_functions_helper():
         if not armature or 'ARMATURE' != armature.type:
             return
 
+        # determine vertex scope: selected vertices only, or all
+        selected_indices = self.get_selected_vert_indicies(meshobj)
+        selected_set = set(selected_indices) if selected_indices else None
+        log_filtered = selected_set is not None and 1 == len(selected_set)
+
+        if selected_set is not None:
+            print(" > selection mode: {} vertices".format(len(selected_set)))
+        else:
+            print(" > full mesh mode")
+
         # for every vertex
         for i, vert in enumerate(meshobj.data.vertices):
+
+            # skip unselected vertices when a selection is active
+            if selected_set is not None and i not in selected_set:
+                continue
+
             # get only vertex groups elements which belong to a bone
             vert_vges = self.get_bone_vgelements_from_vert(meshobj, i, armature)
+
+            # when exactly one vertex is selected, log groups filtered out by get_bone_vgelements_from_vert
+            if log_filtered:
+                bone_vge_group_indices = {vge.group for vge in vert_vges}
+                for vge in vert.groups:
+                    if vge.group not in bone_vge_group_indices:
+                        vg_name = meshobj.vertex_groups[vge.group].name if 0 <= vge.group < len(meshobj.vertex_groups) else "<unknown>"
+                        print(" > vert {}: vg '{}' (w={:.3f}) skipped (no matching bone)".format(i, vg_name, vge.weight))
 
             # continue if this vertex doesn't use more influences then allowed
             if max_influences >= len(vert_vges):
                 continue
-
-            # print ("  > checking vert: {} influences: {}".format(i, len(vert_vges)))
 
             # sort vertex groups by influence value
             vert_vges.sort(key=lambda x: x.weight, reverse=True)
@@ -487,7 +675,7 @@ class MGTOOLS_functions_helper():
                 if 0 > vge.group:
                     continue
                 if vge.group >= len(meshobj.vertex_groups):
-                    print("Strange vertex group found - skipping: " + vge)
+                    print("Strange vertex group found - skipping: " + vge.group)
                     continue
                 if vge in vgroups_keep:
                     continue
@@ -497,33 +685,65 @@ class MGTOOLS_functions_helper():
                 vg.remove([i])
                 # print ("    removing vert {} with weight: {} from vg: {}".format(i, vge.weight, vg.name))
 
-    # for every vertex set all weights to zero which are below the threshold
     @classmethod
-    def remove_weights_below_threshold(self, meshobj, armature, threshold, normalize:bool=False):
+    def remove_weights_below_threshold(self, meshobj, armature, threshold):
+        """Remove bone influences below threshold per vertex.
+
+        Automatically scopes to selected vertices if any are selected in the mesh data;
+        otherwise processes all vertices. When exactly one vertex is selected, any vertex
+        groups that were filtered out by get_bone_vgelements_from_vert (i.e. not matching
+        a bone in the supplied armature) are logged to the console.
+
+        Args:
+            meshobj:   A Blender mesh object to process.
+            armature:  The armature object whose bones define valid vertex groups.
+            threshold: Minimum weight value to keep; influences strictly below this are removed.
+        """
         print("remove_weights_below_threshold()")
-        
+
         # check if meshobj is really a mesh type
         if not meshobj or 'MESH' != meshobj.type:
             return
         if not armature or 'ARMATURE' != armature.type:
             return
 
-        #for every vertex
+        # determine vertex scope: selected vertices only, or all
+        selected_indices = self.get_selected_vert_indicies(meshobj)
+        selected_set = set(selected_indices) if selected_indices else None
+        log_filtered = selected_set is not None and 1 == len(selected_set)
+
+        if selected_set is not None:
+            print(" > selection mode: {} vertices".format(len(selected_set)))
+        else:
+            print(" > full mesh mode")
+
+        # for every vertex
         for i, vert in enumerate(meshobj.data.vertices):
-            # print ("  > checking vert: {}".format(i))
+
+            # skip unselected vertices when a selection is active
+            if selected_set is not None and i not in selected_set:
+                continue
+
             # get only vertex groups elements which belong to a bone
             vert_vges = self.get_bone_vgelements_from_vert(meshobj, i, armature)
-            # for every bone...
+
+            # when exactly one vertex is selected, log groups filtered out by get_bone_vgelements_from_vert
+            if log_filtered:
+                bone_vge_group_indices = {vge.group for vge in vert_vges}
+                for vge in vert.groups:
+                    if vge.group not in bone_vge_group_indices:
+                        vg_name = meshobj.vertex_groups[vge.group].name if 0 <= vge.group < len(meshobj.vertex_groups) else "<unknown>"
+                        print(" > vert {}: vg '{}' (w={:.3f}) skipped (no matching bone)".format(i, vg_name, vge.weight))
+
+            # for every bone influence on this vertex...
             for vge in vert_vges:
-                # print ("    checking vg {} with weight: {}".format(vge.group, vge.weight))
-                # if below threshould set weight to 0
+                # if at or above threshold keep it
                 if threshold <= vge.weight:
                     continue
                 # get vertex group
                 vg = meshobj.vertex_groups[vge.group]
                 # remove vertex from group
                 vg.remove([i])
-                # print ("    removing vert {} with weight: {} from vg: {}".format(i, vge.weight, vg.name))
 
 
     # Animations #######################################################
@@ -531,6 +751,7 @@ class MGTOOLS_functions_helper():
     # Retrieve all actions given a blender object. Includes NLA-actions
     @classmethod
     def get_all_actions(self, obj):
+        """Return an object's active action and actions used by NLA strips."""
         actions = []
         if None == obj or None == obj.animation_data: 
             return actions
@@ -547,6 +768,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def get_all_animstrips(self, obj):
+        """Return all animation strips from an object's NLA tracks."""
         strips = []
         if None == obj or None == obj.animation_data: 
             return strips
@@ -559,6 +781,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def copy_animation_data(self, obj_from, obj_to):
+        """Copy NLA track and strip settings from one object to another."""
         
         #print ("copy_animation_data()")
 
@@ -610,7 +833,8 @@ class MGTOOLS_functions_helper():
     # Misc #######################################################
 
     @classmethod
-    def convertWeight2Color(self, value):
+    def convert_weight_2_color(self, value):
+        """Convert a normalized vertex weight to a display color."""
         col = (0,0,0,0)
         # special case: weight = 0
         if 0 >= value and 'ACTIVE' == bpy.context.scene.tool_settings.vertex_group_user:
@@ -630,6 +854,7 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def get_local_location(self, obj):
+        """Return an object's location transformed into local parent space."""
         # transform intrinsic- to local-space
         if None == obj:
             return (0, 0, 0)
@@ -641,6 +866,7 @@ class MGTOOLS_functions_helper():
     
     @classmethod
     def get_world_location(self, obj):
+        """Return an object's location transformed into world space."""
         # transform intrinsic- to world-space
         if None == obj:
             return (0, 0, 0)
@@ -656,5 +882,6 @@ class MGTOOLS_functions_helper():
 
     @classmethod
     def print_collection(self, collection):
+        """Print each item in a collection to the console."""
         for c in collection:
             print(c)

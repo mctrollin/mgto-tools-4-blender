@@ -1,12 +1,24 @@
 import bpy
-import logging
+import time
 import traceback
+from contextlib import contextmanager
+
+
+@contextmanager
+def log_timing(label: str):
+    """Log the elapsed time for a block, including blocks that raise."""
+    timer = time.perf_counter()
+    try:
+        yield
+    finally:
+        elapsed_ms = (time.perf_counter() - timer) * 1000.0
+        print("[mgtools timing] {}: {:.2f} ms".format(label, elapsed_ms))
 
 
 def show_exception(exc: Exception, message: str | None = None, operator=None, context=None, title: str = "mgtools: Error", level: str = "ERROR", popup: bool = True, report: bool = True, log: bool = True):
     """Consistent, user-visible exception reporting helper.
 
-    - Logs the full traceback to console and the logging module when `log` is True.
+    - Logs the full traceback to Blender's system console when `log` is True.
     - Calls `operator.report({level}, short_message)` when `operator` is provided and `report` is True.
     - Shows a short popup via WindowManager when `popup` is True.
 
@@ -15,7 +27,7 @@ def show_exception(exc: Exception, message: str | None = None, operator=None, co
     short = message or str(exc)
     # Log full traceback
     if log:
-        logging.getLogger(__name__).error("%s\n%s", short, traceback.format_exc())
+        print("[mgtools error] {}".format(short))
         traceback.print_exc()
 
     # Operator report (shows message in the Info header)
@@ -37,4 +49,4 @@ def show_exception(exc: Exception, message: str | None = None, operator=None, co
                 self.layout.label(text="See system console for details.")
             ctx.window_manager.popup_menu(_draw, title=title, icon='ERROR')
         except Exception:
-            logging.getLogger(__name__).warning("Failed to show popup for exception: %s", short)
+            print("[mgtools warning] Failed to show popup for exception: {}".format(short))

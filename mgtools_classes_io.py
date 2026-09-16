@@ -58,7 +58,6 @@ class MGTOOLS_io_exporter():
     use_mesh_modifiers_armature = False
     mesh_smooth_type = 'OFF'
     use_mesh_modifiers = False # used by fbx exporter
-    use_mesh_modifier_armature = False # usually we don't want to apply the armature
     combine_meshes = False
     clone_meshes_filter = ""
     combine_meshes_filter = ""
@@ -71,6 +70,7 @@ class MGTOOLS_io_exporter():
     vgroups_rename_add_prefix = ""
     armature_replacement = None
     weights_limit = 4
+    modifier_to_shapekey_prefix = ""
 
     # material
     material_override = None
@@ -517,6 +517,11 @@ class MGTOOLS_io_exporter():
                 # add to to-process list
                 input_objects.extend(collection_instances_content_clones)
 
+        # Apply the same visibility/selectability rules to all direct inputs.
+        input_objects, skipped_objects = MGTOOLS_functions_io.filter_export_objects(input_objects, self.to_export_collection)
+        for skipped_object, reasons in skipped_objects.items():
+            print(" > Warning: skipping {} '{}' from export: {}".format(skipped_object.type, skipped_object.name, ', '.join(reasons)))
+
        
         # -------------------
         input_meshes = []
@@ -528,10 +533,11 @@ class MGTOOLS_io_exporter():
 
         # pre-set armatures
         if None != self.armature_replacement and False == (self.armature_replacement in input_armatures):
-                if not self.armature_replacement.visible_get():
-                    print(" > Warning: armature is hidden and therefore can't be exported: {} ".format(self.armature_replacement))
-                else:
-                    input_armatures.append(self.armature_replacement)
+            replacement_skip_reasons = MGTOOLS_functions_io.get_export_skip_reasons(self.armature_replacement, self.to_export_collection)
+            if 0 < len(replacement_skip_reasons):
+                print(" > Warning: skipping replacement armature '{}' from export: {}".format(self.armature_replacement.name, ', '.join(replacement_skip_reasons)))
+            else:
+                input_armatures.append(self.armature_replacement)
 
         # filter objects into separate lists and try to find pivot dummy
         for obj in input_objects:
@@ -558,16 +564,17 @@ class MGTOOLS_io_exporter():
                 # armatures
                 if 'ARMATURE' == mod.type:
                     # disable the modifier - when we later snapshot the mesh it gets not applied
-                    if False == self.use_mesh_modifier_armature:
+                    if False == self.use_mesh_modifiers_armature:
                         mod.is_active = False
                     # skip if an armature replacement is set (not perfect but the least complex solution atm)
                     if None == self.armature_replacement:
                         # get armature ref
                         armature_ref = mod.object
-                        # auto select armatures (if not hidden)
+                        # auto select armatures only when they pass the common export filter
                         if None != armature_ref and False == (armature_ref in input_armatures):
-                            if not armature_ref.visible_get():
-                                print(" > Warning: armature is hidden and therefore can't be exported: {} ".format(armature_ref))
+                            armature_skip_reasons = MGTOOLS_functions_io.get_export_skip_reasons(armature_ref, self.to_export_collection)
+                            if 0 < len(armature_skip_reasons):
+                                print(" > Warning: skipping armature '{}' referenced by '{}': {}".format(armature_ref.name, obj.name, ', '.join(armature_skip_reasons)))
                             else:
                                 input_armatures.append(armature_ref)
 
@@ -644,7 +651,8 @@ class MGTOOLS_io_exporter():
                 prefix=self.objectname_prefix, 
                 postfix=self.objectname_postfix, 
                 select_clones=False, 
-                type_filter=None)
+                type_filter=None,
+                modifier_to_shapekey_prefix=self.modifier_to_shapekey_prefix)
             input_meshes_clones += input_mesh_snapshot
 
             # without merge (don't merge by processing mesh by mesh)
@@ -655,7 +663,8 @@ class MGTOOLS_io_exporter():
                     prefix=self.objectname_prefix, 
                     postfix=self.objectname_postfix, 
                     select_clones=False, 
-                    type_filter=None)
+                    type_filter=None,
+                    modifier_to_shapekey_prefix=self.modifier_to_shapekey_prefix)
                 input_meshes_clones += input_mesh_snapshot
 
             transfer_modifier = True # necessary as the merge command applies them all
@@ -672,7 +681,7 @@ class MGTOOLS_io_exporter():
             # do a view_layer refresh after creating clones
             bpy.context.view_layer.update()
 
-            # post process (only!) clones -----
+            # post process (only!) clones ----- 
 
             # transfer modifier
             if True == transfer_modifier:
@@ -707,8 +716,10 @@ class MGTOOLS_io_exporter():
                     # armatures
                     if 'ARMATURE' == mod.type:
                         # replacement armatures
-                        if None != self.armature_replacement:
+                        if None != self.armature_replacement and self.armature_replacement in to_export_armatures:
                             mod.object = self.armature_replacement
+                        elif None != self.armature_replacement:
+                            mod.object = None
 
             # vertex groups post processing
             print(" >> postprocess vertex groups")

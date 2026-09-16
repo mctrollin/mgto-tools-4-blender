@@ -7,7 +7,7 @@ from . mgtools_functions_macros import MGTOOLS_functions_macros
 class MGTOOLS_OT_auto_update_motion_paths(Operator):
     bl_idname = "mgtools.animation_auto_update_motion_paths"
     bl_label = ""
-    bl_description = ""
+    bl_description = "Automatically update motion paths while the timeline changes"
 
     update_timer = None
     time_duration_cached : bpy.props.FloatProperty()
