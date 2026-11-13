@@ -108,6 +108,14 @@ class MGTOOLS_OT_export_collections(Operator):
             exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
             exporter.clone_meshes_filter = mgtools_props_scene.p_io_export_clone_meshes_filter
             exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
+            exporter.bake_to_vcolors_attribute = mgtools_props_scene.p_io_export_bake_to_vcolors_attribute
+            exporter.bake_to_vcolors_channels = (
+                mgtools_props_scene.p_io_export_bake_to_vcolors_r,
+                mgtools_props_scene.p_io_export_bake_to_vcolors_g,
+                mgtools_props_scene.p_io_export_bake_to_vcolors_b,
+                mgtools_props_scene.p_io_export_bake_to_vcolors_a,
+            )
+            exporter.bake_to_vcolors_samples = mgtools_props_scene.p_io_export_bake_to_vcolors_samples
             exporter.objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix
             exporter.objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
             exporter.vgroups_rename = mgtools_props_scene.p_io_export_vgroups_rename
@@ -196,6 +204,14 @@ class MGTOOLS_OT_export_selection(Operator):
         exporter.combine_meshes = mgtools_props_scene.p_io_export_combine_meshes
         exporter.clone_meshes_filter = mgtools_props_scene.p_io_export_clone_meshes_filter
         exporter.combine_meshes_filter = mgtools_props_scene.p_io_export_combine_meshes_filter
+        exporter.bake_to_vcolors_attribute = mgtools_props_scene.p_io_export_bake_to_vcolors_attribute
+        exporter.bake_to_vcolors_channels = (
+            mgtools_props_scene.p_io_export_bake_to_vcolors_r,
+            mgtools_props_scene.p_io_export_bake_to_vcolors_g,
+            mgtools_props_scene.p_io_export_bake_to_vcolors_b,
+            mgtools_props_scene.p_io_export_bake_to_vcolors_a,
+        )
+        exporter.bake_to_vcolors_samples = mgtools_props_scene.p_io_export_bake_to_vcolors_samples
         exporter.objectname_prefix = mgtools_props_scene.p_io_export_objectname_prefix
         exporter.objectname_postfix = mgtools_props_scene.p_io_export_objectname_postfix
         exporter.vgroups_rename = mgtools_props_scene.p_io_export_vgroups_rename

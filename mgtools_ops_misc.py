@@ -33,10 +33,16 @@ class MGTOOLS_OT_particle_hair_to_mesh(Operator):
         # per object...
         for obj in to_process:
             created_objs = []
+            created_materials = []
 
             # find relevant modifier and get converted meshes
             for mod in obj.modifiers:
                 if 'PARTICLE_SYSTEM' == mod.type and mod.show_viewport == True:
+                    particle_material = None
+                    particle_system = mod.particle_system
+                    material_index = particle_system.settings.material - 1
+                    if 0 <= material_index < len(obj.material_slots):
+                        particle_material = obj.material_slots[material_index].material
                     
                     # re-select object
                     MGTOOLS_functions_macros.select_only(obj)
@@ -45,7 +51,9 @@ class MGTOOLS_OT_particle_hair_to_mesh(Operator):
                     print(f"convert modifier: {mod}")
                     bpy.ops.object.modifier_convert(modifier=mod.name)
 
-                    created_objs.append(bpy.context.view_layer.objects.active)
+                    created_obj = bpy.context.view_layer.objects.active
+                    created_objs.append(created_obj)
+                    created_materials.append(particle_material)
 
                     # converted hair is now selected - convert to curve
                     print(f"convert to curves: {mod}")
@@ -75,6 +83,10 @@ class MGTOOLS_OT_particle_hair_to_mesh(Operator):
             # convert curves to meshes
             MGTOOLS_functions_macros.select_objects(created_objs)
             bpy.ops.object.convert(target='MESH')
+            for mesh, material in zip(created_objs, created_materials):
+                if material is not None:
+                    mesh.data.materials.clear()
+                    mesh.data.materials.append(material)
             bpy.ops.object.shade_smooth()
 
         return{'FINISHED'}

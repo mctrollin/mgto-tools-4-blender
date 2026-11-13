@@ -5,6 +5,7 @@ import bpy
 from bpy.types import Panel
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . mgtools_functions_io import MGTOOLS_functions_io
+from . mgtools_functions_vertex_color import MGTOOLS_functions_vertex_color
 from . mgtools_functions_macros import MGTOOLS_functions_macros
 from . mgtools_manager_overlays import MGTOOLSOverlayManager
 from . import mgtools_compat as compat
@@ -14,18 +15,18 @@ from. mgtools_props import MGTOOLS_properties_curve_workaround
 def draw_overlay_display_controls(layout, props, draw_mode):
     if draw_mode == 'WEIGHT':
         row = layout.row(align=True)
-        row.prop(props, 'p_weightdisplay_isenabled', toggle=True, text="Colored Vertices")
+        row.prop(props, 'p_weightdisplay_isenabled', toggle=True, text="Colored Vertices", icon='CHECKBOX_HLT')
         row.prop(props, 'p_weightdisplay_point_size', text="Size")
         row = layout.row(align=True)
-        row.prop(bpy.context.preferences.view, "use_weight_color_range", toggle=True, text="Custom Colors")
+        row.prop(bpy.context.preferences.view, "use_weight_color_range", toggle=True, text="Custom Colors", icon='CHECKBOX_HLT')
         return
 
     if draw_mode == 'VERTEX_COLOR':
         row = layout.row(align=True)
-        row.prop(props, 'p_vertexcolordisplay_isenabled', toggle=True, text="Colored Vertices")
+        row.prop(props, 'p_vertexcolordisplay_isenabled', toggle=True, text="Colored Vertices", icon='CHECKBOX_HLT')
         row.prop(props, 'p_weightdisplay_point_size', text="Size")
         row = layout.row(align=True)
-        row.prop(props, 'p_vertexcolordisplay_alpha', toggle=True, text="Alpha as Grayscale")
+        row.prop(props, 'p_vertexcolordisplay_alpha', toggle=True, text="Alpha as Grayscale", icon='CHECKBOX_HLT')
 
 
 class MGTOOLS_PT_rigging(Panel):
@@ -58,10 +59,10 @@ class MGTOOLS_PT_rigging(Panel):
                 row = box.row()
                 row.label(text="Bones prefix")
                 row.prop(mgtools_props_scene, 'p_rigging_bone_name_prefix', text="")
-                box.prop(mgtools_props_scene, 'p_rigging_add_root_bone')
-                box.prop(mgtools_props_scene, 'p_rigging_add_location_constraints_to_cloned_bones')
-                box.prop(mgtools_props_scene, 'p_rigging_add_rotation_constraints_to_cloned_bones')
-                box.prop(mgtools_props_scene, 'p_rigging_add_scale_constraints_to_cloned_bones')
+                box.prop(mgtools_props_scene, 'p_rigging_add_root_bone', toggle=True, icon='CHECKBOX_HLT')
+                box.prop(mgtools_props_scene, 'p_rigging_add_location_constraints_to_cloned_bones', toggle=True, icon='CHECKBOX_HLT')
+                box.prop(mgtools_props_scene, 'p_rigging_add_rotation_constraints_to_cloned_bones', toggle=True, icon='CHECKBOX_HLT')
+                box.prop(mgtools_props_scene, 'p_rigging_add_scale_constraints_to_cloned_bones', toggle=True, icon='CHECKBOX_HLT')
                 box.operator('mgtools.rigging_extract_clone_bones', text="Make Bones Snapshot")
 
                 box.label(text="Bone Select Tool")
@@ -155,7 +156,7 @@ class MGTOOLS_PT_weighting(Panel):
         box_normalize = box_set_weights.box()
         row = box_normalize.row()
         row.operator('mgtools.weighting_normalize_weights_groups', text="Normalize")
-        row.prop(bpy.context.scene.tool_settings, 'use_auto_normalize', text="Auto Normalize")
+        row.prop(bpy.context.scene.tool_settings, 'use_auto_normalize', text="Auto Normalize", toggle=True, icon='CHECKBOX_HLT')
 
         # set weight shortcuts
         
@@ -222,7 +223,7 @@ class MGTOOLS_PT_weighting(Panel):
 
         # weight list
         box_weight_lists = l.box()
-        box_weight_lists.prop(mgtools_props_obj, 'p_weightedit_list_enabled', text="Vertex Groups List View")
+        box_weight_lists.prop(mgtools_props_obj, 'p_weightedit_list_enabled', text="Vertex Groups List View", toggle=True, icon='CHECKBOX_HLT')
         if mgtools_props_obj.p_weightedit_list_enabled:
         
             # default default
@@ -237,8 +238,8 @@ class MGTOOLS_PT_weighting(Panel):
         box_mirror = l.box()
         # box_mirror.label(text="Mirror", )
         row = box_mirror.row()
-        row.prop(mgtools_props_obj, 'p_weightedit_mirror_all_groups',)
-        row.prop(mgtools_props_obj, 'p_weightedit_mirror_use_topology',)
+        row.prop(mgtools_props_obj, 'p_weightedit_mirror_all_groups', toggle=True, icon='CHECKBOX_HLT')
+        row.prop(mgtools_props_obj, 'p_weightedit_mirror_use_topology', toggle=True, icon='CHECKBOX_HLT')
         row = box_mirror.row(align=True)
         row.prop(mgtools_props_obj, 'p_weightedit_mirror_direction', text="")
         row.prop(mgtools_props_obj, 'p_weightedit_mirror_axis', text="")
@@ -258,8 +259,8 @@ class MGTOOLS_PT_weighting(Panel):
         # remove vertex groups
         box_remove = box_vg_tools.box()
         row = box_remove.row()
-        row.prop(mgtools_props_obj, 'p_weightedit_remove_empty', text="Only Empty")
-        row.prop(mgtools_props_obj, 'p_weightedit_remove_locked', text="+ Locked")
+        row.prop(mgtools_props_obj, 'p_weightedit_remove_empty', text="Only Empty", toggle=True, icon='CHECKBOX_HLT')
+        row.prop(mgtools_props_obj, 'p_weightedit_remove_locked', text="+ Locked", toggle=True, icon='CHECKBOX_HLT')
         box_remove.operator('mgtools.weighting_remove_vertex_groups_unused', text="Remove VGs")
 
         # Vertex group ordering does not require Weight Paint mode.
@@ -301,17 +302,16 @@ class MGTOOLS_PT_vertex_color(Panel):
             return
 
         info = layout.box()
-        info.label(text="{}".format(attribute.name))
-        info.label(text="{} / {}".format(attribute.domain, attribute.data_type))
-        info.label(text="Selected vertices: {}".format(len([v for v in obj.data.vertices if v.select])))
+        info.label(text="{} | {} | {}".format(attribute.name, attribute.domain, attribute.data_type), icon='GROUP_VCOL')
+        info.label(text="{}".format(len([v for v in obj.data.vertices if v.select])), icon='VERTEXSEL')
 
         # Channels Mask
         channel_box = layout.box()
         row = channel_box.row(align=True)
-        row.prop(props, 'p_vertexcoloredit_channels', index=0, toggle=True, text="R")
-        row.prop(props, 'p_vertexcoloredit_channels', index=1, toggle=True, text="G")
-        row.prop(props, 'p_vertexcoloredit_channels', index=2, toggle=True, text="B")
-        row.prop(props, 'p_vertexcoloredit_channels', index=3, toggle=True, text="A")
+        row.prop(props, 'p_vertexcoloredit_channels', index=0, toggle=True, text="R", icon='CHECKBOX_HLT')
+        row.prop(props, 'p_vertexcoloredit_channels', index=1, toggle=True, text="G", icon='CHECKBOX_HLT')
+        row.prop(props, 'p_vertexcoloredit_channels', index=2, toggle=True, text="B", icon='CHECKBOX_HLT')
+        row.prop(props, 'p_vertexcoloredit_channels', index=3, toggle=True, text="A", icon='CHECKBOX_HLT')
 
         # Sample 
         selected_box = layout.box()
@@ -346,6 +346,29 @@ class MGTOOLS_PT_vertex_color(Panel):
         smooth_row = edit_box.row()
         smooth_row.enabled = context.mode == 'PAINT_VERTEX'
         smooth_row.operator('mgtools.vertex_color_smooth', text="Smooth")
+
+        bake_box = layout.box()
+        bake_box.label(text="Bake to Vertex Colors")
+        row = bake_box.row(align=True)
+        row.prop(props, 'p_vertexcolor_bake_to_vcolors_type', text="")
+        row.prop(props, 'p_vertexcolor_bake_to_vcolors_channel', text="")
+        row.prop(props, 'p_vertexcolor_bake_to_vcolors_samples', text="Samples")
+        bake_channel = props.p_vertexcolor_bake_to_vcolors_channel
+        bake_channel_index = None if bake_channel == 'ALL' else 'RGBA'.index(bake_channel)
+        bake_errors = MGTOOLS_functions_vertex_color.get_bake_to_vcolors_errors(
+            obj,
+            channel=bake_channel_index,
+            samples=props.p_vertexcolor_bake_to_vcolors_samples)
+        if bake_errors:
+            warning_box = bake_box.box()
+            warning_box.alert = True
+            warning_box.label(text="Bake unavailable:", icon='ERROR')
+            for error in bake_errors:
+                warning_box.label(text=error)
+        bake_operator = bake_box.operator('mgtools.vertex_color_bake', text="Bake", icon='RENDER_STILL')
+        bake_operator.bake_type = props.p_vertexcolor_bake_to_vcolors_type
+        bake_operator.channel = props.p_vertexcolor_bake_to_vcolors_channel
+        bake_operator.samples = props.p_vertexcolor_bake_to_vcolors_samples
 
 class MGTOOLS_PT_animation(Panel):
     bl_idname = "MGTOOLS_PT_animation"
@@ -430,9 +453,9 @@ class MGTOOLS_PT_object(Panel):
         # snapshot tools
         snap_box = col.box()
         snap_box.label(text="Snapshots")
-        snap_box.prop(mgtools_props_scene, 'p_snapshot_use_name_prefix')
+        snap_box.prop(mgtools_props_scene, 'p_snapshot_use_name_prefix', toggle=True, icon='CHECKBOX_HLT')
         snap_box.prop(mgtools_props_scene, 'p_snapshot_name_prefix')
-        snap_box.prop(mgtools_props_scene, 'p_snapshot_merge_objects')
+        snap_box.prop(mgtools_props_scene, 'p_snapshot_merge_objects', toggle=True, icon='CHECKBOX_HLT')
         snap_box.prop(mgtools_props_scene, 'p_snapshot_frame_start')
         snap_box.prop(mgtools_props_scene, 'p_snapshot_frame_end')
 
@@ -469,8 +492,8 @@ class MGTOOLS_PT_mesh(Panel):
             box_vgs.label(text="Active has no vertex groups", icon='INFO')
         else:
             col = box_vgs.column()
-            col.prop(mgtools_props_scene, 'p_mesh_keep_target_unique_vgs', text="Keep unique target VGs")
-            col.prop(mgtools_props_scene, 'p_mesh_copy_vg_flags', text="Copy VG Flags")
+            col.prop(mgtools_props_scene, 'p_mesh_keep_target_unique_vgs', text="Keep unique target VGs", toggle=True, icon='CHECKBOX_HLT')
+            col.prop(mgtools_props_scene, 'p_mesh_copy_vg_flags', text="Copy VG Flags", toggle=True, icon='CHECKBOX_HLT')
             col.prop(mgtools_props_scene, 'p_mesh_vg_name_filter', text="Filter")
             col.operator('mgtools.match_vertex_groups', text="Match Vertex Groups to Selection")
 
@@ -497,7 +520,7 @@ class MGTOOLS_PT_renaming(Panel):
         mapping_box.label(text="Rename with mapping")
 
         mapping_box.prop(mgtools_props_scene, 'p_rename_mapping_file_path')
-        mapping_box.prop(mgtools_props_scene, 'p_rename_mapping_inverse')
+        mapping_box.prop(mgtools_props_scene, 'p_rename_mapping_inverse', toggle=True, icon='CHECKBOX_HLT')
         row = mapping_box.row(align=True)
         row.prop(mgtools_props_scene, 'p_rename_remove_prefix', text='Remove prefix')
         row.prop(mgtools_props_scene, 'p_rename_add_prefix', text='Add prefix')
@@ -547,30 +570,30 @@ class MGTOOLS_PT_io(Panel):
         is_fbx = (mgtools_props_scene.p_io_export_format == 'FBX')
 
         if is_fbx:
-            row = axis_options_box.row()
-            row.label(text="Forward")
+            row = axis_options_box.row(align=True)
+            row.label(text="Axis")
             row.prop(mgtools_props_scene, "p_io_export_axis_forward", text="",)
-            row.label(text="Up")
+            # row.label(text="Up")
             row.prop(mgtools_props_scene, "p_io_export_axis_up", text="")
-            row = axis_options_box.row()
-            row.label(text="P Bone Axis")
+            row = axis_options_box.row(align=True)
+            row.label(text="Bone Axis")
             row.prop(mgtools_props_scene, "p_io_export_primary_bone_axis", text="",)
-            row.label(text="S Bone Axis")
+            # row.label(text="S Bone Axis")
             row.prop(mgtools_props_scene, "p_io_export_secondary_bone_axis", text="")
         else:
             row = axis_options_box.row()
-            row.prop(mgtools_props_scene, "p_io_export_axis_up_force_y", text="Y-up")
+            row.prop(mgtools_props_scene, "p_io_export_axis_up_force_y", text="Y-up", toggle=True, icon='CHECKBOX_HLT')
 
         # scale options -------------------------------------------
         if is_fbx:
             scale_options_box = col.box()
-            row = scale_options_box.row()
+            row = scale_options_box.row(align=True)
             row.prop(mgtools_props_scene, "p_io_export_scale", text="")
             row.prop(mgtools_props_scene, "p_io_export_scale_apply_options", text="")
-            row.prop(mgtools_props_scene, "p_io_export_apply_unit_scale",)
+            row.prop(mgtools_props_scene, "p_io_export_apply_unit_scale", toggle=True, icon='CHECKBOX_HLT')
 
             row = scale_options_box.row()
-            row.prop(mgtools_props_scene, "p_io_export_use_space_transform",)
+            row.prop(mgtools_props_scene, "p_io_export_use_space_transform", toggle=True, icon='CHECKBOX_HLT')
 
         # pivot options -------------------------------------------
         pivot_options_box = col.box()
@@ -578,23 +601,24 @@ class MGTOOLS_PT_io(Panel):
         row = pivot_options_box.row()
         row.label(text="Filter:")
         row.prop(mgtools_props_scene, "p_io_export_prefix_filter_pivot", text="")
-        pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy",)
+        pivot_options_box_row = pivot_options_box.row(align=True)
+        pivot_options_box_row.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy", text="Pivot Dummy", toggle=True, icon='CHECKBOX_HLT')
         if True == mgtools_props_scene.p_io_export_include_pivot_dummy:
-            pivot_options_box.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy_if_required",)
-        pivot_options_box.prop(mgtools_props_scene, "p_io_export_set_pivots_to_dummy",)
-        row = pivot_options_box.row()
+            pivot_options_box_row.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy_if_required", text="if required", toggle=True, icon='CHECKBOX_HLT')
+        pivot_options_box.prop(mgtools_props_scene, "p_io_export_set_pivots_to_dummy", toggle=True, icon='CHECKBOX_HLT')
+        row = pivot_options_box.row(align=True)
         row.label(text="Reset:")
-        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_location", text="location")
-        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_rotation", text="rotation")
-        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_scale", text="scale")
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_location", text="location", toggle=True, icon='CHECKBOX_HLT')
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_rotation", text="rotation", toggle=True, icon='CHECKBOX_HLT')
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_scale", text="scale", toggle=True, icon='CHECKBOX_HLT')
         if True == mgtools_props_scene.p_io_export_pivot_reset_rotation:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_rotation",)
-        pivot_options_box.prop(mgtools_props_scene, "p_io_export_pivot_dummy_disable_constraints",)
+        pivot_options_box.prop(mgtools_props_scene, "p_io_export_pivot_dummy_disable_constraints", toggle=True, icon='CHECKBOX_HLT')
 
         # helper options -------------------------------------------
         helper_options_box = col.box()
         helper_options_box.label(text="Helper", icon='EMPTY_DATA')
-        helper_options_box.prop(mgtools_props_scene, "p_io_export_helper_strip_dotnumbers",)
+        helper_options_box.prop(mgtools_props_scene, "p_io_export_helper_strip_dotnumbers", toggle=True, icon='CHECKBOX_HLT')
 
         # rotation offset options -------------------------------------------
         rotation_offset_box = col.box()
@@ -609,8 +633,9 @@ class MGTOOLS_PT_io(Panel):
         mesh_options_box = col.box()
         mesh_options_box.label(text="Mesh", icon='MESH_CUBE')
         # currently modifiers are always applied for multiple export features requiring it
-        mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers",)
-        mesh_options_box.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers_armature",)
+        mesh_options_box_row = mesh_options_box.row(align=True)
+        mesh_options_box_row.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers", toggle=True, icon='CHECKBOX_HLT')
+        mesh_options_box_row.prop(mgtools_props_scene, "p_io_export_use_mesh_modifiers_armature", toggle=True, icon='CHECKBOX_HLT')
         mesh_options_box.prop(mgtools_props_scene, "p_io_export_mesh_smooth_type",)
 
         mesh_options_box2 = mesh_options_box.box()
@@ -618,29 +643,84 @@ class MGTOOLS_PT_io(Panel):
         row = mesh_options_box2.row()
         row.label(text="Clone Filter:")
         row.prop(mgtools_props_scene, "p_io_export_clone_meshes_filter", text="")
-        mesh_options_box2.prop(mgtools_props_scene, "p_io_export_combine_meshes", text="Combine Cloned Meshes")
-        if True == mgtools_props_scene.p_io_export_combine_meshes:
-            row = mesh_options_box2.row()
-            row.label(text="Combine Filter:")
-            row.prop(mgtools_props_scene, "p_io_export_combine_meshes_filter", text="")
-        row = mesh_options_box2.row()
-        row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
-        row.prop(mgtools_props_scene, "p_io_export_objectname_postfix", text="Pos")
-        row = mesh_options_box2.row(align=True)
-        row.label(text="To Shape Key Filter:")
-        row.prop(mgtools_props_scene, "p_io_export_shapekey_modifier_prefix", text="")
+        name_row = mesh_options_box2.row()
+        name_row.prop(mgtools_props_scene, "p_io_export_objectname_prefix", text="Pre")
+        name_row.prop(mgtools_props_scene, "p_io_export_objectname_postfix", text="Pos")
+        
+        combine_row = mesh_options_box2.box().row(align=True)
+        combine_row.prop(mgtools_props_scene, "p_io_export_combine_meshes", text="Join", toggle=True, icon='CHECKBOX_HLT')
+        combine_row.prop(mgtools_props_scene, "p_io_export_combine_meshes_filter", text="")
+        
+        bake_box = mesh_options_box2.box()
+        bake_box.label(text="Bake to Vertex Colors (RGBA)")
+        bake_row1 = bake_box.row(align=True)
+        bake_row1.prop(mgtools_props_scene, "p_io_export_bake_to_vcolors_attribute", text="")
+        bake_row1.prop(mgtools_props_scene, "p_io_export_bake_to_vcolors_samples", text="")
+        bake_row2 = bake_box.row(align=True)
+        for channel_name, property_name in (
+            ("R", "p_io_export_bake_to_vcolors_r"),
+            ("G", "p_io_export_bake_to_vcolors_g"),
+            ("B", "p_io_export_bake_to_vcolors_b"),
+            ("A", "p_io_export_bake_to_vcolors_a")):
+            # bake_row.label(text=channel_name)
+            bake_row2.prop(mgtools_props_scene, property_name, text="")
+        export_bake_modes = (
+            mgtools_props_scene.p_io_export_bake_to_vcolors_r,
+            mgtools_props_scene.p_io_export_bake_to_vcolors_g,
+            mgtools_props_scene.p_io_export_bake_to_vcolors_b,
+            mgtools_props_scene.p_io_export_bake_to_vcolors_a)
+        if any(mode != 'OFF' for mode in export_bake_modes):
+            export_meshes = {
+                obj for obj in bpy.context.selected_objects if obj.type == 'MESH'
+            }
+            filter_prefix_collection = mgtools_props_scene.p_io_export_prefix_filter_collection
+            for export_collection in bpy.data.collections:
+                if not export_collection.name.startswith(filter_prefix_collection):
+                    continue
+                layercollection = MGTOOLS_functions_helper.get_layercollection(export_collection)
+                if (layercollection is None or layercollection.exclude or
+                        layercollection.hide_viewport or export_collection.hide_select or
+                        export_collection.hide_viewport):
+                    continue
+                export_meshes.update(
+                    obj for obj in export_collection.all_objects if obj.type == 'MESH')
+
+            export_bake_errors = {}
+            for export_mesh in export_meshes:
+                errors = MGTOOLS_functions_vertex_color.get_bake_to_vcolors_errors(
+                    export_mesh,
+                    attribute_name=mgtools_props_scene.p_io_export_bake_to_vcolors_attribute,
+                    samples=mgtools_props_scene.p_io_export_bake_to_vcolors_samples,
+                    check_cycles=any(
+                        mode != 'OFF' and not mode.startswith('VALUE_')
+                        for mode in export_bake_modes))
+                for error in errors:
+                    export_bake_errors.setdefault(error, []).append(export_mesh.name)
+            if export_bake_errors:
+                warning_box = bake_box.box()
+                warning_box.alert = True
+                warning_box.label(text="Export bake warnings:", icon='ERROR')
+                for error, object_names in export_bake_errors.items():
+                    warning_box.label(text=error)
+                    warning_box.label(text="Objects: {}".format(', '.join(object_names[:3])))
+                    if len(object_names) > 3:
+                        warning_box.label(text="... and {} more".format(len(object_names) - 3))
+        shapek_row = mesh_options_box2.row(align=True)
+        shapek_row.label(text="To Shape Key Filter:")
+        shapek_row.prop(mgtools_props_scene, "p_io_export_shapekey_modifier_prefix", text="")
         mesh_options_box2.prop(mgtools_props_scene, "p_io_export_material_override",)
         mesh_options_box2.prop(mgtools_props_scene, "p_io_export_armature_replacement",)
         mesh_options_box2.prop(mgtools_props_scene, "p_io_export_weights_limit",)
 
         mesh_options_box3 = mesh_options_box.box()
-        mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename",)
+        mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename", toggle=True, icon='CHECKBOX_HLT')
         if True == mgtools_props_scene.p_io_export_vgroups_rename:
-            mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename_mapping_file_path",)
-            mesh_options_box3.prop(mgtools_props_scene, "p_io_export_vgroups_rename_mapping_inverse",)
+            mesh_options_box3_row = mesh_options_box3.row(align=True)
+            mesh_options_box3_row.prop(mgtools_props_scene, "p_io_export_vgroups_rename_mapping_file_path", text='')
+            mesh_options_box3_row.prop(mgtools_props_scene, "p_io_export_vgroups_rename_mapping_inverse", text='', icon='AREA_SWAP')
             row = mesh_options_box3.row(align=True)
-            row.prop(mgtools_props_scene, 'p_io_export_vgroups_rename_remove_prefix', text='Remove prefix')
-            row.prop(mgtools_props_scene, 'p_io_export_vgroups_rename_add_prefix', text='Add prefix')
+            row.prop(mgtools_props_scene, 'p_io_export_vgroups_rename_remove_prefix', text='', icon='REMOVE')
+            row.prop(mgtools_props_scene, 'p_io_export_vgroups_rename_add_prefix', text='', icon='ADD')
 
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_objects", toggle=True)
         # main_options_box.prop(mgtools_props_scene, "ignore_hidden_collections", toggle=True)
@@ -661,7 +741,7 @@ class MGTOOLS_PT_io(Panel):
         else:
             animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_bake_anim_simplify_factor",)
         if 'STRIPS' == mgtools_props_scene.p_io_export_animation_mode:
-            animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges",)
+            animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_use_relative_frameranges", toggle=True, icon='CHECKBOX_HLT')
         if 'MARKERS' == mgtools_props_scene.p_io_export_animation_mode:
             animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_marker_start", text="Start")
             animation_options_box.prop(mgtools_props_scene, "p_io_export_animation_marker_end", text="End")
@@ -671,23 +751,22 @@ class MGTOOLS_PT_io(Panel):
         box.label(text="File name", icon='FILE')
         row = box.row()
         row.label(text="Prefix:")
-        row.prop(mgtools_props_scene, "p_io_export_filename_prefix", text="")
-        row = box.row()
-        row.label(text="Prefix Static:")
-        row.prop(mgtools_props_scene, "p_io_export_filename_prefix_static", text="")
-        row = box.row()
-        row.label(text="Prefix Skeletal:")
-        row.prop(mgtools_props_scene, "p_io_export_filename_prefix_skeletal", text="")
-        row = box.row()
-        row.label(text="Prefix Animation:")
-        row.prop(mgtools_props_scene, "p_io_export_filename_prefix_animation", text="")
+        prefix_row = box.row(align=True)
+        prefix_row.prop(mgtools_props_scene, "p_io_export_filename_prefix", text="", icon='MONKEY')
+        # row.label(text="Prefix Static:")
+        prefix_row.prop(mgtools_props_scene, "p_io_export_filename_prefix_static", text="", icon='MESH_CUBE')
+        # row = box.row()
+        # row.label(text="Prefix Skeletal:")
+        prefix_row.prop(mgtools_props_scene, "p_io_export_filename_prefix_skeletal", text="", icon="OUTLINER_OB_ARMATURE")
+        # row = box.row()
+        # row.label(text="Prefix Animation:")
+        prefix_row.prop(mgtools_props_scene, "p_io_export_filename_prefix_animation", text="", icon="ANIM")
         row = box.row()
         row.label(text="Postfix:")
         row.prop(mgtools_props_scene, "p_io_export_filename_postfix", text="")
-        row = box.row()
-        row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename")
-        row = box.row()
-        row.prop(mgtools_props_scene, "p_io_export_filename_ignore_collection_dot_prefix")
+        row = box.row(align=True)
+        row.prop(mgtools_props_scene, "p_io_export_filename_include_blendfilename", toggle=True, icon='CHECKBOX_HLT')
+        row.prop(mgtools_props_scene, "p_io_export_filename_ignore_collection_dot_prefix", toggle=True, icon='CHECKBOX_HLT')
 
         # export warnings -------------------------------------------
         skipped_armatures = {}
@@ -853,7 +932,7 @@ class MGTOOLS_PT_misc(Panel):
         row = attributes_box.row()
         row.prop(mgtools_props_scene, "p_attributes_vertex_positions_snapshot_name", text="Name")
         row = attributes_box.row()
-        row.prop(mgtools_props_scene, "p_attributes_vertex_positions_snapshot_relative", text="Relative")
+        row.prop(mgtools_props_scene, "p_attributes_vertex_positions_snapshot_relative", text="Relative", toggle=True, icon='CHECKBOX_HLT')
         row = attributes_box.row()
         op = row.operator("mgtools.vertices_to_attribute", text="Snapshot Vertex Positions")
         op.attribute_name = mgtools_props_scene.p_attributes_vertex_positions_snapshot_name

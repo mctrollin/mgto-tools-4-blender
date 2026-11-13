@@ -1,7 +1,10 @@
+# pyright: reportInvalidTypeForm=false
+
 import bpy
 from bpy.types import Operator
 
 from . mgtools_functions_helper import MGTOOLS_functions_helper
+from . mgtools_functions_vertex_color import MGTOOLS_functions_vertex_color
 from . mgtools_manager_overlays import MGTOOLSOverlayManager
 
 
@@ -249,3 +252,45 @@ class MGTOOLS_OT_vertex_color_smooth(Operator):
             self.report({'ERROR'}, str(error))
             return {'CANCELLED'}
         return result
+
+
+class MGTOOLS_OT_vertex_color_bake(MGTOOLS_vertex_color_operator, Operator):
+    bl_idname = "mgtools.vertex_color_bake"
+    bl_label = "Bake to Vertex Color"
+    bl_description = "Bake a Cycles pass to the active color attribute"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    bake_type: bpy.props.EnumProperty(
+        name="Bake Type",
+        items=(
+            ('AO', "Ambient Occlusion", "Bake ambient occlusion"),
+            ('COMBINED', "Combined", "Bake the combined render pass"),
+            ('EMIT', "Emission", "Bake emission"),
+            ('DIFFUSE', "Diffuse", "Bake diffuse lighting"),
+        ),
+        default='AO',
+    )
+    channel: bpy.props.EnumProperty(
+        name="Channel",
+        items=(
+            ('ALL', "All", "Write all channels"),
+            ('R', "R", "Write red"),
+            ('G', "G", "Write green"),
+            ('B', "B", "Write blue"),
+            ('A', "A", "Write alpha"),
+        ),
+        default='ALL',
+    )
+    samples: bpy.props.IntProperty(name="Samples", min=1, default=100)
+
+    def execute(self, context):
+        obj, attribute = _color_context(self, context)
+        if obj is None:
+            return {'CANCELLED'}
+        try:
+            channel = None if self.channel == 'ALL' else 'RGBA'.index(self.channel)
+            MGTOOLS_functions_vertex_color.bake_to_vcolors_attribute(obj, self.bake_type, channel=channel, samples=self.samples)
+        except RuntimeError as error:
+            self.report({'ERROR'}, str(error))
+            return {'CANCELLED'}
+        return {'FINISHED'}

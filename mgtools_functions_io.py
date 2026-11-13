@@ -1,8 +1,52 @@
 import os
 import bpy
 from . mgtools_functions_helper import MGTOOLS_functions_helper
+from . mgtools_functions_vertex_color import MGTOOLS_functions_vertex_color
 
 class MGTOOLS_functions_io():
+
+    @classmethod
+    def bake_to_vcolors_on_clones(self, mesh_objects, attribute_name, channel_modes, samples, objects_to_hide=()):
+        """Apply configured bake modes to export clones' vertex colors."""
+        if not any(channel != 'OFF' for channel in channel_modes):
+            return
+        print(" >> bake to vertex color")
+        for mesh_object in mesh_objects:
+            render_visibility = {}
+            # AO rays should see the active export clone, but not its source or sibling clones.
+            objects_to_hide_for_bake = set(objects_to_hide) | set(mesh_objects)
+            objects_to_hide_for_bake.discard(mesh_object)
+            for object_to_hide in objects_to_hide_for_bake:
+                render_visibility[object_to_hide] = object_to_hide.hide_render
+                object_to_hide.hide_render = True
+            try:
+                for channel_index, bake_type in enumerate(channel_modes):
+                    if bake_type == 'OFF':
+                        continue
+                    if bake_type.startswith('VALUE_'):
+                        value = {
+                            'VALUE_0': 0.0,
+                            'VALUE_025': 0.25,
+                            'VALUE_050': 0.5,
+                            'VALUE_075': 0.75,
+                            'VALUE_1': 1.0,
+                        }[bake_type]
+                        MGTOOLS_functions_vertex_color.write_vcolors_attribute_channel(
+                            obj=mesh_object, 
+                            attribute_name=attribute_name, 
+                            channel=channel_index, 
+                            value=value)
+                    else:
+                        MGTOOLS_functions_vertex_color.bake_to_vcolors_attribute(
+                            obj=mesh_object,
+                            bake_type=bake_type,
+                            attribute_name=attribute_name,
+                            channel=channel_index,
+                            samples=samples)
+            finally:
+                # Export baking must not leave the user's scene with changed render visibility.
+                for object_to_hide, hide_render in render_visibility.items():
+                    object_to_hide.hide_render = hide_render
 
     @classmethod
     def build_filepath(self, path, filename, extension):

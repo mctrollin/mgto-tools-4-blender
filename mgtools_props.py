@@ -7,6 +7,19 @@ from bpy.props import PointerProperty, StringProperty, IntProperty, BoolProperty
 from . mgtools_functions_helper import MGTOOLS_functions_helper
 from . import mgtools_compat as compat
 
+BAKE_TO_VCOLORS_ITEMS = (
+    ('AO', "AO", "Bake ambient occlusion"),
+    ('COMBINED', "Combined", "Bake the combined render pass"),
+    ('EMIT', "Emission", "Bake emission"),
+    ('DIFFUSE', "Diffuse", "Bake diffuse lighting"),
+    ('OFF', "Off", "Leave this channel unchanged"),
+    ('VALUE_0', "0", "Write 0"),
+    ('VALUE_025', "0.25", "Write 0.25"),
+    ('VALUE_050', "0.5", "Write 0.5"),
+    ('VALUE_075', "0.75", "Write 0.75"),
+    ('VALUE_1', "1", "Write 1"),
+)
+
 class MGTOOLS_properties_scene(PropertyGroup):
 
 
@@ -171,6 +184,12 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_combine_meshes: BoolProperty(name="Combine meshes", default=True, description="Joins all related meshes together.",)
     p_io_export_clone_meshes_filter: StringProperty(name='Clone meshes filter', default="", description="Allows to exclude meshes from beeing cloned. Usually this should be off but allows to export models as-is in specific situations where a complex object setup doesn't survive the cloning process. Delimiter=','.",)
     p_io_export_combine_meshes_filter: StringProperty(name='Combine meshes filter', default="", description="Allows to exclude meshes from beeing combined during export when 'Combine meshes' option is enabled. Delimiter=','.",)
+    p_io_export_bake_to_vcolors_attribute: StringProperty(name="Color Attribute", default="Col", description="Destination vertex-color attribute on export clones.",)
+    p_io_export_bake_to_vcolors_samples: IntProperty(name="Samples", min=1, default=100, description="Cycles samples used for baking to vertex colors.",)
+    p_io_export_bake_to_vcolors_r: EnumProperty(name="Red", items=BAKE_TO_VCOLORS_ITEMS, default='OFF')
+    p_io_export_bake_to_vcolors_g: EnumProperty(name="Green", items=BAKE_TO_VCOLORS_ITEMS, default='OFF')
+    p_io_export_bake_to_vcolors_b: EnumProperty(name="Blue", items=BAKE_TO_VCOLORS_ITEMS, default='OFF')
+    p_io_export_bake_to_vcolors_a: EnumProperty(name="Alpha", items=BAKE_TO_VCOLORS_ITEMS, default='OFF')
     p_io_export_objectname_prefix: StringProperty(name='Object name prefix', default="m_", description="Prefix added to all cloned meshes.",)
     p_io_export_objectname_postfix: StringProperty(name='Object name postfix', default="", description="Postfix added to all cloned meshes.",)
     p_io_export_vgroups_rename: BoolProperty(name="Rename Vertex Groups", default=False, description="Rename vertex groups based on a mapping file.",)
@@ -188,7 +207,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_filename_prefix_skeletal: StringProperty(name='Filename: Prefix (skeletal)', default="", description="Optional filename prefix for skeletal meshes.",)
     p_io_export_filename_prefix_animation: StringProperty(name='Filename: Prefix (animation)', default="", description="Optional filename prefix for animations.",)
     p_io_export_filename_postfix: StringProperty(name='Filename: Postfix', default="", description="Optional filename postfix.",)
-    p_io_export_filename_include_blendfilename: BoolProperty(name='Include .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
+    p_io_export_filename_include_blendfilename: BoolProperty(name='Add .blend name', default=False, description="Include the filename of the currently open document in the export file name.",)
     p_io_export_filename_ignore_collection_dot_prefix: BoolProperty(name='Ignore .000', default=False, description="Excludes everything after the last dot in the collection name (e.g. 'bla.blub' will become just 'bla').",)
 
     # armature
@@ -280,6 +299,28 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_vertexcolor_paint: FloatVectorProperty(name="Paint Color", subtype='COLOR', size=4, min=0.0, max=1.0, get=get_vertexcolor_paint, set=set_vertexcolor_paint, )
     p_vertexcoloredit_channels: BoolVectorProperty(name="Channels", size=4, default=(True, False, False, False), description="Channels affected by color offsets: Red, Green, Blue, Alpha", )
     p_vertexcoloredit_amount: FloatProperty(name="Amount", default=0.1, min=0.0, max=1.0, precision=3, subtype='FACTOR', description="Color channel offset", )
+    p_vertexcolor_bake_to_vcolors_type: EnumProperty(
+        name="Bake Type",
+        items=(
+            ('AO', "AO", "Bake ambient occlusion"),
+            ('COMBINED', "Combined", "Bake the combined render pass"),
+            ('EMIT', "Emission", "Bake emission"),
+            ('DIFFUSE', "Diffuse", "Bake diffuse lighting"),
+        ),
+        default='AO',
+    )
+    p_vertexcolor_bake_to_vcolors_channel: EnumProperty(
+        name="Channel",
+        items=(
+            ('ALL', "All", "Write all channels"),
+            ('R', "R", "Write red"),
+            ('G', "G", "Write green"),
+            ('B', "B", "Write blue"),
+            ('A', "A", "Write alpha"),
+        ),
+        default='ALL',
+    )
+    p_vertexcolor_bake_to_vcolors_samples: IntProperty(name="Samples", min=1, default=100, description="Cycles samples used for baking to vertex colors.", )
 
     # Weight display and editing  ---------------------
     def on_weightdisplay_isenabled(self, context):

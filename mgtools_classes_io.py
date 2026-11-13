@@ -61,6 +61,9 @@ class MGTOOLS_io_exporter():
     combine_meshes = False
     clone_meshes_filter = ""
     combine_meshes_filter = ""
+    bake_to_vcolors_attribute = ""
+    bake_to_vcolors_channels = ('OFF', 'OFF', 'OFF', 'OFF')
+    bake_to_vcolors_samples = 100
     objectname_prefix = "to_export__"
     objectname_postfix = ""
     vgroups_rename = False
@@ -455,6 +458,16 @@ class MGTOOLS_io_exporter():
             print(" > Error: No objects defined for export!")
             return
 
+        # Keep source meshes out of AO rays; they remain in the scene while clones are baked.
+        bake_source_meshes = {
+            obj for obj in input_objects if obj.type == 'MESH'
+        }
+        for obj in input_objects:
+            if obj.instance_collection is not None:
+                bake_source_meshes.update(
+                    child for child in obj.instance_collection.all_objects
+                    if child.type == 'MESH')
+
         # flags ----------------------------------
         # tmp: decide if we should create throw-away only-for-export clones or not
         # create_clones = False
@@ -720,6 +733,14 @@ class MGTOOLS_io_exporter():
                             mod.object = self.armature_replacement
                         elif None != self.armature_replacement:
                             mod.object = None
+
+            # Bake final clones in isolation while leaving source geometry unchanged.
+            MGTOOLS_functions_io.bake_to_vcolors_on_clones(
+                input_meshes_clones,
+                self.bake_to_vcolors_attribute,
+                self.bake_to_vcolors_channels,
+                self.bake_to_vcolors_samples,
+                objects_to_hide=bake_source_meshes | set(input_meshes))
 
             # vertex groups post processing
             print(" >> postprocess vertex groups")
