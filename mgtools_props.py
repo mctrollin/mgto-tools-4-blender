@@ -162,7 +162,7 @@ class MGTOOLS_properties_scene(PropertyGroup):
     p_io_export_pivot_dummy_disable_constraints: BoolProperty(name="Disable constraints", default=False, description="Disable constraints on the pivot dummy.",)
 
     #helper
-    p_io_export_helper_strip_dotnumbers: BoolProperty(name="Strip dot-numbers", default=False, description="Try to remove blenders .000 numbering on helper objects.",)
+    p_io_export_helper_strip_dotnumbers: BoolProperty(name="Strip dot-numbers", default=False, description="Strip trailing Blender-style numeric suffixes from helper names when the resulting names are unique.",)
 
     # rotation offset
     p_io_export_rotation_offset_filter: StringProperty(name='Rotation Offset Filter', default="", description="Comma-separated list of substrings. Objects whose name contains any of these will have the rotation offset applied during export (case-sensitive). Leave empty to disable.",)

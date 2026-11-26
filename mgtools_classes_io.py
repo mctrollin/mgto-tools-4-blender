@@ -1,4 +1,5 @@
 import os
+import re
 from math import radians
 import bpy
 from mathutils import Matrix # Vector, Euler, 
@@ -449,6 +450,162 @@ class MGTOOLS_io_exporter():
         ########################
 
     def process_export(self, input_objects_raw):
+        """Run an export and restore every cached scene mutation on every exit path."""
+        # Keep rollback data outside the worker so finally can see partially completed setup.
+        cleanup_state = {
+            "helper_original_names": {},
+            "input_meshes_clones": [],
+            "collection_instances_content_clones": [],
+            "pivot_dummy_muted_constraints": [],
+            "rotation_offset_cached": {},
+            "modifier_active_cached": [],
+        }
+        try:
+            self._process_export(input_objects_raw, cleanup_state)
+        finally:
+            try:
+                self._cleanup_export_state(cleanup_state)
+            except Exception as exc:
+                # Preserve the export exception if an unexpected cleanup failure escapes its safeguards.
+                print(" > export cleanup aborted unexpectedly: {}".format(exc))
+
+    @staticmethod
+    def _next_export_helper_temp_name(index):
+        """Find an unused temporary name so Blender cannot silently add a suffix."""
+        suffix = 0
+        while True:
+            name = "__mgtools_export_helper_{}_{}".format(index, suffix)
+            if None == bpy.data.objects.get(name):
+                return name
+            suffix += 1
+
+    def _restore_export_helper_names(self, original_names):
+        """Restore original names in two passes to avoid collisions between helpers."""
+        renamed_helpers = []
+        for helper, original_name in original_names.items():
+            try:
+                if helper.name != original_name:
+                    renamed_helpers.append((helper, original_name))
+            except ReferenceError:
+                continue
+
+        staged_helpers = []
+        for index, (helper, original_name) in enumerate(renamed_helpers):
+            try:
+                # Free every original name before restoring any, since helpers may exchange names.
+                helper.name = self._next_export_helper_temp_name(index)
+                staged_helpers.append((helper, original_name))
+            except Exception as exc:
+                print(" > unable to stage helper name restoration for '{}': {}".format(original_name, exc))
+
+        for helper, original_name in staged_helpers:
+            try:
+                helper.name = original_name
+                if helper.name != original_name:
+                    print(" > unable to restore helper name '{}' (got '{}')".format(original_name, helper.name))
+            except Exception as exc:
+                print(" > unable to restore helper name '{}': {}".format(original_name, exc))
+
+    def _cleanup_export_state(self, state):
+        """Best-effort rollback of scene state, even when export or another rollback step fails."""
+        # Isolate each rollback so one invalid Blender reference cannot skip unrelated restoration.
+        def attempt(label, callback):
+            try:
+                callback()
+            except Exception as exc:
+                print(" > cleanup failed while {}: {}".format(label, exc))
+
+        armature = state.get("armature_primary")
+        armature_name = state.get("armature_primary_name")
+        if None != armature and None != armature_name:
+            def restore_armature_name():
+                if armature.name != armature_name:
+                    print(" > reverting primary armature's name {} to {}".format(armature.name, armature_name))
+                    armature.name = armature_name
+            attempt("restoring the primary armature name", restore_armature_name)
+
+        animation_source = state.get("animation_strips_source")
+        if None != animation_source:
+            def restore_animation_action():
+                if None != animation_source.animation_data:
+                    animation_source.animation_data.action = state.get("animation_strips_source_active_action")
+            attempt("restoring the active animation action", restore_animation_action)
+
+        frame_range = state.get("frame_range")
+        if None != frame_range:
+            def restore_frame_range():
+                bpy.context.scene.frame_start, bpy.context.scene.frame_end = frame_range
+            attempt("restoring the scene frame range", restore_frame_range)
+
+        def restore_rotation_offsets():
+            for obj, (original_mode, original_rotation) in state["rotation_offset_cached"].items():
+                def restore_rotation():
+                    obj.rotation_mode = 'XYZ'
+                    if original_mode == 'XYZ':
+                        obj.rotation_euler = original_rotation
+                    elif original_mode == 'QUATERNION':
+                        obj.rotation_mode = original_mode
+                        obj.rotation_quaternion = original_rotation
+                    elif original_mode == 'AXIS_ANGLE':
+                        obj.rotation_mode = original_mode
+                        obj.rotation_axis_angle = original_rotation
+                    else:
+                        obj.rotation_euler = original_rotation
+                        obj.rotation_mode = original_mode
+                attempt("restoring rotation for '{}'".format(obj.name), restore_rotation)
+        attempt("restoring rotation offsets", restore_rotation_offsets)
+
+        pivot_dummy = state.get("pivot_dummy")
+        pivot_transform = state.get("pivot_transform")
+        if None != pivot_dummy and None != pivot_transform:
+            def restore_pivot_transform():
+                pivot_dummy.location, pivot_dummy.rotation_euler, pivot_dummy.scale = pivot_transform
+            attempt("restoring pivot transforms", restore_pivot_transform)
+
+        for constraint in state["pivot_dummy_muted_constraints"]:
+            attempt("restoring a pivot constraint", lambda constraint=constraint: setattr(constraint, "mute", False))
+
+        for modifier, was_active in state["modifier_active_cached"]:
+            attempt("restoring an armature modifier", lambda modifier=modifier, was_active=was_active: setattr(modifier, "is_active", was_active))
+
+        attempt("restoring helper names", lambda: self._restore_export_helper_names(state["helper_original_names"]))
+
+        def remove_temporary_objects():
+            temporary_objects = list(state["input_meshes_clones"])
+            temporary_objects.extend(state["collection_instances_content_clones"])
+            temp_collection = state.get("tmp_export_collection")
+            if None != temp_collection:
+                temporary_objects.extend(list(temp_collection.objects))
+
+            removed_objects = set()
+            for obj in temporary_objects:
+                try:
+                    if obj in removed_objects or bpy.data.objects.get(obj.name) != obj:
+                        continue
+                    bpy.data.objects.remove(obj)
+                    removed_objects.add(obj)
+                except Exception as exc:
+                    print(" > cleanup failed while removing a temporary object: {}".format(exc))
+
+            if None != temp_collection:
+                try:
+                    bpy.data.collections.remove(temp_collection)
+                except Exception as exc:
+                    print(" > cleanup failed while removing the temporary collection: {}".format(exc))
+        attempt("removing temporary export objects", remove_temporary_objects)
+
+        if state.get("selection_cached", False):
+            def restore_selection():
+                bpy.context.view_layer.objects.active = state["active_object"]
+                MGTOOLS_functions_macros.select_objects(state["selected_objects"], False)
+            attempt("restoring object selection", restore_selection)
+
+        if state.get("mode_cached", False) and state.get("active_mode"):
+            attempt("restoring the active object mode", lambda: bpy.ops.object.mode_set(mode=state["active_mode"]))
+
+    def _process_export(self, input_objects_raw, cleanup_state):
+        """Prepare export objects, export them, and record each mutation for rollback."""
+        helper_original_names = cleanup_state["helper_original_names"]
         
         # copy incoming data into working list
         input_objects = []
@@ -482,12 +639,17 @@ class MGTOOLS_io_exporter():
 
         # Cache edit mode and activate object mode
         active_mode_cached = bpy.context.object.mode if None != bpy.context.object else ''
+        cleanup_state["active_mode"] = active_mode_cached
+        cleanup_state["mode_cached"] = True
         if '' != active_mode_cached:
             bpy.ops.object.mode_set(mode='OBJECT')
 
         # Cache selection
         active_object_cached = bpy.context.view_layer.objects.active
         selected_objects_cached = bpy.context.selected_objects
+        cleanup_state["active_object"] = active_object_cached
+        cleanup_state["selected_objects"] = selected_objects_cached
+        cleanup_state["selection_cached"] = True
 
         # if None == active_object_cached:
         #     print(" > Error: No active objects defined for export!")
@@ -495,11 +657,13 @@ class MGTOOLS_io_exporter():
 
         # create a temporary collection for exporting purposes
         tmp_export_collection = None
+        cleanup_state["tmp_export_collection"] = tmp_export_collection
         if True == create_clones:
             # create a temporary to-export collection
             if True == create_temp_collection:
                 # create temporary collection (problem with unique names if we don't want ".001" etc. added to our exported objects)
                 tmp_export_collection = MGTOOLS_functions_macros.duplicate_to_collection(input_objects, False)
+                cleanup_state["tmp_export_collection"] = tmp_export_collection
                 # make any containted collection instance real
                 collection_objects = []
                 for obj in tmp_export_collection.all_objects:
@@ -524,11 +688,10 @@ class MGTOOLS_io_exporter():
                         ic_clone = bpy.context.selected_objects[0]
                         input_collection_instances_clones.append(ic_clone)
                 # make clones real
-                collection_instances_content_clones = []
                 for icc in input_collection_instances_clones:
-                    collection_instances_content_clones.extend(MGTOOLS_functions_macros.make_collection_instance_real(icc))
+                    cleanup_state["collection_instances_content_clones"].extend(MGTOOLS_functions_macros.make_collection_instance_real(icc))
                 # add to to-process list
-                input_objects.extend(collection_instances_content_clones)
+                input_objects.extend(cleanup_state["collection_instances_content_clones"])
 
         # Apply the same visibility/selectability rules to all direct inputs.
         input_objects, skipped_objects = MGTOOLS_functions_io.filter_export_objects(input_objects, self.to_export_collection)
@@ -578,6 +741,7 @@ class MGTOOLS_io_exporter():
                 if 'ARMATURE' == mod.type:
                     # disable the modifier - when we later snapshot the mesh it gets not applied
                     if False == self.use_mesh_modifiers_armature:
+                        cleanup_state["modifier_active_cached"].append((mod, mod.is_active))
                         mod.is_active = False
                     # skip if an armature replacement is set (not perfect but the least complex solution atm)
                     if None == self.armature_replacement:
@@ -608,7 +772,7 @@ class MGTOOLS_io_exporter():
 
         # option: created throw-away snapshots during export
         # pivot_dummy_clone = None
-        input_meshes_clones = []
+        input_meshes_clones = cleanup_state["input_meshes_clones"]
         if 0 < len(input_meshes) and True == create_clones:
             # create input_pivot_dummy throw-away snapshot
             # if None != input_pivot_dummy:
@@ -781,13 +945,15 @@ class MGTOOLS_io_exporter():
             pivot_pos_cached = to_export_pivot_dummy.location.copy()
             pivot_rot_cached = to_export_pivot_dummy.rotation_euler.copy()
             pivot_scale_cached = to_export_pivot_dummy.scale.copy()
+            cleanup_state["pivot_dummy"] = to_export_pivot_dummy
+            cleanup_state["pivot_transform"] = (pivot_pos_cached, pivot_rot_cached, pivot_scale_cached)
             # print ("Cached transforms: {}, {}".format(pivot_pos_cached, pivot_rot_cached))
 
 
         # options ----------------------------------
         # @ pivot dummy
         print (" > apply pivot dummy options")
-        pivot_dummy_muted_constraints = []
+        pivot_dummy_muted_constraints = cleanup_state["pivot_dummy_muted_constraints"]
         if None != to_export_pivot_dummy:
             # option: reset transforms
             if True == self.pivot_reset_location:
@@ -811,16 +977,42 @@ class MGTOOLS_io_exporter():
         # @ helper
         print (" > apply helper options")
         if True == self.export_helper_strip_dotnumbers:
+            helper_rename_plan = []
             for helper in to_export_helper:
-                last_dot_idx = helper.name.rfind('.')
-                if 1 > last_dot_idx : continue
-                stripped_name = helper.name[:last_dot_idx]
-                # first we have to free our current name for blender by using a temporary name
-                helper.name = stripped_name + ".to_be_renamed"
-                # then we rename to the actual name
-                helper.name = stripped_name
-                if stripped_name != helper.name:
-                    print (" >> unable to rename {} to {}".format(helper.name, stripped_name))
+                original_name = helper.name
+                stripped_name = re.sub(r"\.\d{3,}$", "", original_name)
+                if stripped_name != original_name:
+                    helper_rename_plan.append((helper, original_name, stripped_name))
+
+            rename_helpers = {helper for helper, _, _ in helper_rename_plan}
+            target_counts = {}
+            blocking_objects = {}
+            for helper, _, stripped_name in helper_rename_plan:
+                target_counts[stripped_name] = target_counts.get(stripped_name, 0) + 1
+                existing_object = bpy.data.objects.get(stripped_name)
+                if None != existing_object and existing_object not in rename_helpers:
+                    blocking_objects[stripped_name] = existing_object
+
+            duplicate_targets = sorted(name for name, count in target_counts.items() if count > 1)
+            if 0 < len(duplicate_targets) or 0 < len(blocking_objects):
+                print(" > unable to strip helper dot-numbers; target names are not unique")
+                for name in duplicate_targets:
+                    print(" >> multiple helpers would be named '{}'".format(name))
+                for name, blocker in blocking_objects.items():
+                    print(" >> '{}' is already used by '{}'".format(name, blocker.name))
+            else:
+                # Stage all affected helpers first so their base names are free simultaneously.
+                helper_original_names.update(
+                    (helper, original_name)
+                    for helper, original_name, _ in helper_rename_plan)
+
+                for index, (helper, _, _) in enumerate(helper_rename_plan):
+                    helper.name = self._next_export_helper_temp_name(index)
+
+                for helper, _, stripped_name in helper_rename_plan:
+                    helper.name = stripped_name
+                    if helper.name != stripped_name:
+                        raise RuntimeError("Blender could not assign helper name '{}' (got '{}')".format(stripped_name, helper.name))
 
         # for mesh in to_export_meshes:
         #     MGTOOLS_functions_macros.select_objects(mesh, True)
@@ -842,7 +1034,7 @@ class MGTOOLS_io_exporter():
         MGTOOLS_functions_macros.select_objects(to_export_list, True)
 
         # rotation offset ------------------------------------
-        rotation_offset_cached = {}  # obj -> (original_mode, original_rotation_euler or quat/axis_angle)
+        rotation_offset_cached = cleanup_state["rotation_offset_cached"]
         if 0 < len(self.rotation_offset_filter.strip()):
             tokens = [t.strip() for t in self.rotation_offset_filter.split(',') if t.strip()]
             from mathutils import Euler
@@ -887,6 +1079,8 @@ class MGTOOLS_io_exporter():
             armature_primary = to_export_armatures[0]
             # rename armatures
             armature_primary_name_cached = armature_primary.name
+            cleanup_state["armature_primary"] = armature_primary
+            cleanup_state["armature_primary_name"] = armature_primary_name_cached
             if '' != self.armature_primary_rename and armature_primary.name != self.armature_primary_rename:
                 try:
                     armature_primary.name = self.armature_primary_rename
@@ -901,6 +1095,7 @@ class MGTOOLS_io_exporter():
         # cache frame range
         cached_frame_start = bpy.context.scene.frame_start
         cached_frame_end = bpy.context.scene.frame_end
+        cleanup_state["frame_range"] = (cached_frame_start, cached_frame_end)
 
         if 'RANGE' == self.animation_export_mode:
             
@@ -918,6 +1113,8 @@ class MGTOOLS_io_exporter():
 
                 animation_strips_source = armature # to_export_armatures[0] if 0 < len(to_export_armatures) else None # for now we use the first armature
                 animation_strips_source_active_action_cached = armature.animation_data.action
+                cleanup_state["animation_strips_source"] = animation_strips_source
+                cleanup_state["animation_strips_source_active_action"] = animation_strips_source_active_action_cached
                 break
 
             # if None != actions_source_override: # TODO: if this is somehow necessary the property needs to be added (or moved from the obsolete animation batch export)
@@ -1036,86 +1233,6 @@ class MGTOOLS_io_exporter():
 
         else:
             print('Unhandled animation export mode: {}.'.format(self.animation_export_mode))
-
-        # cleanup ------------------------------------
-
-        # revert armature name
-        if None != armature_primary and armature_primary.name != armature_primary_name_cached :
-            try:
-                print(f" > reverting primary armature's name {armature_primary.name} to {armature_primary_name_cached}")
-                armature_primary.name = armature_primary_name_cached
-            except AttributeError as e:
-                mgtools_functions_log.show_exception(e, message=f"Could not revert primary armature name to '{armature_primary_name_cached}' (likely a linked/library read-only object)", popup=True, report=False)
-                # skip reverting name
-
-        # revert active action
-        if None != animation_strips_source:
-            animation_strips_source.animation_data.action = animation_strips_source_active_action_cached
-
-        # revert scene frame range
-        bpy.context.scene.frame_start = cached_frame_start
-        bpy.context.scene.frame_end = cached_frame_end
-
-        # revert rotation offsets
-        if 0 < len(rotation_offset_cached):
-            print(" > reverting rotation offsets")
-            for obj, (original_mode, original_rot) in rotation_offset_cached.items():
-                obj.rotation_mode = 'XYZ'  # ensure we are in euler mode before restoring
-                if original_mode == 'XYZ':
-                    obj.rotation_euler = original_rot
-                elif original_mode == 'QUATERNION':
-                    obj.rotation_mode = original_mode
-                    obj.rotation_quaternion = original_rot
-                elif original_mode == 'AXIS_ANGLE':
-                    obj.rotation_mode = original_mode
-                    obj.rotation_axis_angle = original_rot
-                else:
-                    obj.rotation_euler = original_rot
-                    obj.rotation_mode = original_mode
-
-        # revert pivot transforms
-        if None != to_export_pivot_dummy:
-            print(" > reverting pivot transforms")
-            # print ("Cached transforms: {}, {}".format(pivot_pos_cached, pivot_rot_cached))
-            to_export_pivot_dummy.location = pivot_pos_cached
-            to_export_pivot_dummy.rotation_euler = pivot_rot_cached
-            to_export_pivot_dummy.scale = pivot_scale_cached
-
-            print(" > reverting pivot constraints")
-            if 0 < len(pivot_dummy_muted_constraints):
-                for constraint in pivot_dummy_muted_constraints:
-                    constraint.mute = False
-
-        # delete clones after export
-        print(" > removing temporary export files")
-
-        # if None != pivot_dummy_clone:
-        #     bpy.data.objects.remove(pivot_dummy_clone)
-
-        # remove cloned meshes
-        if None != input_meshes_clones:
-            for clone in input_meshes_clones:
-                bpy.data.objects.remove(clone)
-
-        # remove temporary export collections and their content
-        if None != tmp_export_collection:
-            for clone in tmp_export_collection.objects:
-                bpy.data.objects.remove(clone)
-            bpy.data.collections.remove(tmp_export_collection)
-
-        # remove clones from collection instances made real
-        if None != collection_instances_content_clones:
-            while 0 < len(collection_instances_content_clones):
-                clone = collection_instances_content_clones.pop(0)
-                bpy.data.objects.remove(clone)
-
-        # Reset selection
-        bpy.context.view_layer.objects.active = active_object_cached
-        MGTOOLS_functions_macros.select_objects(selected_objects_cached, False)
-
-        # Reset edit mode
-        if '' != active_mode_cached:
-            bpy.ops.object.mode_set(mode=active_mode_cached)
 
     @classmethod
     def quick_export_anim(self, path, filename, frame_start, frame_end):

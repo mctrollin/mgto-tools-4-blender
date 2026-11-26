@@ -607,10 +607,10 @@ class MGTOOLS_PT_io(Panel):
             pivot_options_box_row.prop(mgtools_props_scene, "p_io_export_include_pivot_dummy_if_required", text="if required", toggle=True, icon='CHECKBOX_HLT')
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_set_pivots_to_dummy", toggle=True, icon='CHECKBOX_HLT')
         row = pivot_options_box.row(align=True)
-        row.label(text="Reset:")
-        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_location", text="location", toggle=True, icon='CHECKBOX_HLT')
-        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_rotation", text="rotation", toggle=True, icon='CHECKBOX_HLT')
-        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_scale", text="scale", toggle=True, icon='CHECKBOX_HLT')
+        row.label(text="Reset Dummy Transforms:")
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_location", text="", toggle=True, icon='CON_LOCLIKE')
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_rotation", text="", toggle=True, icon='CON_ROTLIKE')
+        row.prop(mgtools_props_scene, "p_io_export_pivot_reset_scale", text="", toggle=True, icon='CON_SIZELIKE')
         if True == mgtools_props_scene.p_io_export_pivot_reset_rotation:
             pivot_options_box.prop(mgtools_props_scene, "p_io_export_rotation",)
         pivot_options_box.prop(mgtools_props_scene, "p_io_export_pivot_dummy_disable_constraints", toggle=True, icon='CHECKBOX_HLT')
@@ -967,7 +967,7 @@ class MGTOOLS_PT_about(Panel):
         l = self.layout
 
         box = l.column()
-        box.label(text="MGTO tools v0.7.00") # check also version in __init__
+        box.label(text="MGTO tools v0.7.00 (2026-11-26)") # check also version in __init__
         box.label(text="by Till - rollin - Maginot")
         box.label(text="(C) 2026")
 
